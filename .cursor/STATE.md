@@ -41,7 +41,32 @@
 - OT-33: Desktop model pickers type-to-filter. Chat menu focuses search on open. Settings/cron/bots/fallback Selects are `searchable`.
 - OT-34: Local `Papership.app` rebuilt from current web dist and opened. Leftover `OrgOS.app` removed. Use rustup Cargo (`~/.cargo/bin`) — Homebrew 1.84.1 fails `edition2024`.
 - OT-36: Desktop/OS icons are full-bleed so the system squircle fills the well. Web/tab mark stays the pre-cut plate.
-- OT-35: Hermes updates are in NousResearch PR https://github.com/NousResearch/hermes-agent/pull/109304 (`cam-douglas:fix/openrouter-picker-and-search`). Local `Hermes.app` rebuilt from `07de97ddce` and installed unsigned (duplicate Apple Development identities).
+- OT-35: Hermes updates are in NousResearch PR https://github.com/NousResearch/hermes-agent/pull/109304 (`cam-douglas:fix/openrouter-picker-and-search`).
+- OT-37: Settings type-to-search no longer steals picker keystrokes. Branch head `9fd6983c20`. Local `Hermes.app` rebuilt unsigned (duplicate Apple Development identities).
+- OT-38: Desktop chrome overlay kernel — live `overlay.css`, last-known-good rollback, `model-pill` slot with bundled fallback. Composer/settings stay in the kernel.
+- OT-39: `claude-design` v1.2.0 emits `::preview` on Desktop. Installed locally and on the droplet.
+- OT-40: droplet was reachable (SSH, Tailscale, serve `:9119`). Desktop SSH to `root@` timed out under load ~66; gateway restarted after watchdog; `auth.json` was root-owned again. Ownership restored to `hermes`. Reconnect Desktop as `hermes`.
+- OT-41: Desktop now SSH as `hermes@hermes-droplet-campbell`. Root isolated serve gone. `droplet-campbell` stays root for admin.
+- OT-42: Cursor + Terminal.app new sessions start at `/Users/camdouglas`, not the papership workspace.
+- OT-43: cmux starts at home; inherit-from-last-workspace is off; Ghostty `working-directory = home`.
+- OT-44: Desktop session-reserve failure was root-owned `active_sessions.json`. Ownership restored. Retry the turn.
+- OT-45: Mac + droplet Hermes caps are all 100 (`agent.max_turns`, `code_execution.max_tool_calls`, `goals.max_turns`, `delegation.max_iterations`). Infinite not set. New Desktop chat required to bind.
+- OT-46: Max-iteration wrap-up 400 was `ultra` leaked on the summary path. Droplet + local helpers now clamp to `max`. Isolated serve restarted.
+- OT-47: Enabled Desktop/droplet tool-loop hard-stop. Compaction+todo replay was the token burn; stop that chat.
+- OT-48: Droplet SMTP is DigitalOcean-blocked. Local 2525 relay + Gmail API send. Email adapter stays off.
+- OT-49: Re-enabling Email caused SMTP timeouts + watchdog gateway restarts. Keep Email disabled.
+- OT-50: Wheel now handled inside cursor-agent Ink `U()` (VPS 1931.index.js). New `agent` pane required. No Hermes PTY key inject; vps-ui-sync untouched.
+- OT-51: Droplet Cursor CLI defaults to Run Everything via `~/bin/agent` `--yolo` wrapper. Existing pane unchanged until a new `agent`.
+- OT-52: Desktop plays a Mac chime + toast when the VPS Cursor stop script rings BEL. Packaged app installed; reopen required.
+- OT-53: Desktop remote terminals persist via named tmux; launch remounts tabs and resumes Cursor (`agent --resume` / `--continue`). Unsigned app installed; same quit+reopen.
+- OT-54: Gateway dropouts are 2 vCPU / 4 GB starvation (load ~55, 83 MiB free). Upgrade in DO; 4/8 floor, 8/16 if two Cursor panes stay.
+- OT-55: Parked extra Cursor/WhatsApp Chrome so one pane can finish. Load 50→6; 1.8 GiB free. Extras exit while one is interactive; resume on attach. Gateway/serve stay up.
+- OT-56: Messaging no longer needs `hermes-msg` to wake. Gateway + Gmail watcher stay up. Email stays off.
+- OT-57: Chrome is on-demand. `chromium-cdp` disabled on login; 1-min idle parks it unless a live browse is using CPU. Leftover wwa/puppeteer always killed. Gateway stays up.
+- OT-58: Mac spend-tracker plugin refreshed from VPS (8920 B, DropdownMenu + self-pull). Palette reload sent. No named profiles.
+- OT-59: `vps-ui-sync` plugin + `pull_vps_desktop_plugins.sh` on the Mac. Countdown/window-reload attempt reverted; the pull script owns sync.
+- OT-60: Hermes at-risk patches snapshotted to `~/.hermes/preserve/` (Mac + VPS). Apply scripts installed. Live `hermes-agent` left in place.
+- OT-61: Auto-apply after `hermes update` (zsh wrapper, VPS `~/bin/hermes`, git post-merge). Idempotent.
 - OT-05 done: live Hermes user systemd has no `Environment=EMAIL_*`. OT-06…OT-14 parked in `docs/handover/future-tasks.md`. OT-15 JWT is sessionStorage + memory. OT-16 GET `/health` is 200.
 - Leftover feature branches are gone from git (`main` + `origin/main` only). Cursor may still show closed-PR names. Local and origin `main` are `551bf31`. Vercel will pick up the Git push.
 
@@ -95,10 +120,64 @@
 
 ## Next Actions
 
-1. Repeat `docs/handover/outstanding-tasks.md` open rows every turn (none open after 2026-09-13 park).
+1. Repeat `docs/handover/outstanding-tasks.md` open rows every turn. OT-50, OT-52, OT-53, OT-62 are done.
 2. Do not treat write/external Hermes tools as `accepted`.
 3. Charges stay off until a later owner flip (OT-08, parked).
+4. Live Hermes is HostHatch `hermes@100.82.91.60`. DigitalOcean rollback aliases (`*-do`) may be deleted after the owner destroys that droplet. Do not start a second gateway there.
+5. Hermes git backups stay on **`main`** for Hatch (`hermes-agent` fork `bc4ddbf10c`, private `.hermes` `101f836`). Do not park the live VPS tree on a side branch. `hermes update` still pulls Nous; preserve wrappers restore local patches.
+6. HostHatch Cursor CLI is installed. Portable control plane is `/home/hermes/agent-instructions/.cursor` plus user rules under the hermes home Cursor directory. New projects: `~/bin/init-cursor-project`.
+7. Hatch Cursor always starts in tmux (`~/bin/agent` / `~/bin/cursor-agent`) with Run Everything persisted (`approvalMode=unrestricted`). Owner off-switch: `~/.cursor/tmux.off` / `~/.cursor/run-everything.off` or `CURSOR_VPS_TMUX=0` / `CURSOR_VPS_RUN_EVERYTHING=0`.
 
 ## Last Updated
 
-- 2026-09-12T17:20Z — pushed `551bf31` (`81284b2..551bf31`): Papership desktop name + full-bleed OS icons.
+- 2026-09-12T18:48Z — OT-38: Hermes Desktop chrome overlay (CSS + rollback + model-pill slot). Unsigned rebuild installed.
+- 2026-09-12T18:58Z — OT-39: claude-design skill wired to `::preview` (Desktop live canvas). Droplet + local skill copies updated.
+- 2026-09-13T13:45Z — OT-40: droplet not down; Desktop SSH to root timed out under load; auth.json ownership restored.
+- 2026-09-13T13:51Z — OT-41: Desktop pointed at hermes@; leftover root isolated serve killed; reconnect verified.
+- 2026-09-13T13:53Z — OT-42: terminal default cwd is home, not papership.
+- 2026-09-13T13:55Z — OT-43: cmux pointed at home; does not inherit Terminal/Cursor cwd.
+- 2026-09-13T13:57Z — OT-44: chowned droplet `runtime/active_sessions.json` so Desktop can lease sessions.
+- 2026-09-13T15:05Z — OT-45: Hermes turn/tool caps set to 100 on Mac and droplet. Infinite not applied.
+- 2026-09-13T15:20Z — OT-46: clamp iteration-summary `ultra`→`max`; isolated serve restarted.
+- 2026-09-13T15:25Z — OT-47: `hard_stop_enabled: true` on Mac + droplet.
+- 2026-09-13T15:50Z — OT-48: localhost Gmail-API SMTP relay on :2525; adapter stays disabled.
+- 2026-09-13T16:05Z — OT-49: Email platform SMTP timeouts blocked the gateway loop; keep disabled.
+- 2026-09-13T18:45Z — OT-50: Desktop terminal TUI jitter patched (fit hysteresis + POSIX convertEol + hidden viewport scrollbar). Unsigned app installed; reopen to load.
+- 2026-09-13T18:48Z — OT-51: droplet `~/bin/agent` wraps Cursor CLI with `--yolo` so new sessions are Run Everything.
+- 2026-09-13T18:52Z — OT-52: Desktop terminal BEL/OSC 9 → Glass chime + toast. VPS finish script ssh-tty only.
+- 2026-09-13T19:05Z — OT-53: Desktop terminal persist via tmux attach + Cursor `--resume` claimer. Unsigned app installed; reopen to load.
+- 2026-09-13T19:20Z — OT-50 second pass after reopen still jittered: integer lineHeight, drop 1-cell fits, snap 1px overlay. App reinstalled. Droplet SSH timed out during a hung tmux set-option; Desktop fix does not need it.
+- 2026-09-13T19:23Z — OT-54: droplet 2 vCPU / 3.8 GiB, load 54–58, 83 MiB available. Cursor×3 + Hermes + two Chromes. Upgrade recommended.
+- 2026-09-13T19:28Z — OT-50 third pass: Cursor wheel loop was xterm viewport vs TUI redraw. Lock viewport on alt/mouse; freeze fit after wheel.
+- 2026-09-13T19:40Z — OT-55: killed extra Cursor + WhatsApp Chrome/wwa; cron parks extras while one pane is live. Load 50→6, 1.8 GiB available.
+- 2026-09-13T19:47Z — OT-56: `hermes-msg` idle park for gateway messaging; 20 min; wake command only. Email still off.
+- 2026-09-13T19:55Z — OT-56 revised: owner rejected manual `hermes-msg` wake and chat NLP. Gateway stays up; Desktop isolated serve is the deterministic keep-alive; idle parks Chrome/wwa only.
+- 2026-09-13T19:48Z — OT-50 fourth pass: wheel lock now writes SGR/arrows to the PTY so Cursor can scroll.
+- 2026-09-13T20:02Z — OT-57: Chrome on-demand + 1-min idle park; chromium-cdp disabled from login. Gateway stays up. SIGSTOP not used (keeps RAM).
+- 2026-09-13T20:04Z — OT-58: spend-tracker Desktop plugin copied VPS → Mac `~/.hermes/desktop-plugins/spend-tracker/`; ⌘K Reload desktop plugins sent. Did not quit Hermes.
+- 2026-09-13T20:12Z — OT-58 refresh: Mac plugin replaced with live VPS 8920 B file (DropdownMenu + `desktop.plugin.source` pull). Palette reload sent. Chat paste was the prior 7989 B Popover revision.
+- 2026-09-13T20:22Z — OT-59: vps-ui-sync plugin + Mac pull script + HERMES_VPS_SSH. Launchd template filled, not loaded. Palette reload sent.
+- 2026-09-13T20:30Z — Reverted the 30s countdown / window-reload plugin draft. Mac `vps-ui-sync` restored from VPS (5315 B, `POLL_MS` 15s, no `location.reload`).
+- 2026-09-13T20:44Z — OT-60: snapshotted Mac/VPS dirty hermes-agent trees into `~/.hermes/preserve/` with apply.sh. Did not delete live source.
+- 2026-09-13T20:50Z — OT-61: auto-apply preserve patches after hermes update (wrapper + post-merge). Both trees reported already applied.
+- 2026-09-13T21:02Z — OT-50 fifth pass: restored native xterm scrollbar/scroll; kept fit anti-jitter. Snapshotted `mac-20260913T2105Z`. Packed and installed without quitting the live app.
+- 2026-09-13T21:09Z — OT-50 Ink wheel: patched VPS cursor-agent 1931.index.js to map SGR wheel → `U()`. No Hermes key inject. New agent session needed.
+- 2026-09-14T09:05Z — Droplet-style 8/16 GB price canvas: Hetzner CX33/CX43 ~$10/$18.50; Contabo cheaper flat; BinaryLane for Sydney hourly. DO Basic 8/16 is $48/$96.
+- 2026-09-14T09:20Z — Hostinger/Hetzner/IONOS/netcup pick: Hetzner CX43. RAM first. Hourly ≠ per-process; gateway 24/7 hits the monthly cap.
+- 2026-09-14T09:32Z — A$40 max-compute: Contabo VPS 12, HostHatch 32 GB, Hetzner CX43. No GPU in budget; local models = CPU GGUF 8B–14B.
+- 2026-09-14T09:40Z — Single plan under A$50: Contabo Cloud VPS 12.
+- 2026-09-14T10:40Z — All-domain under A$50: Contabo Cloud VPS 16 (16/64/500/1G) at €29.60. No dedicated/Performance SKU fits.
+- 2026-09-14T10:50Z — Disk size not important; NVMe quality secondary to RAM. Last pick Hetzner CX53. Contabo only if resident 14B+ with 3+ panes.
+- 2026-09-14T11:05Z — Owner asked if Contabo 64 GB is worth it at A$50. Yes if promo €29.60: unique 64 GB; CPU/disk worse than CX53; not a Mac.
+- 2026-09-14T16:00Z — Owner chose HostHatch NVMe 64GB Sydney / Ubuntu 26.04. DO parked for remaining work. Cutover blocked on HostHatch IPv4 (`.env` fail-closed).
+- 2026-09-14T16:20Z — HostHatch 85.155.189.170: hermes user, keys, UFW, copied `.hermes` without disposable venvs, uv venv OK. Tailscale needs owner login URL. Gateway not started.
+- 2026-09-14T16:32Z — OT-62 flipped. Hatch gateway 200 / serve 302 / Telegram up. DO units stopped. Aliases retargeted. OT-50/52/53 owner-closed.
+- 2026-09-14T17:10Z — OT-63: Hatch WhatsApp Baileys + Chrome 153 CDP; Email uses real Gmail SMTP 587 + IMAP 993; watcher removed. DO SSH aliases + public IPv4 fallback.
+- 2026-09-14T17:20Z — Cutover audit: Desktop already on Hatch (`hermes@` + isolated serve). DO leftover Gmail watcher parked.
+- 2026-09-14T17:28Z — OT-64: Photon sidecar live; cost-guard timer on; preserve snapshot refreshed.
+- 2026-09-14T17:32Z — OT-65: Desktop `.local/bin/hermes` now snapshots + auto-applies preserve. No owner apply step.
+- 2026-09-14T17:45Z — Pushed Mac/Hatch hermes-agent + Hatch `.hermes` overlay as Cursor Agent. Mac home is not a git clone. Preserve branches stay split so Nous/Desktop updates cannot wipe the other machine.
+- 2026-09-14T17:50Z — Generic `agent-instructions` control plane copied to Hatch `~/agent-instructions`. Cursor CLI already present (`2026.09.10-fd3934a`). User rules installed. Hatch live agent/home trees are on `main` only (`vps/hosthatch` and `mac/preserve` removed).
+- 2026-09-14T17:54Z — Hatch `~/bin/agent` and `~/bin/cursor-agent` wrap Cursor in tmux and keep Run Everything on unless the owner disables it.
+- 2026-09-14T17:58Z — Paused Hatch cron `gmail-internal-review`. IMAP+SMTP replace the Gmail API watcher/watchdog.
+- 2026-09-14T18:20Z — Removed `gmail-internal-review`. DO→Hatch overlay (update-only; live auth/email/WhatsApp kept). Photon pairing + Zapier token copied. Preserve apply OK; snapshots through `vps-20260914T1819Z`. Pushed fork `main` `bc4ddbf10c` and `.hermes` `main` `101f836`. DO droplet can be destroyed.

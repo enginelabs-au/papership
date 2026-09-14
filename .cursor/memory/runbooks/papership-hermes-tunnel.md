@@ -1,10 +1,22 @@
 # Runbook: Papership ↔ Hermes on droplet-campbell
 
-SSH Host `hermes-vps` is in `~/.ssh/config` (user `hermes`, Tailscale). Do not copy keys into this repo.
+SSH Host `hermes-vps` / `hermes-droplet-campbell` is user `hermes` on HostHatch Tailscale `100.82.91.60`. `droplet-campbell` is root on the same box. Old DigitalOcean rollback: `droplet-campbell-do` / `hermes-droplet-campbell-do` (Tailscale `100.126.6.56`) or `*-do-pub` (public `209.38.81.239`). Hop `~/bin/droplet-campbell-do` tries Tailscale then public. Owner may destroy the DigitalOcean droplet (OT-66). After destroy, those aliases are historical only. Do not start a second `hermes-gateway` on any leftover DO box. Do not copy keys into this repo.
+
+## Git backups (2026-09-14)
+
+Do not make Mac `~/.hermes` a clone of the Hatch home. Do not `git pull` Hatch `main` onto the Mac or `mac/preserve` onto Hatch.
+
+| Tree | Remote | Branch | HEAD |
+|---|---|---|---|
+| Hatch `~/.hermes/hermes-agent` | `cam-douglas` public fork | `main` | `570b31ab98` (0.21.1) |
+| Hatch `~/.hermes` | private `cam-douglas/.hermes` | `main` | overlay + preserve |
+| Mac `~/.hermes/hermes-agent` | `fork` same public repo | Mac working branch | Desktop/agent patches |
+
+`origin` on both agent trees is NousResearch. `hermes update` / Desktop `--keep-stash` pull that. Wrappers snapshot then `preserve/apply.sh`. Hatch GitHub SSH Host aliases were missing after cutover; deploy keys `hatch-dot-hermes` and `hatch-hermes-agent` restore push/pull.
 
 ## What is running on the VPS
 
-- Hermes Agent **v0.21.1** (git `20f7ef4d`)
+- Hermes Agent **v0.21.1** (git `5b1c6b76` on `vps/hosthatch`)
 - `hermes-serve.service`: `hermes serve --host 0.0.0.0 --port 9119` — desktop login UI. `/health` is 302 `/login`.
 - `hermes-gateway.service`: messaging + **HTTP API** on `127.0.0.1:8642`. Do not start a second gateway.
 - API connect can take >30s on this box. User drop-in sets `HERMES_GATEWAY_PLATFORM_CONNECT_TIMEOUT=120`.
@@ -26,4 +38,4 @@ SSH Host `hermes-vps` is in `~/.ssh/config` (user `hermes`, Tailscale). Do not c
 - Live `accepted` is catalogued **read** `tool=` only. Example run `run_ee41560dd3ee46eb9bef3fcd6615e6ba`.
 - OT-16 closed 2026-09-12: `GET /health` on `:8642` is 200; HEAD-first probe stays.
 
-Mailbox `EMAIL_*` is no longer on systemd `Environment=` (checked 2026-09-13 on `hermes-droplet-campbell` user units). Do not print values if they reappear.
+Mailbox `EMAIL_*` is no longer on systemd `Environment=`. Hatch Email uses Gmail SMTP 587 + IMAP 993 (OT-63). The Gmail API watcher is off. Do not print values if they reappear.
