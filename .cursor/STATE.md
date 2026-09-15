@@ -206,3 +206,4 @@
 - 2026-09-15T10:47Z — OT-50 done (owner confirmed Desktop Cursor scroll). Goal complete.
 - 2026-09-15T10:53Z — Pushed Desktop scroll/persist to fork + NousResearch PR #111822; papership docs d23cb1e; preserve extras-after-apply wired.
 - 2026-09-15T11:02Z — Preserve automation: post-commit snapshot + agent-commit record; host extras in snapshot; Mac synced to Hatch-class apply; private `.hermes` `fabf5d9` pushed.
+- 2026-09-15T11:06Z — Removed custom Desktop `data-tui-scrollbar` rail; wheel/PageUp tmux history path kept. Pushed fork PR branch.

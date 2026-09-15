@@ -21,3 +21,4 @@
 - OT-50 owner-complete: Desktop terminal scroll works. Goal closed.
 - Persist+push: Mac snapshot `mac-20260915T1051Z`; `extras-after-apply.sh` re-patches cursor-agent + VPS hermes-term/tmux after every update. Fork branch `fix/desktop-terminal-scroll-and-persist` → NousResearch PR https://github.com/NousResearch/hermes-agent/pull/111822. Papership docs `d23cb1e` on origin/main. Hatch snapshot `vps-20260915T1053Z`.
 - Preserve is automatic going forward: `post-commit` → `snapshot.sh` + `record-patch.sh agent-commit …`; `hermes update` still before/after; post-merge re-applies; snapshots also refresh `~/bin` + tmux + desktop-plugins backup. Mac preserve scripts brought up to Hatch-class. Pushed private `.hermes` `fabf5d9`. Owner does not need to ask each patch.
+- Removed Desktop custom `data-tui-scrollbar` rail (wheel/PageUp → tmux copy-mode remains). Tests 12+6. Pushed fork `fix/desktop-terminal-scroll-and-persist`.
