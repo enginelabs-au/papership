@@ -120,10 +120,10 @@
 
 ## Next Actions
 
-1. Repeat `docs/handover/outstanding-tasks.md` open rows every turn. OT-50, OT-52, OT-53, OT-62 are done.
+1. Repeat `docs/handover/outstanding-tasks.md` open rows every turn. OT-50 and OT-68 done.
 2. Do not treat write/external Hermes tools as `accepted`.
 3. Charges stay off until a later owner flip (OT-08, parked).
-4. Live Hermes is HostHatch `hermes@100.82.91.60`. DigitalOcean rollback aliases (`*-do`) may be deleted after the owner destroys that droplet. Do not start a second gateway there.
+4. Live Hermes is HostHatch `hermes@100.82.91.60`. Tailscale MagicDNS is `hermes-droplet-campbell` (no `-1`). DigitalOcean Tailscale is logged out; `*-do` SSH is public IPv4 only. Do not start a second gateway there.
 5. Hermes git backups stay on **`main`** for Hatch (`hermes-agent` fork `bc4ddbf10c`, private `.hermes` `101f836`). Do not park the live VPS tree on a side branch. `hermes update` still pulls Nous; preserve wrappers restore local patches.
 6. HostHatch Cursor CLI is installed. Portable control plane is `/home/hermes/agent-instructions/.cursor` plus user rules under the hermes home Cursor directory. New projects: `~/bin/init-cursor-project`.
 7. Hatch Cursor always starts in tmux (`~/bin/agent` / `~/bin/cursor-agent`) with Run Everything persisted (`approvalMode=unrestricted`). Owner off-switch: `~/.cursor/tmux.off` / `~/.cursor/run-everything.off` or `CURSOR_VPS_TMUX=0` / `CURSOR_VPS_RUN_EVERYTHING=0`.
@@ -181,3 +181,26 @@
 - 2026-09-14T17:54Z — Hatch `~/bin/agent` and `~/bin/cursor-agent` wrap Cursor in tmux and keep Run Everything on unless the owner disables it.
 - 2026-09-14T17:58Z — Paused Hatch cron `gmail-internal-review`. IMAP+SMTP replace the Gmail API watcher/watchdog.
 - 2026-09-14T18:20Z — Removed `gmail-internal-review`. DO→Hatch overlay (update-only; live auth/email/WhatsApp kept). Photon pairing + Zapier token copied. Preserve apply OK; snapshots through `vps-20260914T1819Z`. Pushed fork `main` `bc4ddbf10c` and `.hermes` `main` `101f836`. DO droplet can be destroyed.
+- 2026-09-14T18:30Z — Hatch Tailscale MagicDNS is `hermes-droplet-campbell` (dropped `-1`). DO Tailscale logged out; `tailscaled` disabled. Offline admin row may remain until deleted in the Tailscale machines page.
+- 2026-09-14T18:37Z — Desktop terminal Cursor TUI was a bash prompt after `agent` exited blank. Respawned the live `h-45ca5461-…` pane onto `~/bin/agent`; cursor-agent stayed up (Grok 4.6 High Fast). Login OK.
+- 2026-09-14T18:47Z — OT-50: Desktop alt-screen wheel writes SGR 64/65 to the PTY for Cursor Ink `U()`. Unsigned Hermes.app installed; reopen required.
+- 2026-09-14T18:50Z — Desktop “gateway disconnected” was Mac-side: `ditto` at 18:45 closed the SSH tunnel; Mac Tailscale was stopped so reconnect timed out. Hatch `hermes-gateway` stayed active, `/health` 200, 60 GiB free, no OOM. Tailscale reopened; Desktop reused isolated serve pid 57793.
+- 2026-09-14T19:05Z — OT-50: dropped SGR-to-PTY. Wheel over the terminal overlay now sends Ink C-u / C-d. App installed; reopen required. Did not quit the live app.
+- 2026-09-14T19:08Z — Pre-update preserve snapshots: `mac-20260914T1908Z` and `vps-20260914T1908Z` (both reverse-check OK; Hatch copy also on the Mac). Cursor `1931.index.js` in Hatch extras.
+- 2026-09-15T08:20Z — Desktop update failed because Mac checkout was on `campbell/local-patches` with dirty wheel files. Stashed, switched to `main`, pulled to `a55c972e09` (v0.21.3). Hatch same tip; uv left `.venv` and units still called `venv/` (203/EXEC). Symlinked `venv`→`.venv`; gateway 200 / serve 302. Preserve 3-way incomplete on Hatch; snapshots kept.
+- 2026-09-15T08:55Z — Post-update Cursor wheel still dead: stock `main` has no handler and C-u is ignored while Ink input is disabled. Desktop now writes `ESC[9001~`/`ESC[9002~` + SGR; Hatch `1931` maps to `U()` without `g` or `1000h`. Unsigned app ditto’d; live Hermes not quit. Five `h-*` panes `--resume`d.
+- 2026-09-15T08:59Z — 9001 leaked into the Cursor prompt as digits. Replaced with Page Up/Down. Hatch key handler allows page keys while `g`. Removed stdin listener. App ditto’d; reopen required. Did not respawn panes.
+- 2026-09-15T09:06Z — Owner asked to revert the terminal pane to stock. Restored `use-terminal-session.ts` from `a55c972e09`, removed wheel files, restored Hatch `1931` from `.pre-hermes-wheel`, patch script restore-only. Clean unsigned app ditto’d (no 9001 in bundle). Live Hermes not quit.
+- 2026-09-15T09:30Z — Goal: Cursor transcript wheel. Stock xterm history was the “past messages” scroll. Desktop now steals TUI wheel and sends Page Up/Down only; xterm scrollback 0 on TUI. Hatch page keys call `U()` while `g`. Tests 5 passed. App ditto’d; panes `--resume`d. Reopen required. Goal not complete until reopen verifies transcript moves.
+- 2026-09-15T09:40Z — OT-68: Hatch tmux status clock is Sydney (`TZ=Australia/Sydney date`; 19:37 AEST vs 09:37 UTC). Desktop restore remounts tabs, reveals the pane, attaches `h-<tabId>` or `agent --resume`. Unsigned app 09:38Z. Did not quit live Hermes.
+- 2026-09-15T09:42Z — OT-50: pixel-wheel carry (48px → one Page Up/Down). Hatch page-key `U()` patch confirmed. Tests 6. App 09:41Z. Reopen still required; transcript movement not yet observed.
+- 2026-09-15T09:46Z — OT-50: Page Up/Down call `U()` before `g`/`v`. Hatch live `PageUp` scrolled a conversation pane. Desktop reopen still required for wheel.
+- 2026-09-15T09:49Z — Signed `npm run pack` failed (duplicate Apple Development identities). Unsigned pack installed 09:48Z: TUI latch for chat titles, Sydney persist, pane restore. Live Hermes pid 30783 left running.
+- 2026-09-15T09:51Z — Latch no longer drops on a leftover `zsh` title during wheel. Hatch pane is `Hermes Desktop Fixes` `alt=0`. Unsigned app ditto’d 09:51Z. Bundle has Page Up/Down, no CSI 9001. Pid 30783 still old.
+- 2026-09-15T09:54Z — Overlay wheel hit-test + Hatch-title tests (8). Bundle assert `index-C0CcTvIJ.js` Page Up/Down only. Ditto 09:54Z. Pid 30783 unchanged (started 19:43). Desktop wheel still unverified until reopen.
+- 2026-09-15T09:56Z — `planTuiWheelWrite` covers the live Hatch pane (normal buffer + `Hermes Desktop Fixes` → Page Up). Tests 10. Pack `index-xR7pw6mf.js` Page Up/Down only; ditto 09:56Z. Pid 30783 still 19:43.
+- 2026-09-15T09:58Z — `createTuiWheelDispatcher` + jsdom `WheelEvent` writes Page Up. Hatch PageUp changed the live pane with a visible prompt. Tests 11. Pack `index-sAXobJWW.js`; ditto 09:58Z. Pid 30783 still 19:43.
+- 2026-09-15T10:09Z — Owner: still no scroll, no scrollbar. Cause: TUI zeros xterm scrollback (no native bar) and the custom rail was source-only (not in 09:58 pack). Packed rail + host wheel + 12px page (`index-Bw8wIGGE.js`); ditto + Force Reload. Hatch PageUp works on attached `h-45ab6dfa`.
+- 2026-09-15T10:31Z — OT-50/68: scrollbar always PTY PageUp×3; tmux status `%%` Sydney clock (was UTC via format expand).
+- 2026-09-15T10:44Z — OT-68 done. OT-50: remote PageUp → tmux copy-mode history scroll (Ink U() had nothing to move).
+- 2026-09-15T10:47Z — OT-50 done (owner confirmed Desktop Cursor scroll). Goal complete.

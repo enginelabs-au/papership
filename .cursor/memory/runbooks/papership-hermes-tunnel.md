@@ -1,6 +1,6 @@
 # Runbook: Papership ↔ Hermes on droplet-campbell
 
-SSH Host `hermes-vps` / `hermes-droplet-campbell` is user `hermes` on HostHatch Tailscale `100.82.91.60`. `droplet-campbell` is root on the same box. Old DigitalOcean rollback: `droplet-campbell-do` / `hermes-droplet-campbell-do` (Tailscale `100.126.6.56`) or `*-do-pub` (public `209.38.81.239`). Hop `~/bin/droplet-campbell-do` tries Tailscale then public. Owner may destroy the DigitalOcean droplet (OT-66). After destroy, those aliases are historical only. Do not start a second `hermes-gateway` on any leftover DO box. Do not copy keys into this repo.
+SSH Host `hermes-vps` / `hermes-droplet-campbell` is user `hermes` on HostHatch Tailscale `100.82.91.60`. `droplet-campbell` is root on the same box. Old DigitalOcean rollback: `droplet-campbell-do` / `hermes-droplet-campbell-do` (Tailscale `100.126.6.56`) or `*-do-pub` (public `209.38.81.239`). Hop `~/bin/droplet-campbell-do` uses public IPv4 only. DigitalOcean Tailscale is logged out and `tailscaled` is disabled. HostHatch MagicDNS is `hermes-droplet-campbell` (no `-1`). Owner may destroy the DigitalOcean droplet (OT-66). After destroy, those aliases are historical only. Do not start a second `hermes-gateway` on any leftover DO box. Do not copy keys into this repo.
 
 ## Git backups (2026-09-14)
 
@@ -29,6 +29,8 @@ Do not make Mac `~/.hermes` a clone of the Hatch home. Do not `git pull` Hatch `
 3. `curl http://127.0.0.1:8000/health` — `hermes` should be `reachable` (not `serve_ui`)
 
 `HERMES_API_SERVER_KEY` is worker/VPS only. The API and desktop must never read it. Model keys stay on the VPS.
+
+HostHatch system time stays UTC. tmux status clock is forced to Sydney (`TZ=Australia/Sydney`) via `~/.tmux.conf`, `~/bin/hermes-term`, and `tmux set-option -g status-right`. Desktop quit detaches the SSH client only; named `h-<tabId>` sessions stay. Reopen attaches, or `agent --resume` / `--continue` if that session is gone.
 
 ## Live path (2026-09-11)
 
