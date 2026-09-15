@@ -124,7 +124,7 @@
 2. Do not treat write/external Hermes tools as `accepted`.
 3. Charges stay off until a later owner flip (OT-08, parked).
 4. Live Hermes is HostHatch `hermes@100.82.91.60`. Tailscale MagicDNS is `hermes-droplet-campbell` (no `-1`). DigitalOcean Tailscale is logged out; `*-do` SSH is public IPv4 only. Do not start a second gateway there.
-5. Hermes git backups stay on **`main`** for Hatch (`hermes-agent` fork `bc4ddbf10c`, private `.hermes` `101f836`). Do not park the live VPS tree on a side branch. `hermes update` still pulls Nous; preserve wrappers restore local patches.
+5. Hermes git backups stay on **`main`** for Hatch (`hermes-agent` fork + private `.hermes` `fabf5d9`). Do not park the live VPS tree on a side branch. `hermes update` still pulls Nous; preserve wrappers restore local patches. **Auto-preserve:** every `hermes-agent` commit runs `preserve/githooks/post-commit` (snapshot + named `agent-commit` patch); every `hermes update` / post-merge still snapshot→apply→extras. Owner does not need to ask per patch.
 6. HostHatch Cursor CLI is installed. Portable control plane is `/home/hermes/agent-instructions/.cursor` plus user rules under the hermes home Cursor directory. New projects: `~/bin/init-cursor-project`.
 7. Hatch Cursor always starts in tmux (`~/bin/agent` / `~/bin/cursor-agent`) with Run Everything persisted (`approvalMode=unrestricted`). Owner off-switch: `~/.cursor/tmux.off` / `~/.cursor/run-everything.off` or `CURSOR_VPS_TMUX=0` / `CURSOR_VPS_RUN_EVERYTHING=0`.
 
@@ -204,3 +204,5 @@
 - 2026-09-15T10:31Z — OT-50/68: scrollbar always PTY PageUp×3; tmux status `%%` Sydney clock (was UTC via format expand).
 - 2026-09-15T10:44Z — OT-68 done. OT-50: remote PageUp → tmux copy-mode history scroll (Ink U() had nothing to move).
 - 2026-09-15T10:47Z — OT-50 done (owner confirmed Desktop Cursor scroll). Goal complete.
+- 2026-09-15T10:53Z — Pushed Desktop scroll/persist to fork + NousResearch PR #111822; papership docs d23cb1e; preserve extras-after-apply wired.
+- 2026-09-15T11:02Z — Preserve automation: post-commit snapshot + agent-commit record; host extras in snapshot; Mac synced to Hatch-class apply; private `.hermes` `fabf5d9` pushed.
