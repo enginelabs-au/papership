@@ -73,7 +73,7 @@ Do not store secret values here. Charges stay off until a later owner flip.
 | OT-65 | done | — | Preserve is automatic with no owner step. Before `hermes update`: snapshot. After: apply (3-way fallback). Wired on Mac zsh `hermes()`, Mac `~/.local/bin/hermes`, Hatch `~/bin/hermes`, Hatch Desktop path `~/.local/bin/hermes`, and `hermes-agent` `post-merge` hook. |
 | OT-66 | done | — | DO→Hatch overlay complete. Secrets that existed on DO are on Hatch (live auth kept; DO auth parked under `from-do`). Preserve apply OK (`vps-20260914T1819Z`). Gmail cron removed. Fork `main` `bc4ddbf10c`, private `.hermes` `main` `101f836`. Hatch `/health` 200. Owner may destroy the DigitalOcean droplet. |
 | OT-67 | done | — | Hatch Tailscale MagicDNS is `hermes-droplet-campbell` (no `-1`). DigitalOcean Tailscale logged out; `tailscaled` disabled. `*-do` SSH is public IPv4. Residual: offline machines-page row until console/API delete. |
-| OT-69 | in_progress | papership | Engine Labs managed project + loop job wiring. Catalogue is 43 domains; B08/P01/P04 `configured` not `working`. Jobs stay queued. No live GitHub open, no Hermes write. Quark/portability stay out. |
+| OT-69 | done | papership | Engine Labs managed project + loop job wiring. Catalogue is 43 domains; B08/P01/P04 `configured` not `working`. Jobs stay queued. No live GitHub open, no Hermes write. Quark/portability stay out. PR https://github.com/enginelabs-au/papership/pull/7. Tests: `test_engine_labs_job.py` + related 37 passed. |
 
 ## Standing rules for this list
 
