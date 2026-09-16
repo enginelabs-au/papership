@@ -44,7 +44,7 @@ export function TodayOverview({ v }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <input placeholder="What would you like to do?" onFocus={v.openHey} style={{ flex: 1, height: 36, border: "1px solid var(--line)", borderRadius: 8, background: "var(--canvas)", color: "var(--t1)", padding: "0 12px", font: "400 13.5px Inter,sans-serif" }} />
           <button type="button" onClick={v.openHey} style={{ height: 36, padding: "0 3px", border: 0, borderRadius: 8, background: "linear-gradient(135deg,#2563eb,#22d3ee,#4ade80,#fbbf24,#f472b6,#a78bfa)", cursor: "pointer", display: "flex", alignItems: "center" }}>
-            <span style={{ display: "flex", alignItems: "center", height: 30, padding: "0 13px", borderRadius: 6, background: v.heyStripBg, color: "#fff", font: "600 12.5px Inter,sans-serif" }}>Send to Hey Engine</span>
+            <span style={{ display: "flex", alignItems: "center", height: 30, padding: "0 13px", borderRadius: 6, background: v.heyStripBg, color: "#fff", font: "600 12.5px Inter,sans-serif" }}>Send to Hey Papership</span>
           </button>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 11, flexWrap: "wrap" }}>
@@ -376,27 +376,69 @@ export function WorkRoadmap({ v }) {
 }
 
 export function WorkWorkflows({ v }) {
+  const stages = v.workflowStages || [];
+  const job = v.lastEngineLabsJob;
+  const host = v.hermesHost;
   return (
-    <div className="bp2-workflows" style={{ display: "flex", gap: 14, minHeight: 420 }}>
-      <div className="bp2-workflows-lib" style={{ width: 180, flex: "none", background: "var(--raised)", border: "1px solid var(--line2)", borderRadius: 10, padding: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Nodes</div>
-        {v.nodeLibrary.map((n) => (
-          <div key={n.label} style={{ padding: "8px 9px", borderRadius: 7, background: n.bg, marginBottom: 6, fontSize: 12 }}>{n.label}</div>
-        ))}
-      </div>
-      <div className="bp2-workflows-canvas" style={{ flex: 1, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, position: "relative", overflow: "hidden" }}>
-        {v.wires.map((w, i) => (
-          <span key={i} style={{ position: "absolute", left: w.x, top: w.y, width: w.w, height: w.h, background: "var(--line)" }} />
-        ))}
-        {v.nodes.map((n) => (
-          <div key={n.label} style={{ position: "absolute", left: n.x, top: n.y, width: 210, padding: "10px 12px", borderRadius: 8, background: "var(--canvas)", border: `1px solid ${n.bd}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot }} />
-              <span style={{ fontSize: 12, fontWeight: 600 }}>{n.label}</span>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 4 }}>{n.meta}</div>
+    <div className="bp2-workflows" style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 420 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>Founder / Engine Labs loop</div>
+          <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 4 }}>
+            Self-build workflow for Papership. Queues an <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>engine_labs.loop</span> job at stage <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>request</span>. Does not auto-run stages, open GitHub, or enable Hermes write tools.
           </div>
-        ))}
+          {job ? (
+            <div style={{ marginTop: 8, font: "400 11.5px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
+              Last job · {job.id || "queued"} · {job.status || "queued"} · stage {job.stage || "request"}
+            </div>
+          ) : (
+            <div style={{ marginTop: 8, fontSize: 12, color: "var(--t3)" }}>No loop job queued yet on this session.</div>
+          )}
+          {v.actionError ? <div style={{ marginTop: 8, fontSize: 12, color: "var(--amber)" }}>{v.actionError}</div> : null}
+        </div>
+        {typeof v.startEngineLabsJob === "function" ? (
+          <button
+            type="button"
+            onClick={() => void v.startEngineLabsJob()}
+            style={{ height: 32, padding: "0 14px", border: 0, borderRadius: 7, background: "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer", flex: "none" }}
+          >
+            Start Founder loop
+          </button>
+        ) : null}
+      </div>
+      <div style={{ display: "flex", gap: 14, flex: 1, minHeight: 280 }}>
+        <div className="bp2-workflows-lib" style={{ width: 180, flex: "none", background: "var(--raised)", border: "1px solid var(--line2)", borderRadius: 10, padding: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Loop stages</div>
+          {stages.map((n) => (
+            <div key={n.label} style={{ padding: "8px 9px", borderRadius: 7, background: n.bg, marginBottom: 6, fontSize: 12, display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot, flex: "none" }} />
+              {n.label}
+            </div>
+          ))}
+        </div>
+        <div className="bp2-workflows-canvas" style={{ flex: 1, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 14, overflow: "auto" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 10 }}>Pipeline</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {stages.map((n, i) => (
+              <div key={n.label} style={{ minWidth: 140, flex: "1 1 140px", padding: "10px 12px", borderRadius: 8, background: "var(--canvas)", border: `1px solid ${n.bd}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot }} />
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{i + 1}. {n.label}</span>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 4 }}>{n.meta}</div>
+              </div>
+            ))}
+          </div>
+          {host ? (
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, border: "1px solid var(--line2)", background: "var(--raised)" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600 }}>Hermes Host · always-on agent box</div>
+              <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4 }}>{host.message}</div>
+              <div style={{ marginTop: 8, font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
+                status={host.status} · write_tools={String(host.write_tools)} · mock={String(host.mock)}
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -656,6 +698,23 @@ export function SettingsView({ v }) {
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 18 }}>
         <div style={{ fontSize: 15, fontWeight: 600 }}>{v.setTitle}</div>
         <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 4 }}>{v.setDesc}</div>
+        {v.set_ai_agents && v.hermesHost ? (
+          <div style={{ marginTop: 16, padding: 14, borderRadius: 9, border: "1px solid var(--line2)", background: "var(--raised)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: v.hermesHost.status === "reachable" ? "var(--green)" : "var(--amber)" }} />
+              <span style={{ fontSize: 13.5, fontWeight: 600 }}>Hermes Host</span>
+              <span style={{ marginLeft: "auto", font: "500 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{v.hermesHost.status}</span>
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 8 }}>{v.hermesHost.message}</div>
+            <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12 }}>
+              <div>Always-on agent box · technical operators</div>
+              <div style={{ textAlign: "right", color: "var(--t3)" }}>Write tools · blocked</div>
+              <div>Pin · {v.hermesHost.pin || "not set"}</div>
+              <div style={{ textAlign: "right", color: "var(--t3)" }}>{v.hermesHost.mock ? "Local / mock safe" : "Probe only"}</div>
+            </div>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--t3)" }}>Workspace product stays Papership. Hermes Host is the runtime box inside it. Context Music is out of scope.</div>
+          </div>
+        ) : null}
         {v.set_permissions ? (
           <div style={{ marginTop: 16 }}>
             {v.repoGrants.map((g) => (

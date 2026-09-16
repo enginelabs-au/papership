@@ -313,7 +313,7 @@ export default function Blueprint2App() {
       { id: "run_7ed30", purpose: "Verify web research allow-list", item: "CCO-231", mode: "Review", status: "Failed", dot: DOTS.bad, started: "09:52", elapsed: "00m 48s", band: "Low (actual)", open: routeTo({ kind: "run" }) },
     ];
     const RB = ["Strategy, goals, KPIs, initiatives, board", "Organisation, entities, teams, reporting lines", "People, HR, leave, payroll references", "CRM, accounts, opportunities, consent", "Enquiries, proposals, contracts, signatures", "Plans, milestones, dependencies, acceptance", "Priorities, assignments, blockers, approvals", "Development loop — isolated change, review, release proposal", "Operations, SOPs, work orders, SLAs", "Support tickets, adoption, retention", "Knowledge, decisions, evidence, document intake", "Comms — email, chat, calendar, transcripts", "Finance, invoices, budgets (source system)", "Treasury, payments (designated authority + reauth)", "Procurement, vendors, subscriptions", "Marketing, campaigns, publishing", "Legal, risk, compliance, privacy requests", "IT, devices, access, cloud", "Inventory, facilities", "Field, dispatch, offline capture", "Quality, BOM, inspections", "Research, experiments, IP", "Guests, partners, scoped review", "Sector packs — care, grants, education"];
-    const RP = ["Agent record — sponsor, skills, budget, status", "Identity, membership, seats", "Hey Engine, modes, persisted sessions", "Runs, steps, receipts, pause / cancel / recover", "Durable jobs — close never cancels", "Capability registry and connector catalogue", "Sync, lineage, freshness", "Canonical metrics and deterministic reports", "Governed memory", "Grants — row, field and action control", "Retention, export, erasure", "Secrets off desktop, isolated workers", "Audit and provenance", "Outcome metrics — completion, correctness, recovery", "Usage events (no published prices)", "Desktop shell and locale en-AU", "Adaptive views — pin, undo, reset, fallback", "Health, queues, backups", "Connector SDK and domain packs"];
+    const RP = ["Agent record — sponsor, skills, budget, status", "Identity, membership, seats", "Hey Papership, modes, persisted sessions", "Runs, steps, receipts, pause / cancel / recover", "Durable jobs — close never cancels", "Capability registry and connector catalogue", "Sync, lineage, freshness", "Canonical metrics and deterministic reports", "Governed memory", "Grants — row, field and action control", "Retention, export, erasure", "Secrets off desktop, isolated workers", "Audit and provenance", "Outcome metrics — completion, correctness, recovery", "Usage events (no published prices)", "Desktop shell and locale en-AU", "Adaptive views — pin, undo, reset, fallback", "Health, queues, backups", "Connector SDK and domain packs"];
     const chip = (s) => (s === "working" ? { bg: "var(--green-soft)", ink: "var(--green)", dot: "var(--green)", action: "Open" } : s === "configured" ? { bg: "var(--blue-soft)", ink: "var(--blue)", dot: "var(--blue)", action: "Review" } : s === "unavailable" ? { bg: "var(--red-soft)", ink: "var(--red)", dot: "var(--red)", action: "Recover" } : { bg: "var(--line2)", ink: "var(--t3)", dot: "var(--t3)", action: "Plan" });
     const row = (pfx, i, label, w, c, u) => {
       const s = w.includes(i) ? "working" : c.includes(i) ? "configured" : u.includes(i) ? "unavailable" : "planned";
@@ -358,15 +358,45 @@ export default function Blueprint2App() {
       { name: "Release 3 — Memory & adaptation", meta: "PLAN-024 · specified", w: "76%", pct: 4, bar: "var(--blue-soft)", ink: "var(--blue)" },
       { name: "Release 4 — Mobile clients", meta: "PLAN-026 · planned", w: "64%", pct: 0, bar: "var(--line2)", ink: "var(--t2)" },
     ];
-    out.nodeLibrary = [{ label: "Trigger", bg: "var(--blue-soft)" }, { label: "Read source", bg: "var(--green-soft)" }, { label: "Draft change", bg: "var(--blue-soft)" }, { label: "Run checks", bg: "var(--amber-soft)" }, { label: "Request approval", bg: "var(--red-soft)" }, { label: "Record decision", bg: "var(--raised)" }];
-    out.nodes = [
-      { label: "Trigger · issue moves to in progress", meta: "Work · CCO-*", x: "20px", y: "22px", dot: DOTS.run, bd: "var(--line)" },
-      { label: "Isolated change", meta: "Grant: repository · change", x: "250px", y: "22px", dot: DOTS.run, bd: "var(--blue)" },
-      { label: "Run checks", meta: "Grant: repository · check", x: "250px", y: "150px", dot: DOTS.warn, bd: "var(--line)" },
-      { label: "Request approval", meta: "Sponsor: Cam Douglas", x: "480px", y: "150px", dot: DOTS.bad, bd: "var(--line)" },
-      { label: "Release proposal only", meta: "Release grant off", x: "480px", y: "278px", dot: DOTS.idle, bd: "var(--line)" },
-    ];
-    out.wires = [{ x: "188px", y: "44px", w: "62px", h: "2px" }, { x: "334px", y: "78px", w: "2px", h: "72px" }, { x: "418px", y: "172px", w: "62px", h: "2px" }, { x: "564px", y: "206px", w: "2px", h: "72px" }];
+    out.nodeLibrary = [{ label: "request", bg: "var(--blue-soft)" }, { label: "research", bg: "var(--green-soft)" }, { label: "specification", bg: "var(--blue-soft)" }, { label: "plan", bg: "var(--amber-soft)" }, { label: "assignment", bg: "var(--raised)" }, { label: "isolated_change", bg: "var(--blue-soft)" }, { label: "tests", bg: "var(--amber-soft)" }, { label: "review", bg: "var(--red-soft)" }, { label: "release_proposal", bg: "var(--raised)" }, { label: "monitoring", bg: "var(--green-soft)" }, { label: "retained_knowledge", bg: "var(--raised)" }];
+    const stageMeta = {
+      request: "Founder request · queued",
+      research: "Gather context",
+      specification: "Write the brief",
+      plan: "Break into work",
+      assignment: "Sponsor + agent",
+      isolated_change: "Branch only · never main",
+      tests: "Evidence required",
+      review: "Human approval",
+      release_proposal: "Proposal only",
+      monitoring: "Watch the release",
+      retained_knowledge: "Keep what worked",
+    };
+    out.workflowStages = out.nodeLibrary.map((n, i) => ({
+      label: n.label,
+      meta: stageMeta[n.label] || "Loop stage",
+      bg: n.bg,
+      dot: i === 0 ? DOTS.run : DOTS.idle,
+      bd: i === 0 ? "var(--blue)" : "var(--line)",
+    }));
+    out.nodes = out.workflowStages.slice(0, 5).map((n, i) => ({
+      label: n.label,
+      meta: n.meta,
+      x: `${20 + (i % 3) * 230}px`,
+      y: `${22 + Math.floor(i / 3) * 128}px`,
+      dot: n.dot,
+      bd: n.bd,
+    }));
+    out.wires = [];
+    out.lastEngineLabsJob = overlay.lastEngineLabsJob || null;
+    out.hermesHost = overlay.hermesHost || {
+      status: "not_configured",
+      message: "Hermes Host is not configured. Local mock mode — no Cam HostHatch secrets required.",
+      write_tools: false,
+      mock: true,
+      pin: null,
+    };
+    out.operatorSeat = overlay.operatorSeat || null;
     const th = (subject, preview, channel, key, when, unread, active) => ({ subject, preview, channel, key, when, dot: unread ? DOTS.run : DOTS.idle, bg: active ? "var(--blue-soft)" : "transparent", mark: active ? "var(--blue)" : "transparent" });
     out.threads = [
       th("Interception behaviour before policy resolution", "Cam: confirmed — interception must run first…", "in-app", "TCK-0182", "09:12", true, true),
@@ -426,6 +456,7 @@ export default function Blueprint2App() {
     out.set_permissions = setPane === "Permissions";
     out.set_appearance = setPane === "Appearance";
     out.set_plan = setPane === "Plan";
+    out.set_ai_agents = setPane === "AI & Agents";
     out.planTiers = [];
     const grantRow = (key, label, desc) => ({ label, desc, toggle: () => setGrants((g) => ({ ...g, [key]: !g[key] })), track: grants[key] ? "var(--blue)" : "var(--line2)", bd: grants[key] ? "var(--blue)" : "var(--line)", knob: grants[key] ? "20px" : "2px" });
     out.repoGrants = [grantRow("branch", "Branch", "Create and update branches in the bound repository."), grantRow("change", "Change", "Write an isolated change on a branch. Never on main."), grantRow("check", "Check", "Run checks and read their results."), grantRow("release", "Release", "Publish a release. Off by default.")];
@@ -436,19 +467,29 @@ export default function Blueprint2App() {
     ];
     const PANES = {
       General: { desc: "Organisation defaults for Engine Labs.", rows: [{ k: "Organisation name", v: "Papership · Engine Labs" }, { k: "Timezone", v: "Australia/Sydney" }, { k: "Locale", v: "en-AU" }] },
-      "AI & Agents": { desc: "Ceilings apply to every agent run.", rows: [{ k: "Budget band", v: "Medium" }, { k: "Allowed modes", v: "6 of 7" }] },
+      "AI & Agents": {
+        desc: "Hey Papership chat plus Hermes Host as the always-on agent box for technical operators. Write tools stay blocked.",
+        rows: [
+          { k: "Assistant", v: "Hey Papership" },
+          { k: "Budget band", v: "Medium" },
+          { k: "Allowed modes", v: "6 of 7" },
+          { k: "Hermes Host", v: overlay.hermesHost?.status || "not_configured" },
+          { k: "Context Music", v: "Out of scope" },
+        ],
+      },
       Notifications: { desc: "What reaches you, and how loudly.", rows: [{ k: "Critical incidents", v: "On" }, { k: "Approvals", v: "On · immediate" }] },
       Security: { desc: "Sessions and strong factors.", rows: [{ k: "Active sessions", v: "2" }, { k: "Two-factor", v: "Authenticator app" }] },
-      Team: { desc: "Members and invitations. A second seat needs the measurement notice.", rows: [{ k: "Members", v: "1" }] },
+      Team: { desc: "Members and invitations. A second seat needs the measurement notice.", rows: [{ k: "Members", v: "1" }, { k: "Paid operator seat", v: "Founder · Cam Douglas · all domains entitled" }] },
       "Data & retention": { desc: "Your content is yours. Papership does not own it. The measurement notice is the store flag that unlocks a second human or guest — it is not a new legal decision.", rows: [{ k: "Conversations", v: "365 days" }, { k: "Usage disclosure", v: "First-party identifier and enum events only" }, { k: "Measurement notice (OQ-G2)", v: overlay.measurement?.oq_g2_recorded ? "Recorded" : "Not recorded on this store" }, { k: "API store", v: overlay.apiBase || "http://127.0.0.1:8000" }, { k: "Erasure request", v: overlay.erasure?.status === "recorded" ? "Intent recorded · destroy not executed" : "None recorded" }] },
       Personalisation: { desc: "Release 3.", rows: [{ k: "Adaptive views", v: "Off" }] },
       Docs: { desc: "Product documentation opens in a reader.", rows: [{ k: "Getting started", v: "Open ↗" }, { k: "Licensing state", v: "Identifiers only · LICENSE, NOTICE · charges off" }] },
       Plan: {
-        desc: "Trial rate card (D-35). Charges stay off. Remaining usage stays not captured until events exist.",
+        desc: "Trial rate card (D-35). Pro is the paid operator seat for one founder/solo operator. Charges stay off. Remaining usage stays not captured until events exist.",
         rows: [
           { k: "Remaining allowance", v: "not captured" },
           { k: "Action cost", v: "not captured" },
           { k: "Charges", v: "Off · trial card only" },
+          { k: "Paid operator seat", v: "Pro · founder/solo · all domains" },
           { k: "Overage", v: "US$10 credit packs at the plan rate after the included pool" },
           { k: "Usage tiers", v: "Usage 1–5 raise the overage ceiling (1× → 16×), like OpenAI / Google" },
           { k: "Payment proposals", v: "Native records only · no payout" },
@@ -707,7 +748,7 @@ export default function Blueprint2App() {
                     <div style={{ padding: "8px 9px 9px", borderBottom: "1px solid var(--line2)", marginBottom: 4 }}>
                       <div style={{ fontSize: 12.5, fontWeight: 600 }}>Cam Douglas</div>
                       <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono',monospace" }}>founder@enginelabs.com.au</div>
-                      <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", height: 20, padding: "0 8px", borderRadius: 10, background: "var(--blue-soft)", color: "var(--blue)", font: "600 10.5px Inter,sans-serif" }}>Founder seat</div>
+                      <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", height: 20, padding: "0 8px", borderRadius: 10, background: "var(--blue-soft)", color: "var(--blue)", font: "600 10.5px Inter,sans-serif" }}>Paid operator seat</div>
                     </div>
                     <div onClick={() => { setRoute({ kind: "account" }); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Profile</div>
                     <div onClick={() => { setTab("settings"); setRoute(null); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Settings</div>
@@ -719,7 +760,7 @@ export default function Blueprint2App() {
               </div>
               <button type="button" className="bp2-hey-launch" onClick={() => setHey((o) => !o)} style={{ height: 32, padding: 3, border: 0, borderRadius: 8, background: "linear-gradient(135deg,#2563eb,#22d3ee,#4ade80,#fbbf24,#f472b6,#a78bfa)", cursor: "pointer", display: "flex", alignItems: "center" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 7, height: 26, padding: "0 11px", borderRadius: 6, background: hey ? "transparent" : (theme !== "light" ? "#16081f" : "#2c1050"), color: "#fff", font: "600 12px Inter,sans-serif" }}>
-                  <Ico d={PATHS.star} size={13} /> Hey Engine
+                  <Ico d={PATHS.star} size={13} /> Hey Papership
                 </span>
               </button>
             </div>
@@ -738,7 +779,7 @@ export default function Blueprint2App() {
               );
             })}
             <div style={{ flex: 1 }} />
-            <div className="bp2-founder-chip" style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 4px 8px", fontSize: 10.5, color: "var(--navink2)", fontFamily: "'JetBrains Mono',monospace" }}>Founder · Cam Douglas</div>
+            <div className="bp2-founder-chip" style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 4px 8px", fontSize: 10.5, color: "var(--navink2)", fontFamily: "'JetBrains Mono',monospace" }}>Paid operator · Cam Douglas</div>
           </div>
 
           <div className="bp2-body" style={{ flex: 1, display: "flex", minHeight: 0, background: "var(--canvas)", position: "relative" }}>
@@ -864,7 +905,7 @@ export default function Blueprint2App() {
                 <div className="bp2-hey-mobile-bar">
                   <div>
                     <Ico d={PATHS.star} size={15} />
-                    <span style={{ flex: 1, font: "600 13.5px Inter,sans-serif" }}>Hey Engine</span>
+                    <span style={{ flex: 1, font: "600 13.5px Inter,sans-serif" }}>Hey Papership</span>
                     <span style={{ font: "400 11px 'JetBrains Mono',monospace", opacity: 0.8 }}>CCO-245</span>
                     <button type="button" title="Close sheet" onClick={() => setHey(false)} style={{ width: 28, height: 28, border: 0, background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16 }}>✕</button>
                   </div>
@@ -936,7 +977,7 @@ export default function Blueprint2App() {
                     </div>
                     <button type="button" className="bp2-hit" onClick={() => setStreaming((s) => !s)} style={{ height: 34, padding: "0 14px", border: 0, borderRadius: 8, background: streaming ? "var(--red)" : "var(--blue)", color: "#fff", font: "600 12.5px Inter,sans-serif", cursor: "pointer", flex: "none" }}>{streaming ? "Stop" : "Send"}</button>
                   </div>
-                  <div style={{ fontSize: 10.5, color: "var(--t3)" }}>Enter sends · Shift+Enter for a new line. Hey Engine acts with your access — never more.</div>
+                  <div style={{ fontSize: 10.5, color: "var(--t3)" }}>Enter sends · Shift+Enter for a new line. Hey Papership acts with your access — never more.</div>
                 </div>
               </div>
             ) : null}
@@ -977,7 +1018,7 @@ export default function Blueprint2App() {
             ))}
             <button type="button" data-on={hey ? "1" : "0"} onClick={() => { setHey(true); setRailOpen(false); setPalette(false); setDrawer(false); }}>
               <Ico d={PATHS.star} size={19} />
-              Hey Engine
+              Hey Papership
             </button>
           </nav>
         </div>

@@ -256,8 +256,8 @@ export const TRIAL_RATE_CARD = {
   aud_per_usd: 1.5,
   credit_increment_usd: 10,
   plans: [
-    { id: "free", label: "Free", usd_month: 0, seats: "1", tokens_month: 50000, token_scope: "organisation", overage: "none", overage_usd_per_100k: null, note: "Try Hey Engine. Hard stop at the pool — add Pro to continue." },
-    { id: "pro", label: "Pro", usd_month: 24, seats: "1+", tokens_month: 200000, token_scope: "per_seat", overage: "credits", overage_usd_per_100k: 8, note: "Team standard. 4× Free tokens. Buy usage credits when the pool runs out." },
+    { id: "free", label: "Free", usd_month: 0, seats: "1", tokens_month: 50000, token_scope: "organisation", overage: "none", overage_usd_per_100k: null, note: "Try Hey Papership. Hard stop at the pool — add Pro to continue." },
+    { id: "pro", label: "Pro", usd_month: 24, seats: "1+", tokens_month: 200000, token_scope: "per_seat", overage: "credits", overage_usd_per_100k: 8, note: "Paid operator seat for one founder/solo operator. All Papership domains. Charges stay off until enabled." },
     { id: "max", label: "Max", usd_month: 120, seats: "1+", tokens_month: 800000, token_scope: "per_seat", overage: "credits", overage_usd_per_100k: 6, note: "Power seat (5× Pro price, 4× Pro tokens). Cheaper overage than Pro." },
     { id: "enterprise", label: "Enterprise", usd_month: 32, seats: "5 minimum", tokens_month: 400000, token_scope: "per_seat_pooled", overage: "credits", overage_usd_per_100k: 5, note: "Affordable org seats. Tokens pool across the tenant. Floor 5 × $32 = $160 / month." },
   ],
@@ -295,6 +295,14 @@ export async function loadPapershipOverlay() {
       measurement: defaultMeasurement(),
       rateCard: TRIAL_RATE_CARD,
       health: mapHealth(await fetchHealth()),
+      hermesHost: {
+        status: "not_configured",
+        message: "Hermes Host is not configured. Local mock mode — no Cam HostHatch secrets required.",
+        write_tools: false,
+        mock: true,
+        pin: null,
+      },
+      operatorSeat: null,
       erasure: { status: "none", destroyed: false, items: [] },
       memory: [],
       strategy: [],
@@ -310,7 +318,7 @@ export async function loadPapershipOverlay() {
     };
   }
   try {
-    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health] = await Promise.all([
+    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, operatorSeat] = await Promise.all([
       fetchPapershipJson("/people"),
       fetchPapershipJson("/teams"),
       fetchPapershipJson("/inbox"),
@@ -330,6 +338,8 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/erasure/status").catch(() => ({ status: "none", destroyed: false, items: [] })),
       fetchPapershipJson("/billing/rate-card").catch(() => TRIAL_RATE_CARD),
       fetchHealth(),
+      fetchPapershipJson("/hermes/host").catch(() => null),
+      fetchPapershipJson("/seats/operator").catch(() => null),
     ]);
     return {
       source: "api",
@@ -355,6 +365,14 @@ export async function loadPapershipOverlay() {
       erasure: erasure || { status: "none", destroyed: false, items: [] },
       rateCard: rateCard?.published ? rateCard : TRIAL_RATE_CARD,
       health: mapHealth(health),
+      hermesHost: hermesHost || {
+        status: health?.hermes || "not_configured",
+        message: "Hermes Host status from health probe.",
+        write_tools: false,
+        mock: health?.hermes !== "reachable",
+        pin: health?.hermes_pin || null,
+      },
+      operatorSeat,
       references,
       schedules: schedules.items || [],
     };
@@ -650,6 +668,9 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
   }
   out.domainShells = overlay.domains || [];
   out.managedProjects = overlay.managedProjects || [];
+  out.hermesHost = overlay.hermesHost || null;
+  out.operatorSeat = overlay.operatorSeat || null;
+  out.lastEngineLabsJob = overlay.lastEngineLabsJob || null;
   out.packs = overlay.packs || [];
   out.proposals = overlay.proposals || [];
   out.evidence = overlay.evidence || [];

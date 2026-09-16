@@ -2,11 +2,11 @@
 
 ## Current Objective
 
-- First managed project is Papership / Engine Labs. Full B01–B24 + P01–P19 catalogue is visible. Engine Labs loop jobs can be queued (`engine_labs.loop`) without fake-shipping 43 working products. Quark and portability stay out of this increment.
+- Papership command room: paid founder/solo operator seat (all domains entitled), Hey Papership chat, Workflows + Founder/`engine_labs.loop`, Hermes Host always-on agent box. Context Music / Quark / portability out of scope.
 
 ## Current Status
 
-- Increment in flight on `cursor/engine-labs-job-loop-b87f`: managed project seed, 43-row catalogue, loop job persist-before-202 queued (not auto-run).
+- Increment continues on `cursor/engine-labs-job-loop-b87f` (PR #7): seat entitlements, Hey Papership rename, Workflows Founder loop CTA, Hermes Host probe box. Tests: `test_command_room.py` + prior job-loop suite green.
 
 ## Project Phase
 
@@ -21,11 +21,13 @@
 - `services/api/app/managed_projects.py`
 - `services/api/app/store.py`
 - `services/api/app/main.py`
-- `services/api/app/phase5.py`
+- `services/api/app/rate_card.py`
 - `services/api/tests/test_engine_labs_job.py`
+- `services/api/tests/test_command_room.py`
 - `apps/web/src/api/papership.js`
 - `apps/web/src/blueprint2/App.jsx`
 - `apps/web/src/blueprint2/screens.jsx`
+- `packages/ui/src/HeyEngineButton.tsx`
 - `docs/handover/outstanding-tasks.md`
 
 ## Current Working State

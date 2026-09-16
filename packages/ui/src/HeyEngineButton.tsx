@@ -3,7 +3,7 @@ import { Mic } from "./icons";
 import type { Theme } from "./tokens";
 
 /**
- * Persistent chrome control labelled Hey Engine (PRD-E.13).
+ * Persistent chrome control labelled Hey Papership (PRD-E.13).
  * Opens the assistant via callback. Never invents assistant text.
  */
 export function HeyEngineButton({
@@ -16,7 +16,7 @@ export function HeyEngineButton({
   return (
     <Btn T={T} variant="rainbow" onClick={onOpenAssistant} style={{ minHeight: 36 }}>
       <Mic size={16} aria-hidden />
-      Hey Engine
+      Hey Papership
     </Btn>
   );
 }

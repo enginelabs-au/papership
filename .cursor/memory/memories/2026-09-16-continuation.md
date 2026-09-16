@@ -1,6 +1,14 @@
 # 2026-09-16 continuation
 
 
+## Papership command room (continue PR #7)
+
+- Paid founder/solo operator seat: `GET /seats/operator` + seeded domain/product entitlements (43 domains); operator template gains command-room grants (still no org.admin).
+- Hey Engine → Hey Papership across live UI, API session default, rate card, wake-word decision, capabilities.
+- Work → Workflows starts Founder/`engine_labs.loop`; Settings → AI & Agents shows Hermes Host probe box (no write tools; mock when unconfigured).
+- Context Music / Quark / portability excluded. Tests: `test_command_room.py` + related 57 passed.
+
+
 ## Engine Labs managed project + loop job (P-009)
 
 - Seeded `proj-engine-labs` (Papership / Engine Labs, bound `enginelabs-au/papership`).

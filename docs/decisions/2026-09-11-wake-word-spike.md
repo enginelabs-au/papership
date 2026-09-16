@@ -5,7 +5,7 @@ Status: specified. **Do not ship a vendor.**
 
 ## Phrase
 
-“Hey Engine” plus typed Ask. The desktop Hey Engine button is the R1 control.
+“Hey Papership” plus typed Ask. The desktop Hey Papership button is the R1 control.
 
 ## Entitlement
 

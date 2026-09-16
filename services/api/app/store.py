@@ -58,14 +58,28 @@ PROJECT_LEAD_GRANTS = [
     }
 ]
 
+# Paid solo-operator / technical-operator seat: command-room work without org admin.
+# Can queue Engine Labs loop jobs (needs ledger.write + run.start). No billing/erasure/release admin.
 OPERATOR_GRANTS = [
     "ledger.read",
+    "ledger.write",
     "run.start",
+    "run.cancel",
+    "registry.read",
+    "usage.read",
     "records.read",
     "search.read",
+    "aggregates.read",
+    "attachments.read",
+    "attachments.write",
     "notifications.read",
     "memory.read",
+    "memory.write",
+    "repo.branch",
+    "repo.change",
+    "repo.check",
     "comms.read",
+    "comms.draft",
 ]
 
 GUEST_GRANTS = [
@@ -665,6 +679,7 @@ class Store:
             self._seed_registry()
             self._seed_phase4(tenant_id="tenant-founder")
             self._seed_phase5(tenant_id="tenant-founder")
+            self._seed_paid_operator_seat(tenant_id="tenant-founder")
             self.flush()
             return
         now = _now()
@@ -708,11 +723,89 @@ class Store:
         self._seed_registry()
         self._seed_phase4(tenant_id="tenant-founder")
         self._seed_phase5(tenant_id="tenant-founder")
+        self._seed_paid_operator_seat(tenant_id="tenant-founder")
         self.append_audit("principal-founder", "seed", "organisation", "org-founder")
         self.flush()
 
+    def _seed_paid_operator_seat(self, *, tenant_id: str) -> None:
+        """One paid founder/solo operator seat: all domain entitlements + command-room features.
+
+        Entitlements are not grants — they mark which domains/capabilities the seat is set up
+        for. Domains stay planned/configured shells; live write stays refused.
+        """
+        from app.managed_projects import ALL_DOMAIN_IDS
+
+        features = [
+            "seat.paid_operator",
+            "product.hey_papership",
+            "product.workflows",
+            "product.hermes_host",
+            "product.engine_labs.loop",
+            *[f"domain.{domain_id}" for domain_id in ALL_DOMAIN_IDS],
+        ]
+        for feature in features:
+            existing = self.conn.execute(
+                "SELECT 1 FROM entitlements WHERE principal_id=? AND feature=?",
+                ("principal-founder", feature),
+            ).fetchone()
+            if existing:
+                continue
+            self.conn.execute(
+                "INSERT INTO entitlements (id, tenant_id, principal_id, feature) VALUES (?, ?, ?, ?)",
+                (_id("ent"), tenant_id, "principal-founder", feature),
+            )
+
     def list_seat_templates(self) -> list[dict[str, Any]]:
-        return [{"id": name, "grants": list(grants)} for name, grants in SEAT_TEMPLATES.items()]
+        return [
+            {
+                "id": name,
+                "grants": list(grants),
+                "sku": "paid_operator" if name in {"founder", "operator"} else name,
+                "role": (
+                    "Founder / solo paid operator"
+                    if name == "founder"
+                    else "Technical operator"
+                    if name == "operator"
+                    else name.replace("_", " ").title()
+                ),
+            }
+            for name, grants in SEAT_TEMPLATES.items()
+        ]
+
+    def paid_operator_seat(self, principal_id: str) -> dict[str, Any]:
+        """Describe the seeded paid operator seat for the command room."""
+        principal = self.principal(principal_id)
+        seat_row = self.conn.execute(
+            "SELECT * FROM seats WHERE principal_id=?", (principal_id,)
+        ).fetchone()
+        template = seat_row["template"] if seat_row else None
+        ents = self.entitlements(principal_id)
+        domain_features = sorted(
+            e["feature"].removeprefix("domain.")
+            for e in ents
+            if str(e.get("feature", "")).startswith("domain.")
+        )
+        return {
+            "principal_id": principal_id,
+            "tenant_id": principal["tenant_id"],
+            "seat_id": seat_row["id"] if seat_row else None,
+            "template": template,
+            "sku": "paid_operator",
+            "label": "Founder / solo paid operator",
+            "plan_hint": "pro",
+            "charges_enabled": False,
+            "domain_count": len(domain_features),
+            "domains": domain_features,
+            "products": sorted(
+                e["feature"].removeprefix("product.")
+                for e in ents
+                if str(e.get("feature", "")).startswith("product.")
+            ),
+            "grants": sorted(self.grant_classes(principal_id)),
+            "context_music": False,
+            "quark": False,
+            "portability": False,
+        }
 
     def create_invite(
         self,
@@ -1099,7 +1192,7 @@ class Store:
         self.conn.execute(
             """INSERT INTO conversations (id, tenant_id, principal_id, title, mode, created_at, updated_at)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (cid, p["tenant_id"], principal_id, title or "Hey Engine", mode or "Ask", now, now),
+            (cid, p["tenant_id"], principal_id, title or "Hey Papership", mode or "Ask", now, now),
         )
         self.flush()
         return self.row_to_dict(self.conn.execute("SELECT * FROM conversations WHERE id=?", (cid,)).fetchone())  # type: ignore[return-value]

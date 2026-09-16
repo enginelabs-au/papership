@@ -128,6 +128,35 @@ def create_app(store_path: str | None = None) -> FastAPI:
     def seat_templates(_ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
         return {"items": store.list_seat_templates()}
 
+    @app.get("/seats/operator")
+    def paid_operator_seat(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        """Paid founder/solo operator seat: domains + command-room products. No Context Music."""
+        return store.paid_operator_seat(ctx.principal_id)
+
+    @app.get("/hermes/host")
+    def hermes_host(_ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        """Always-on Hermes Host status box for technical operators. Probe only — no write tools."""
+        status = probe_hermes(settings.hermes_api_base_url)
+        configured = bool((settings.hermes_api_base_url or "").strip())
+        return {
+            "product": "Hermes Host",
+            "role": "always-on agent box",
+            "status": status,
+            "configured": configured,
+            "pin": settings.hermes_version_pin or None,
+            "write_tools": False,
+            "live_production_writes": False,
+            "mock": status in {"not_configured", "unreachable", "error", "serve_ui"},
+            "message": {
+                "reachable": "Hermes Host is reachable. Papership mediates sessions; write tools stay blocked.",
+                "serve_ui": "A Hermes login UI is answering — not the API server. Runs stay blocked.",
+                "unreachable": "Hermes Host is unreachable. Configure HERMES_API_BASE_URL for a local/mock host.",
+                "not_configured": "Hermes Host is not configured. Local mock mode — no Cam HostHatch secrets required.",
+                "error": "Hermes Host probe failed. No write tools were invoked.",
+            }.get(status, "Hermes Host status unknown."),
+            "context_music": False,
+        }
+
     @app.post("/members/invites")
     def create_member_invite(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
         if not store.has_grant(ctx.principal_id, "org.admin"):
@@ -805,7 +834,7 @@ def create_app(store_path: str | None = None) -> FastAPI:
 
     @app.post("/assistant/sessions")
     def create_assistant_session(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
-        return store.create_conversation(ctx.principal_id, str(body.get("title") or "Hey Engine"), str(body.get("mode") or "Ask"))
+        return store.create_conversation(ctx.principal_id, str(body.get("title") or "Hey Papership"), str(body.get("mode") or "Ask"))
 
     @app.get("/assistant/sessions")
     def list_assistant_sessions(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
