@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API_BASE, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, advanceEngineLabsLoopStage, fetchEngineLabsLoopState, ENGINE_LABS_PROJECT_ID, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
+import { API_BASE, applyPapershipOverlay, clearStoredSession, coalesceEngineLabsLoop, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, advanceEngineLabsLoopStage, fetchEngineLabsLoopState, ENGINE_LABS_PROJECT_ID, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
 import { PRODUCT } from "../brand";
 import { useIsMobile } from "../hooks/use-mobile";
 import "./blueprint2.css";
@@ -209,6 +209,7 @@ export default function Blueprint2App() {
   const [wizardPick, setWizardPick] = useState("gmail");
   const [wizardError, setWizardError] = useState("");
   const [oauthNote, setOauthNote] = useState("");
+  const [loopActionBusy, setLoopActionBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -754,22 +755,26 @@ export default function Blueprint2App() {
         setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not record the erasure request." }));
       }
     };
+    out.loopActionBusy = loopActionBusy;
     out.startEngineLabsJob = async () => {
       const projectId = overlay.engineLabsLoop?.projectId || overlay.managedProjects?.[0]?.id || ENGINE_LABS_PROJECT_ID;
+      setLoopActionBusy(true);
       try {
         const result = await startEngineLabsJob(projectId, "Engine Labs loop");
-        const loop = await fetchEngineLabsLoopState(projectId);
-        setOverlay((prev) => ({
-          ...prev,
+        const loop = coalesceEngineLabsLoop(await fetchEngineLabsLoopState(projectId));
+        const fresh = await loadPapershipOverlay();
+        setOverlay({
+          ...fresh,
           actionError: "",
-          lastEngineLabsJob: result,
-          engineLabsLoop: loop,
-        }));
-        setOverlay(await loadPapershipOverlay());
+          engineLabsLoop: coalesceEngineLabsLoop(loop ?? fresh.engineLabsLoop),
+          lastEngineLabsJob: loop?.job || result,
+        });
         return result;
       } catch (error) {
         setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not start the Engine Labs job." }));
         throw error;
+      } finally {
+        setLoopActionBusy(false);
       }
     };
     out.advanceEngineLabsLoop = async () => {
@@ -784,16 +789,17 @@ export default function Blueprint2App() {
         return null;
       }
       const projectId = loop?.projectId || ENGINE_LABS_PROJECT_ID;
+      setLoopActionBusy(true);
       try {
         await advanceEngineLabsLoopStage(workItemId, nextStage, `founder.advance.${nextStage}`);
-        const refreshed = await fetchEngineLabsLoopState(projectId);
-        setOverlay((prev) => ({
-          ...prev,
+        const refreshed = coalesceEngineLabsLoop(await fetchEngineLabsLoopState(projectId));
+        const fresh = await loadPapershipOverlay();
+        setOverlay({
+          ...fresh,
           actionError: "",
-          engineLabsLoop: refreshed,
-          lastEngineLabsJob: refreshed.job,
-        }));
-        setOverlay(await loadPapershipOverlay());
+          engineLabsLoop: coalesceEngineLabsLoop(refreshed ?? fresh.engineLabsLoop),
+          lastEngineLabsJob: refreshed?.job ?? fresh.engineLabsLoop?.job,
+        });
         return refreshed;
       } catch (error) {
         setOverlay((prev) => ({
@@ -801,11 +807,13 @@ export default function Blueprint2App() {
           actionError: error.message || "Could not advance the loop stage.",
         }));
         throw error;
+      } finally {
+        setLoopActionBusy(false);
       }
     };
     void page; void cur;
     return applyPapershipOverlay(out, overlay, { openWizard, setModal });
-  }, [theme, tab, sub, setPane, grants, go, goSeat, goWorkflows, goDomains, openSlide, routeTo, overlay, isMobile, openWizard]);
+  }, [theme, tab, sub, setPane, grants, go, goSeat, goWorkflows, goDomains, openSlide, routeTo, overlay, isMobile, openWizard, loopActionBusy]);
 
   const page = PAGES[tab] || PAGES.today;
   const cur = sub[tab] || DFLT[tab];
@@ -818,6 +826,16 @@ export default function Blueprint2App() {
   if (tab === "files") pageActions = [{ label: "Upload", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => setModal("upload") }];
   if (tab === "integrations") pageActions = [{ label: "Add connection", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => openWizard() }];
   if (tab === "people") pageActions = [{ label: "Invite person", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => setModal("invite") }];
+  if (!rk && tab === "work" && cur === "Workflows") {
+    const loopJob = v.lastEngineLabsJob;
+    const stage = v.engineLabsLoop?.currentStage || loopJob?.stage;
+    if (loopJob?.id && stage) {
+      pageChip = `Loop · ${String(stage).replace(/_/g, " ")}`;
+      pageDesc = `Job ${loopJob.id} · ${loopJob.status || "queued"}${v.engineLabsLoop?.mock ? " · browser mock (API unreachable)" : ""}`;
+    } else {
+      pageDesc = "Founder / Engine Labs loop — press Start; the page title chip shows the live stage.";
+    }
+  }
   if (rk === "work-item") { pageTitle = "CCO-245 · Interception hardening for T2-1"; pageDesc = "Work item · Platform · Cam Douglas · due 24 Sep"; pageChip = "In progress"; pageActions = [{ label: "Back to Work", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("work") }]; }
   if (rk === "run") { pageTitle = "run_7f21c · Isolated change for CCO-245"; pageDesc = "Run · sponsor Cam Douglas · acting as Papership agent (user-equivalent)"; pageChip = "Running"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
   if (rk === "account") { pageTitle = "Account"; pageDesc = "Your profile and sign-in — not an organisation setting"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }

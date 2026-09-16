@@ -399,6 +399,7 @@ export function WorkWorkflows({ v }) {
   const nextStage = loop?.nextStage;
   const boundRepo = loop?.boundRepo || "enginelabs-au/papership";
   const projectName = loop?.projectName || "Engine Labs · Papership";
+  const busy = Boolean(v.loopActionBusy);
   return (
     <div className="bp2-workflows" style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 420 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px" }}>
@@ -413,6 +414,7 @@ export function WorkWorkflows({ v }) {
             <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4, font: "400 11.5px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
               <span>
                 Live job · {job.id} · status {job.status || "queued"} · stage {job.stage || loop?.currentStage || "request"}
+                {loop?.mock || job.mock ? " · mock/offline" : ""}
               </span>
               {job.work_item_id ? (
                 <span>
@@ -437,19 +439,21 @@ export function WorkWorkflows({ v }) {
           {typeof v.startEngineLabsJob === "function" ? (
             <button
               type="button"
+              disabled={busy}
               onClick={() => void v.startEngineLabsJob()}
-              style={{ height: 32, padding: "0 14px", border: 0, borderRadius: 7, background: "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer" }}
+              style={{ height: 32, padding: "0 14px", border: 0, borderRadius: 7, background: busy ? "var(--t3)" : "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: busy ? "wait" : "pointer", opacity: busy ? 0.85 : 1 }}
             >
-              {job ? "Start another loop job" : "Start Founder loop"}
+              {busy ? "Working…" : job ? "Start another loop job" : "Start Founder loop"}
             </button>
           ) : null}
           {typeof v.advanceEngineLabsLoop === "function" && nextStage ? (
             <button
               type="button"
+              disabled={busy}
               onClick={() => void v.advanceEngineLabsLoop()}
-              style={{ height: 32, padding: "0 14px", border: "1px solid var(--blue)", borderRadius: 7, background: "var(--blue-soft)", color: "var(--blue)", font: "600 12px Inter,sans-serif", cursor: "pointer" }}
+              style={{ height: 32, padding: "0 14px", border: "1px solid var(--blue)", borderRadius: 7, background: "var(--blue-soft)", color: "var(--blue)", font: "600 12px Inter,sans-serif", cursor: busy ? "wait" : "pointer", opacity: busy ? 0.7 : 1 }}
             >
-              Advance to {nextStage.replace(/_/g, " ")}
+              {busy ? "Advancing…" : `Advance to ${nextStage.replace(/_/g, " ")}`}
             </button>
           ) : null}
         </div>

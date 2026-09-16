@@ -201,53 +201,225 @@ export async function requestErasure(confirmations) {
 
 export const ENGINE_LABS_PROJECT_ID = "proj-engine-labs";
 export const ENGINE_LABS_JOB_PURPOSE = "engine_labs.loop";
+export const ENGINE_LABS_LOOP_STAGES = [
+  "request",
+  "research",
+  "specification",
+  "plan",
+  "assignment",
+  "isolated_change",
+  "tests",
+  "review",
+  "release_proposal",
+  "monitoring",
+  "retained_knowledge",
+];
+export const ENGINE_LABS_LOOP_LOCAL_KEY = "papership-engine-labs-loop";
+
+function isLoopTransportError(err) {
+  if (!err) return false;
+  if (err.name === "TypeError") return true;
+  if (err.status === undefined) return /fetch|network|failed/i.test(String(err.message || ""));
+  return err.status >= 500 || err.status === 0;
+}
+
+export function readLocalEngineLabsLoop() {
+  try {
+    const raw = localStorage.getItem(ENGINE_LABS_LOOP_LOCAL_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalEngineLabsLoop(state) {
+  try {
+    if (state) localStorage.setItem(ENGINE_LABS_LOOP_LOCAL_KEY, JSON.stringify(state));
+    else localStorage.removeItem(ENGINE_LABS_LOOP_LOCAL_KEY);
+  } catch {
+    /* */
+  }
+}
+
+function buildEngineLabsLoopState({
+  projectId,
+  projectName,
+  boundRepo,
+  loopStages,
+  job,
+  workItem,
+  currentStage,
+  loopEventCount,
+  mock = false,
+}) {
+  const stages = loopStages?.length ? loopStages : ENGINE_LABS_LOOP_STAGES;
+  const stage = currentStage || workItem?.stage || job?.stage || null;
+  const idx = stage ? stages.indexOf(stage) : -1;
+  const nextStage =
+    job && idx >= 0 && idx < stages.length - 1 ? stages[idx + 1] : job ? null : null;
+  return {
+    projectId: projectId || ENGINE_LABS_PROJECT_ID,
+    projectName: projectName || "Engine Labs · Papership",
+    boundRepo: boundRepo || "enginelabs-au/papership",
+    loopStages: stages,
+    job: job && stage ? { ...job, stage } : job,
+    workItem,
+    currentStage: stage,
+    nextStage,
+    loopEventCount: loopEventCount ?? (workItem?.loop?.length || 0),
+    mock,
+  };
+}
+
+function localStartEngineLabsJob(projectId, title = "Engine Labs loop") {
+  const now = Date.now();
+  const jid = `job_local_${now}`;
+  const wid = `wi_local_${now}`;
+  const stage = "request";
+  const job = {
+    id: jid,
+    status: "queued",
+    purpose: ENGINE_LABS_JOB_PURPOSE,
+    project_id: projectId,
+    work_item_id: wid,
+    stage,
+    title,
+    live_github_open: false,
+    hermes_write: false,
+    mock: true,
+  };
+  const workItem = {
+    id: wid,
+    title,
+    stage,
+    project_id: projectId,
+    job_id: jid,
+    loop: [{ stage, evidence: "engine_labs.job.start" }],
+  };
+  const state = buildEngineLabsLoopState({
+    projectId,
+    job,
+    workItem,
+    currentStage: stage,
+    loopEventCount: 1,
+    mock: true,
+  });
+  writeLocalEngineLabsLoop(state);
+  return job;
+}
+
+function localAdvanceEngineLabsLoopStage(workItemId, stage, evidence) {
+  const prev = readLocalEngineLabsLoop();
+  if (!prev?.workItem?.id || prev.workItem.id !== workItemId) {
+    throw new Error("No local loop job. Start the Founder loop first.");
+  }
+  const loopEvents = [...(prev.workItem.loop || []), { stage, evidence }];
+  const workItem = { ...prev.workItem, stage, loop: loopEvents };
+  const state = buildEngineLabsLoopState({
+    projectId: prev.projectId,
+    projectName: prev.projectName,
+    boundRepo: prev.boundRepo,
+    loopStages: prev.loopStages,
+    job: prev.job,
+    workItem,
+    currentStage: stage,
+    loopEventCount: loopEvents.length,
+    mock: true,
+  });
+  writeLocalEngineLabsLoop(state);
+  return workItem;
+}
+
+export function coalesceEngineLabsLoop(apiLoop) {
+  if (apiLoop?.job?.work_item_id) {
+    writeLocalEngineLabsLoop({ ...apiLoop, mock: false });
+    return apiLoop;
+  }
+  const local = readLocalEngineLabsLoop();
+  if (local?.job) return local;
+  return apiLoop || local || null;
+}
 
 export async function startEngineLabsJob(projectId, title = "Engine Labs loop") {
-  return postPapershipJson(`/projects/${projectId}/jobs`, {
-    title,
-    purpose: ENGINE_LABS_JOB_PURPOSE,
-  });
+  try {
+    await ensureLocalSession();
+    const result = await postPapershipJson(`/projects/${projectId}/jobs`, {
+      title,
+      purpose: ENGINE_LABS_JOB_PURPOSE,
+    });
+    return { ...result, mock: false };
+  } catch (err) {
+    if (isLoopTransportError(err)) {
+      return localStartEngineLabsJob(projectId, title);
+    }
+    throw err;
+  }
 }
 
 export async function advanceEngineLabsLoopStage(workItemId, stage, evidence = "founder.advance") {
-  return postPapershipJson(`/work-items/${workItemId}/stage`, { stage, evidence });
+  try {
+    const body = await postPapershipJson(`/work-items/${workItemId}/stage`, { stage, evidence });
+    return { ...body, mock: false };
+  } catch (err) {
+    if (isLoopTransportError(err)) {
+      return localAdvanceEngineLabsLoopStage(workItemId, stage, evidence);
+    }
+    throw err;
+  }
 }
 
 /** Latest engine_labs.loop job + work-item stage from the managed project (live API). */
 export async function fetchEngineLabsLoopState(projectId = ENGINE_LABS_PROJECT_ID) {
-  const project = await fetchPapershipJson(`/projects/${projectId}`);
-  const stages = project.loop_stages || [];
-  const purpose = project.job_purpose || ENGINE_LABS_JOB_PURPOSE;
-  const loopJobs = (project.jobs || []).filter((j) => j.purpose === purpose);
-  const job = loopJobs[0] || null;
-  if (!job?.work_item_id) {
-    return {
+  try {
+    const project = await fetchPapershipJson(`/projects/${projectId}`);
+    const stages = project.loop_stages || ENGINE_LABS_LOOP_STAGES;
+    const purpose = project.job_purpose || ENGINE_LABS_JOB_PURPOSE;
+    const loopJobs = (project.jobs || []).filter((j) => j.purpose === purpose);
+    const job = loopJobs[0] || null;
+    if (!job?.work_item_id) {
+      const empty = buildEngineLabsLoopState({
+        projectId,
+        projectName: project.name,
+        boundRepo: project.bound_repo,
+        loopStages: stages,
+        job: null,
+        workItem: null,
+        currentStage: null,
+        loopEventCount: 0,
+        mock: false,
+      });
+      return coalesceEngineLabsLoop(empty);
+    }
+    const workItem = await fetchPapershipJson(`/work-items/${job.work_item_id}`);
+    const currentStage = workItem.stage || job.stage || "request";
+    const state = buildEngineLabsLoopState({
       projectId,
       projectName: project.name,
       boundRepo: project.bound_repo,
       loopStages: stages,
-      job: null,
-      workItem: null,
-      currentStage: null,
-      nextStage: stages[0] || "request",
-      loopEventCount: 0,
-    };
+      job,
+      workItem,
+      currentStage,
+      loopEventCount: (workItem.loop || []).length,
+      mock: false,
+    });
+    writeLocalEngineLabsLoop(state);
+    return state;
+  } catch (err) {
+    const local = readLocalEngineLabsLoop();
+    if (local) return local;
+    if (isLoopTransportError(err)) {
+      return buildEngineLabsLoopState({
+        projectId,
+        job: null,
+        workItem: null,
+        currentStage: null,
+        loopEventCount: 0,
+        mock: true,
+      });
+    }
+    throw err;
   }
-  const workItem = await fetchPapershipJson(`/work-items/${job.work_item_id}`);
-  const currentStage = workItem.stage || job.stage || "request";
-  const idx = stages.indexOf(currentStage);
-  const nextStage = idx >= 0 && idx < stages.length - 1 ? stages[idx + 1] : null;
-  return {
-    projectId,
-    projectName: project.name,
-    boundRepo: project.bound_repo,
-    loopStages: stages,
-    job: { ...job, stage: currentStage },
-    workItem,
-    currentStage,
-    nextStage,
-    loopEventCount: (workItem.loop || []).length,
-  };
 }
 
 export async function fetchHealth() {
@@ -362,6 +534,7 @@ export async function loadPapershipOverlay() {
       evidence: [],
       references: defaultReferences(),
       schedules: [],
+      engineLabsLoop: coalesceEngineLabsLoop(null),
     };
   }
   try {
@@ -421,7 +594,7 @@ export async function loadPapershipOverlay() {
         pin: health?.hermes_pin || null,
       },
       operatorSeat,
-      engineLabsLoop,
+      engineLabsLoop: coalesceEngineLabsLoop(engineLabsLoop),
       references,
       schedules: schedules.items || [],
     };
@@ -450,6 +623,7 @@ export async function loadPapershipOverlay() {
       evidence: [],
       references: defaultReferences(),
       schedules: [],
+      engineLabsLoop: coalesceEngineLabsLoop(null),
     };
   }
 }

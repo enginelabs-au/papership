@@ -119,3 +119,12 @@ test("command room seat and workflows are deep-linkable", () => {
   assert.match(app, /advanceEngineLabsLoop/);
   assert.match(screens, /seatSummary/);
 });
+
+test("founder loop survives API outage via local mock", () => {
+  const api = readFileSync(join(root, "src/api/papership.js"), "utf8");
+  const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
+  assert.match(api, /ENGINE_LABS_LOOP_LOCAL_KEY/);
+  assert.match(api, /localStartEngineLabsJob/);
+  assert.match(api, /coalesceEngineLabsLoop/);
+  assert.match(app, /Loop ·/);
+});
