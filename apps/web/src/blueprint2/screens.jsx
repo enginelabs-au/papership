@@ -394,41 +394,74 @@ export function WorkRoadmap({ v }) {
 export function WorkWorkflows({ v }) {
   const stages = v.workflowStages || [];
   const job = v.lastEngineLabsJob;
+  const loop = v.engineLabsLoop;
   const host = v.hermesHost;
+  const nextStage = loop?.nextStage;
+  const boundRepo = loop?.boundRepo || "enginelabs-au/papership";
+  const projectName = loop?.projectName || "Engine Labs · Papership";
   return (
     <div className="bp2-workflows" style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 420 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600 }}>Founder / Engine Labs loop</div>
-          <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 4 }}>
-            Self-build workflow for Papership. Queues an <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>engine_labs.loop</span> job at stage <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>request</span>. Does not auto-run stages, open GitHub, or enable Hermes write tools.
+          <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 4, lineHeight: 1.45 }}>
+            Self-build Papership on <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{boundRepo}</span> through PRD-B.1. Each job is purpose{" "}
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>engine_labs.loop</span> on project{" "}
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{projectName}</span>. Stages persist in the work ledger; Hermes stays read-only and GitHub stays dry-run until release grants land.
           </div>
           {job ? (
-            <div style={{ marginTop: 8, font: "400 11.5px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
-              Last job · {job.id || "queued"} · {job.status || "queued"} · stage {job.stage || "request"}
+            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4, font: "400 11.5px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
+              <span>
+                Live job · {job.id} · status {job.status || "queued"} · stage {job.stage || loop?.currentStage || "request"}
+              </span>
+              {job.work_item_id ? (
+                <span>
+                  Work item · {job.work_item_id}
+                  {typeof loop?.loopEventCount === "number" ? ` · ${loop.loopEventCount} stage event(s)` : ""}
+                </span>
+              ) : null}
+              {nextStage ? (
+                <span style={{ color: "var(--blue)" }}>Next advance · {nextStage}</span>
+              ) : (
+                <span style={{ color: "var(--green)" }}>Final stage reached on this work item.</span>
+              )}
             </div>
           ) : (
-            <div style={{ marginTop: 8, fontSize: 12, color: "var(--t3)" }}>No loop job queued yet on this session.</div>
+            <div style={{ marginTop: 8, fontSize: 12, color: "var(--t3)" }}>
+              No loop job on this session yet. Start one to queue <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>engine_labs.loop</span> at stage request (offline-safe when Hermes is unset).
+            </div>
           )}
           {v.actionError ? <div style={{ marginTop: 8, fontSize: 12, color: "var(--amber)" }}>{v.actionError}</div> : null}
         </div>
-        {typeof v.startEngineLabsJob === "function" ? (
-          <button
-            type="button"
-            onClick={() => void v.startEngineLabsJob()}
-            style={{ height: 32, padding: "0 14px", border: 0, borderRadius: 7, background: "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer", flex: "none" }}
-          >
-            Start Founder loop
-          </button>
-        ) : null}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: "none", alignItems: "stretch" }}>
+          {typeof v.startEngineLabsJob === "function" ? (
+            <button
+              type="button"
+              onClick={() => void v.startEngineLabsJob()}
+              style={{ height: 32, padding: "0 14px", border: 0, borderRadius: 7, background: "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer" }}
+            >
+              {job ? "Start another loop job" : "Start Founder loop"}
+            </button>
+          ) : null}
+          {typeof v.advanceEngineLabsLoop === "function" && nextStage ? (
+            <button
+              type="button"
+              onClick={() => void v.advanceEngineLabsLoop()}
+              style={{ height: 32, padding: "0 14px", border: "1px solid var(--blue)", borderRadius: 7, background: "var(--blue-soft)", color: "var(--blue)", font: "600 12px Inter,sans-serif", cursor: "pointer" }}
+            >
+              Advance to {nextStage.replace(/_/g, " ")}
+            </button>
+          ) : null}
+        </div>
       </div>
       <div style={{ display: "flex", gap: 14, flex: 1, minHeight: 280 }}>
         <div className="bp2-workflows-lib" style={{ width: 180, flex: "none", background: "var(--raised)", border: "1px solid var(--line2)", borderRadius: 10, padding: 10 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Loop stages</div>
           {stages.map((n) => (
-            <div key={n.label} style={{ padding: "8px 9px", borderRadius: 7, background: n.bg, marginBottom: 6, fontSize: 12, display: "flex", gap: 8, alignItems: "center" }}>
+            <div key={n.label} style={{ padding: "8px 9px", borderRadius: 7, background: n.bg, marginBottom: 6, fontSize: 12, display: "flex", gap: 8, alignItems: "center", opacity: n.done || n.current ? 1 : 0.85 }}>
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot, flex: "none" }} />
               {n.label}
+              {n.current ? <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--blue)", fontWeight: 600 }}>now</span> : null}
             </div>
           ))}
         </div>
@@ -436,7 +469,7 @@ export function WorkWorkflows({ v }) {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 10 }}>Pipeline</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {stages.map((n, i) => (
-              <div key={n.label} style={{ minWidth: 140, flex: "1 1 140px", padding: "10px 12px", borderRadius: 8, background: "var(--canvas)", border: `1px solid ${n.bd}` }}>
+              <div key={n.label} style={{ minWidth: 140, flex: "1 1 140px", padding: "10px 12px", borderRadius: 8, background: n.current ? "var(--blue-soft)" : "var(--canvas)", border: `1px solid ${n.bd}` }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot }} />
                   <span style={{ fontSize: 12, fontWeight: 600 }}>{i + 1}. {n.label}</span>

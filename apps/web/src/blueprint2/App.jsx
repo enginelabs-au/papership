@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API_BASE, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
+import { API_BASE, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, advanceEngineLabsLoopStage, fetchEngineLabsLoopState, ENGINE_LABS_PROJECT_ID, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
 import { PRODUCT } from "../brand";
 import { useIsMobile } from "../hooks/use-mobile";
 import "./blueprint2.css";
@@ -458,13 +458,26 @@ export default function Blueprint2App() {
       monitoring: "Watch the release",
       retained_knowledge: "Keep what worked",
     };
-    out.workflowStages = out.nodeLibrary.map((n, i) => ({
-      label: n.label,
-      meta: stageMeta[n.label] || "Loop stage",
-      bg: n.bg,
-      dot: i === 0 ? DOTS.run : DOTS.idle,
-      bd: i === 0 ? "var(--blue)" : "var(--line)",
-    }));
+    const loopState = overlay.engineLabsLoop;
+    const currentLoopStage = loopState?.currentStage || loopState?.job?.stage || null;
+    const stageOrder = loopState?.loopStages?.length
+      ? loopState.loopStages
+      : out.nodeLibrary.map((n) => n.label);
+    const currentIdx = currentLoopStage ? stageOrder.indexOf(currentLoopStage) : -1;
+    out.workflowStages = stageOrder.map((label, i) => {
+      const n = out.nodeLibrary.find((row) => row.label === label) || { label, bg: "var(--raised)" };
+      const done = currentIdx >= 0 && i < currentIdx;
+      const current = currentLoopStage && label === currentLoopStage;
+      return {
+        label,
+        meta: stageMeta[label] || "Loop stage",
+        bg: done ? "var(--green-soft)" : current ? "var(--blue-soft)" : n.bg,
+        dot: done ? DOTS.ok : current ? DOTS.run : DOTS.idle,
+        bd: current ? "var(--blue)" : done ? "var(--green)" : "var(--line)",
+        done,
+        current,
+      };
+    });
     out.nodes = out.workflowStages.slice(0, 5).map((n, i) => ({
       label: n.label,
       meta: n.meta,
@@ -474,7 +487,8 @@ export default function Blueprint2App() {
       bd: n.bd,
     }));
     out.wires = [];
-    out.lastEngineLabsJob = overlay.lastEngineLabsJob || null;
+    out.lastEngineLabsJob = overlay.lastEngineLabsJob || loopState?.job || null;
+    out.engineLabsLoop = loopState || null;
     out.hermesHost = overlay.hermesHost || {
       status: "not_configured",
       message: "Hermes Host is not configured. Local mock mode — no Cam HostHatch secrets required.",
@@ -741,18 +755,51 @@ export default function Blueprint2App() {
       }
     };
     out.startEngineLabsJob = async () => {
-      const projectId = overlay.managedProjects?.[0]?.id || "proj-engine-labs";
+      const projectId = overlay.engineLabsLoop?.projectId || overlay.managedProjects?.[0]?.id || ENGINE_LABS_PROJECT_ID;
       try {
         const result = await startEngineLabsJob(projectId, "Engine Labs loop");
+        const loop = await fetchEngineLabsLoopState(projectId);
         setOverlay((prev) => ({
           ...prev,
           actionError: "",
           lastEngineLabsJob: result,
+          engineLabsLoop: loop,
         }));
         setOverlay(await loadPapershipOverlay());
         return result;
       } catch (error) {
         setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not start the Engine Labs job." }));
+        throw error;
+      }
+    };
+    out.advanceEngineLabsLoop = async () => {
+      const loop = overlay.engineLabsLoop;
+      const workItemId = loop?.workItem?.id || loop?.job?.work_item_id;
+      const nextStage = loop?.nextStage;
+      if (!workItemId || !nextStage) {
+        setOverlay((prev) => ({
+          ...prev,
+          actionError: "Start the Founder loop first, or you are already at the final stage.",
+        }));
+        return null;
+      }
+      const projectId = loop?.projectId || ENGINE_LABS_PROJECT_ID;
+      try {
+        await advanceEngineLabsLoopStage(workItemId, nextStage, `founder.advance.${nextStage}`);
+        const refreshed = await fetchEngineLabsLoopState(projectId);
+        setOverlay((prev) => ({
+          ...prev,
+          actionError: "",
+          engineLabsLoop: refreshed,
+          lastEngineLabsJob: refreshed.job,
+        }));
+        setOverlay(await loadPapershipOverlay());
+        return refreshed;
+      } catch (error) {
+        setOverlay((prev) => ({
+          ...prev,
+          actionError: error.message || "Could not advance the loop stage.",
+        }));
         throw error;
       }
     };

@@ -199,8 +199,55 @@ export async function requestErasure(confirmations) {
   return postPapershipJson("/erasure/request", { confirmations });
 }
 
+export const ENGINE_LABS_PROJECT_ID = "proj-engine-labs";
+export const ENGINE_LABS_JOB_PURPOSE = "engine_labs.loop";
+
 export async function startEngineLabsJob(projectId, title = "Engine Labs loop") {
-  return postPapershipJson(`/projects/${projectId}/jobs`, { title, purpose: "engine_labs.loop" });
+  return postPapershipJson(`/projects/${projectId}/jobs`, {
+    title,
+    purpose: ENGINE_LABS_JOB_PURPOSE,
+  });
+}
+
+export async function advanceEngineLabsLoopStage(workItemId, stage, evidence = "founder.advance") {
+  return postPapershipJson(`/work-items/${workItemId}/stage`, { stage, evidence });
+}
+
+/** Latest engine_labs.loop job + work-item stage from the managed project (live API). */
+export async function fetchEngineLabsLoopState(projectId = ENGINE_LABS_PROJECT_ID) {
+  const project = await fetchPapershipJson(`/projects/${projectId}`);
+  const stages = project.loop_stages || [];
+  const purpose = project.job_purpose || ENGINE_LABS_JOB_PURPOSE;
+  const loopJobs = (project.jobs || []).filter((j) => j.purpose === purpose);
+  const job = loopJobs[0] || null;
+  if (!job?.work_item_id) {
+    return {
+      projectId,
+      projectName: project.name,
+      boundRepo: project.bound_repo,
+      loopStages: stages,
+      job: null,
+      workItem: null,
+      currentStage: null,
+      nextStage: stages[0] || "request",
+      loopEventCount: 0,
+    };
+  }
+  const workItem = await fetchPapershipJson(`/work-items/${job.work_item_id}`);
+  const currentStage = workItem.stage || job.stage || "request";
+  const idx = stages.indexOf(currentStage);
+  const nextStage = idx >= 0 && idx < stages.length - 1 ? stages[idx + 1] : null;
+  return {
+    projectId,
+    projectName: project.name,
+    boundRepo: project.bound_repo,
+    loopStages: stages,
+    job: { ...job, stage: currentStage },
+    workItem,
+    currentStage,
+    nextStage,
+    loopEventCount: (workItem.loop || []).length,
+  };
 }
 
 export async function fetchHealth() {
@@ -318,7 +365,7 @@ export async function loadPapershipOverlay() {
     };
   }
   try {
-    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, operatorSeat] = await Promise.all([
+    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, operatorSeat, engineLabsLoop] = await Promise.all([
       fetchPapershipJson("/people"),
       fetchPapershipJson("/teams"),
       fetchPapershipJson("/inbox"),
@@ -340,6 +387,7 @@ export async function loadPapershipOverlay() {
       fetchHealth(),
       fetchPapershipJson("/hermes/host").catch(() => null),
       fetchPapershipJson("/seats/operator").catch(() => null),
+      fetchEngineLabsLoopState().catch(() => null),
     ]);
     return {
       source: "api",
@@ -373,6 +421,7 @@ export async function loadPapershipOverlay() {
         pin: health?.hermes_pin || null,
       },
       operatorSeat,
+      engineLabsLoop,
       references,
       schedules: schedules.items || [],
     };
@@ -670,7 +719,12 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
   out.managedProjects = overlay.managedProjects || [];
   out.hermesHost = overlay.hermesHost || null;
   out.operatorSeat = overlay.operatorSeat || null;
-  out.lastEngineLabsJob = overlay.lastEngineLabsJob || null;
+  const loop = overlay.engineLabsLoop || null;
+  out.engineLabsLoop = loop;
+  out.lastEngineLabsJob =
+    overlay.lastEngineLabsJob ||
+    loop?.job ||
+    null;
   out.packs = overlay.packs || [];
   out.proposals = overlay.proposals || [];
   out.evidence = overlay.evidence || [];

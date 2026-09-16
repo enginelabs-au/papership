@@ -1313,7 +1313,19 @@ class Store:
                ORDER BY created_at DESC LIMIT 20""",
             (p["tenant_id"], project_id),
         ).fetchall()
-        project["jobs"] = [self.row_to_dict(j) for j in jobs]
+        enriched_jobs: list[dict[str, Any]] = []
+        for j in jobs:
+            job_row = self.row_to_dict(j)
+            wid = job_row.get("work_item_id")
+            if wid:
+                wi = self.conn.execute(
+                    "SELECT stage FROM work_items WHERE id=?",
+                    (wid,),
+                ).fetchone()
+                if wi:
+                    job_row["stage"] = wi["stage"]
+            enriched_jobs.append(job_row)
+        project["jobs"] = enriched_jobs
         project["loop_stages"] = list(LOOP_STAGES)
         project["job_purpose"] = ENGINE_LABS_JOB_PURPOSE
         project["live_github_open"] = False

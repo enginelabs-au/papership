@@ -81,6 +81,23 @@ def test_start_engine_labs_job_queues_with_work_item(
     assert work.json()["job_id"] == body["id"]
     assert len(work.json()["loop"]) >= 1
 
+    detail = client.get(f"/projects/{ENGINE_LABS_PROJECT_ID}", headers=founder_headers)
+    assert detail.status_code == 200
+    latest = detail.json()["jobs"][0]
+    assert latest["id"] == body["id"]
+    assert latest["stage"] == "request"
+
+    advanced = client.post(
+        f"/work-items/{body['work_item_id']}/stage",
+        json={"stage": "research", "evidence": "founder.advance.research"},
+        headers=founder_headers,
+    )
+    assert advanced.status_code == 200
+    assert advanced.json()["stage"] == "research"
+
+    detail2 = client.get(f"/projects/{ENGINE_LABS_PROJECT_ID}", headers=founder_headers)
+    assert detail2.json()["jobs"][0]["stage"] == "research"
+
 
 def test_post_jobs_routes_engine_labs_purpose(
     client: TestClient, founder_headers: dict[str, str]
