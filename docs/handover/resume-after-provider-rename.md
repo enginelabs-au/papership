@@ -162,7 +162,7 @@ Paths below use the repo-root `.cursor/` prefix.
 
 **Instruction precedence:** current user request → `.cursor/AGENTS.md` → activated instructions → `.cursor/USER.md` → STATE + active plan → MEMORY / blockers / runbooks / skills / tools → repository conventions.
 
-**Active instructions while Phase 6 is the live plan:** `.cursor/instructions/LAUCH.md`, `.cursor/instructions/PROJECT_PLANNING.md`, `.cursor/instructions/SUBAGENTS.md`, `.cursor/instructions/ROLES.md`. Load `ROLES.md` in full when implementing Phase 6, selecting roles, or running a gate.
+**Active instructions while Phase 6 is the live plan:** `.cursor/instructions/LAUNCH.md`, `.cursor/instructions/PROJECT_PLANNING.md`, `.cursor/instructions/SUBAGENTS.md`, `.cursor/instructions/ROLES.md`. Load `ROLES.md` in full when implementing Phase 6, selecting roles, or running a gate.
 
 **Do not store secrets** in markdown, plans, memory, logs, examples, or chat. Env **names** only.
 

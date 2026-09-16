@@ -14,7 +14,7 @@ When delegated to a sub-agent, remain read-only outside the assigned blueprint p
 
 ## Pre-flight
 
-1. Read `/AGENTS.md`, `/INSTRUCTIONS.md`, `/instructions/LAUCH.md`, `/instructions/ROLES.md` when role delegation is active, `/STATE.md`, `/memory/MEMORY.md`, `/USER.md`, and relevant plans or repository documentation.
+1. Read `/AGENTS.md`, `/INSTRUCTIONS.md`, `/instructions/LAUNCH.md`, `/instructions/ROLES.md` when role delegation is active, `/STATE.md`, `/memory/MEMORY.md`, `/USER.md`, and relevant plans or repository documentation.
 2. Ensure the startup bootstrap has created `docs/` and `docs/blueprints/`.
 3. Set `STATE.md` to `Strategic Analysis` and list this file under `Active Instructions` when operating as lead.
 4. Extract the idea, target user, problem, constraints, desired outcome, and known assumptions from the trigger and repository.

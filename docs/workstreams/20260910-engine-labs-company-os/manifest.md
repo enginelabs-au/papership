@@ -24,7 +24,7 @@ Requested outcome of this workstream: an owner-approved first release in which t
 ## 2. Source request and project context
 
 - Intake: `docs/blueprints/company_agent_system_blueprint.md` (18 blueprint phases: planning 01–06, implementation 07–12, verification 13–18). Location accepted as-is.
-- Launch protocol: `AGENTS.md` → `.cursor/AGENTS.md` → `.cursor/instructions/LAUCH.md` via `/launch-pipeline`. Preflight `MATERIALIZATION_REQUIRED` → bootstrap exit 0 on 2026-09-10.
+- Launch protocol: `AGENTS.md` → `.cursor/AGENTS.md` → `.cursor/instructions/LAUNCH.md` via `/launch-pipeline`. Preflight `MATERIALIZATION_REQUIRED` → bootstrap exit 0 on 2026-09-10.
 - UI reference: [enginelabs-au/Papership](https://github.com/enginelabs-au/OrgOS) at commit `8a843bd6429faf1ace5a9eb6dcfb7440703d34c4`. Live mount is `/papership` (D-32); leftover `/cc-org-dash` redirects. Historical inspection used `/cc-org-dash` on 2026-09-10.
 - Repository state: live Papership monorepo. Phases 0–3 closed. Phase 4 G5 PASS 2026-09-12.
 - Prior decisions: `docs/decisions/2026-08-18-agent-role-pipeline.md`; Phase 4 closeout `docs/decisions/2026-09-12-phase-4-closeout.md`.

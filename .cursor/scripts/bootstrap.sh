@@ -103,7 +103,7 @@ $AGENT_CONFIG_DIR/templates/role-plan-template.md
 $AGENT_CONFIG_DIR/templates/role-evidence-template.md
 $AGENT_CONFIG_DIR/templates/role-handoff-template.md
 $AGENT_CONFIG_DIR/templates/owner-handoff-template.md
-$AGENT_CONFIG_DIR/instructions/LAUCH.md
+$AGENT_CONFIG_DIR/instructions/LAUNCH.md
 $AGENT_CONFIG_DIR/skills/launch-pipeline/SKILL.md
 $AGENT_CONFIG_DIR/skills/launch-pipeline/scripts/preflight.mjs
 $AGENT_CONFIG_DIR/skills/launch-pipeline/scripts/validate-launch.mjs

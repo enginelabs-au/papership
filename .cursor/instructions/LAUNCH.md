@@ -4,7 +4,7 @@
 
 This file is the canonical practical entry point for starting, resuming, and closing product work in this repository. Read-only preflight is its first executable gate; bootstrap is its cornerstone and first mutating gate after Build or explicit Agent-mode implementation authorization. The launcher connects the operating contract, instruction router, adaptive roles, phase plans, skills, tools, memory, state, workstreams, validation, and owner handoff into one parent-agent workflow.
 
-The filename `LAUCH.md` is retained exactly as requested. Invoke the native project skill as `/launch-pipeline`; do not ask the user to attach the entire `.cursor/` tree manually.
+The filename `LAUNCH.md` is retained exactly as requested. Invoke the native project skill as `/launch-pipeline`; do not ask the user to attach the entire `.cursor/` tree manually.
 
 ## Activation
 
@@ -253,13 +253,13 @@ Do not duplicate canonical role bodies, long instructions, secret values, or unv
 
 When the user asks to resume, behave as though instructed:
 
-> Read repository-root `AGENTS.md`, the complete core context, `/instructions/LAUCH.md`, the active phase plan, active workstream manifest, current role charter and plan, latest predecessor handoff, blockers, decisions, and continuation evidence. Verify current repository state against recorded evidence. Resume only from the recorded gate, preserve completed work, route the next required role, and continue until a strict blocker or owner decision.
+> Read repository-root `AGENTS.md`, the complete core context, `/instructions/LAUNCH.md`, the active phase plan, active workstream manifest, current role charter and plan, latest predecessor handoff, blockers, decisions, and continuation evidence. Verify current repository state against recorded evidence. Resume only from the recorded gate, preserve completed work, route the next required role, and continue until a strict blocker or owner decision.
 
 ## Initial idea prompt contract
 
 When the user provides a raw idea, behave as though instructed:
 
-> Act as the parent orchestrator. Follow repository-root `AGENTS.md` and `/instructions/LAUCH.md`. Treat this as a new product. Run read-only preflight; infer intake from evidence; ask only for unresolved consequential decisions; present the activation summary; and enter Plan Mode without mutation. Close the pre-Build plan with `First post-Build action` and `bash .cursor/scripts/bootstrap.sh`. After Build, run that bootstrap command first. Then activate Strategy, Project Planning, Subagents, and Roles; classify risk and affected domains; create an adaptive required/skipped-role matrix; materialize the blueprint, phase zero, and workstream; invoke required roles through direct parent Task delegation in dependency order; require role charters, plans, evidence, and handoffs; remediate failed gates; and continue autonomously until a strict blocker or final owner decision. Do not perform production, publishing, spend, secret, destructive, or external mutation without explicit policy-permitted authorization.
+> Act as the parent orchestrator. Follow repository-root `AGENTS.md` and `/instructions/LAUNCH.md`. Treat this as a new product. Run read-only preflight; infer intake from evidence; ask only for unresolved consequential decisions; present the activation summary; and enter Plan Mode without mutation. Close the pre-Build plan with `First post-Build action` and `bash .cursor/scripts/bootstrap.sh`. After Build, run that bootstrap command first. Then activate Strategy, Project Planning, Subagents, and Roles; classify risk and affected domains; create an adaptive required/skipped-role matrix; materialize the blueprint, phase zero, and workstream; invoke required roles through direct parent Task delegation in dependency order; require role charters, plans, evidence, and handoffs; remediate failed gates; and continue autonomously until a strict blocker or final owner decision. Do not perform production, publishing, spend, secret, destructive, or external mutation without explicit policy-permitted authorization.
 
 ## Security and production boundary
 

@@ -36,7 +36,7 @@ const requiredFiles = [
   ".cursor/SKILLS.md",
   ".cursor/TOOLS.md",
   ".cursor/memory/MEMORY.md",
-  ".cursor/instructions/LAUCH.md",
+  ".cursor/instructions/LAUNCH.md",
   ".cursor/instructions/STRATEGY.md",
   ".cursor/instructions/PROJECT_PLANNING.md",
   ".cursor/instructions/SUBAGENTS.md",
@@ -204,7 +204,7 @@ function classifyControlPlaneFile(relativePath) {
       [
         ".cursor/INSTRUCTIONS.md",
         ".cursor/skills/launch-pipeline/SKILL.md",
-        ".cursor/instructions/LAUCH.md",
+        ".cursor/instructions/LAUNCH.md",
       ],
       `/instructions/${name}`,
     );
@@ -325,7 +325,7 @@ for (const roleId of roleIds) {
 
 const references = new Map([
   [
-    ".cursor/instructions/LAUCH.md",
+    ".cursor/instructions/LAUNCH.md",
     [
       "AGENTS.md",
       "/AGENTS.md",
@@ -355,7 +355,7 @@ const references = new Map([
     [
       "name: launch-pipeline",
       "disable-model-invocation: true",
-      ".cursor/instructions/LAUCH.md",
+      ".cursor/instructions/LAUNCH.md",
       ".cursor/scripts/bootstrap.sh",
       "First post-Build action",
       "bash .cursor/scripts/bootstrap.sh",
@@ -379,17 +379,17 @@ const references = new Map([
       "scripts/validate-agent-config.mjs",
     ],
   ],
-  [".cursor/instructions/PROJECT_PLANNING.md", ["/instructions/LAUCH.md"]],
-  [".cursor/instructions/STRATEGY.md", ["/instructions/LAUCH.md"]],
-  [".cursor/instructions/SUBAGENTS.md", ["/instructions/LAUCH.md"]],
+  [".cursor/instructions/PROJECT_PLANNING.md", ["/instructions/LAUNCH.md"]],
+  [".cursor/instructions/STRATEGY.md", ["/instructions/LAUNCH.md"]],
+  [".cursor/instructions/SUBAGENTS.md", ["/instructions/LAUNCH.md"]],
   [".cursor/USER.md", ["/launch-pipeline"]],
-  [".cursor/SKILLS.md", ["launch-pipeline", "/instructions/LAUCH.md"]],
-  [".cursor/TOOLS.md", ["/launch-pipeline", "/instructions/LAUCH.md"]],
-  [".cursor/memory/MEMORY.md", ["/launch-pipeline", "/instructions/LAUCH.md"]],
+  [".cursor/SKILLS.md", ["launch-pipeline", "/instructions/LAUNCH.md"]],
+  [".cursor/TOOLS.md", ["/launch-pipeline", "/instructions/LAUNCH.md"]],
+  [".cursor/memory/MEMORY.md", ["/launch-pipeline", "/instructions/LAUNCH.md"]],
   [
     ".cursor/BOOTSTRAP.md",
     [
-      "/instructions/LAUCH.md",
+      "/instructions/LAUNCH.md",
       "/skills/launch-pipeline/SKILL.md",
       "docs/blueprints/",
       "docs/plans/",

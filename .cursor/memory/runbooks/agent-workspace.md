@@ -10,7 +10,7 @@ Document the canonical autonomous agent control plane, startup materialization, 
 - `/BOOTSTRAP.md` and `/scripts/bootstrap.sh` — post-Build materialization
 - `/skills/launch-pipeline/scripts/preflight.mjs` — read-only launch health check
 - `/INSTRUCTIONS.md` and `/instructions/` — instruction routing
-- `/instructions/LAUCH.md` and `/skills/launch-pipeline/SKILL.md` — practical product lifecycle entry
+- `/instructions/LAUNCH.md` and `/skills/launch-pipeline/SKILL.md` — practical product lifecycle entry
 - `/instructions/ROLES.md` and `/agents/` — canonical role behavior and native adapters
 - `/STATE.md` — active objective, phase, plan, and instructions
 - `/memory/` — durable memory, continuations, blockers, and runbooks

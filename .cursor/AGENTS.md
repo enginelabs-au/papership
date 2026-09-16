@@ -80,7 +80,7 @@ Use the phased planning workflow for a new project, product idea, major feature,
 
 For phased work:
 
-1. Follow `/instructions/LAUCH.md`: preflight first, then bootstrap after Build or explicit Agent-mode implementation authorization.
+1. Follow `/instructions/LAUNCH.md`: preflight first, then bootstrap after Build or explicit Agent-mode implementation authorization.
 2. Determine whether `/instructions/STRATEGY.md` should be activated for market, product, architecture, or go-to-market discovery.
 3. Create `docs/plans/phase_0_foundations_plan.md` before application implementation.
 4. Phase 0 must describe the complete project from start to finish, define all expected later phases, establish architecture and validation foundations, and end with the exact prompt for generating the next phase plan.
@@ -130,7 +130,7 @@ After delegation, the lead agent must inspect outputs, resolve conflicts, run in
 - `/INSTRUCTIONS.md` — instruction registry and activation router
 - `/instructions/` — detailed task-mode instructions
 - `/instructions/ROLES.md` — canonical adaptive role catalog and stage-gate contract
-- `/instructions/LAUCH.md` — product lifecycle launcher
+- `/instructions/LAUNCH.md` — product lifecycle launcher
 - `/skills/launch-pipeline/SKILL.md` — explicit-only native entry
 - `/agents/` — thin native Cursor role adapters
 - `/USER.md` — durable user preferences and standing directives

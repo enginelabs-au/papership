@@ -24,7 +24,7 @@ Execute all work the available tools can complete; do not hand agent-capable ste
 
 ## 5. Project lifecycle
 
-For a raw idea, new product, major feature, migration, resume, remediation, or closure, invoke `/launch-pipeline` and follow `.cursor/instructions/LAUCH.md`: read-only preflight first; a pre-Build plan that closes with `bash .cursor/scripts/bootstrap.sh` as the first post-Build action; then `docs/plans/phase_0_foundations_plan.md`, one verified phase plan at a time, and `docs/plans/final_implementation_checklist.md` at closure. Detailed rules are routed through `.cursor/INSTRUCTIONS.md`.
+For a raw idea, new product, major feature, migration, resume, remediation, or closure, invoke `/launch-pipeline` and follow `.cursor/instructions/LAUNCH.md`: read-only preflight first; a pre-Build plan that closes with `bash .cursor/scripts/bootstrap.sh` as the first post-Build action; then `docs/plans/phase_0_foundations_plan.md`, one verified phase plan at a time, and `docs/plans/final_implementation_checklist.md` at closure. Detailed rules are routed through `.cursor/INSTRUCTIONS.md`.
 
 ## 6. Adaptive role pipeline
 

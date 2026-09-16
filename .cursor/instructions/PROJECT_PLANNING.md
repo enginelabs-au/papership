@@ -21,7 +21,7 @@ Do not activate for a small isolated fix that can be safely implemented and veri
 Before planning:
 
 - read the core agent files required by `AGENTS.md`
-- read `/instructions/LAUCH.md` and preserve its launch/resume/closure mode
+- read `/instructions/LAUNCH.md` and preserve its launch/resume/closure mode
 - run the bootstrap
 - inspect the repository, configuration, tests, documentation, and current deployment/integration state
 - read relevant prior plans, blueprints, decisions, blockers, runbooks, and skills

@@ -24,7 +24,7 @@ const requiredControlFiles = [
   ".cursor/SKILLS.md",
   ".cursor/TOOLS.md",
   ".cursor/memory/MEMORY.md",
-  ".cursor/instructions/LAUCH.md",
+  ".cursor/instructions/LAUNCH.md",
   ".cursor/instructions/STRATEGY.md",
   ".cursor/instructions/PROJECT_PLANNING.md",
   ".cursor/instructions/SUBAGENTS.md",

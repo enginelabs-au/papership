@@ -12,7 +12,7 @@
 
 ## Unified launch entry
 
-- Added `.cursor/instructions/LAUCH.md` as the complete practical lifecycle contract and `.cursor/skills/launch-pipeline/SKILL.md` as its native auto-discovered and slash-invokable entry.
+- Added `.cursor/instructions/LAUNCH.md` as the complete practical lifecycle contract and `.cursor/skills/launch-pipeline/SKILL.md` as its native auto-discovered and slash-invokable entry.
 - Linked launch behavior through Project Planning, Strategy, Subagents, USER, SKILLS, TOOLS, MEMORY, BOOTSTRAP, workspace runbooks, documentation indexes, and live state.
 - Added `.cursor/README.md` and expanded `.cursor/config/README.md` so every major control-plane surface has a documented owner and loading path.
 - Kept `hooks.json`, `cli.json`, `sandbox.json`, and `permissions.json` at required native `.cursor/` root paths; unsupported relocation or symlink indirection was intentionally rejected.
@@ -39,12 +39,12 @@
 ## Pre-Build bootstrap suggestion
 
 - Required every `/launch-pipeline` Cursor plan generated before Build to close with a `First post-Build action` section containing `bash .cursor/scripts/bootstrap.sh`.
-- Applied the same closing requirement to the activation summary, new-product sequence, and initial-idea prompt contract in `/instructions/LAUCH.md` and `/skills/launch-pipeline/SKILL.md`.
+- Applied the same closing requirement to the activation summary, new-product sequence, and initial-idea prompt contract in `/instructions/LAUNCH.md` and `/skills/launch-pipeline/SKILL.md`.
 - Launch validation now fails if those files omit the required heading or command.
 
 ## Remaining protected-route alignment
 
-- Closed non-protected gaps: `SKILLS.md` now loads `LAUCH.md` through `/launch-pipeline`; workspace and bootstrap runbooks are preflight-first; `docs/README.md` names the launch entry.
+- Closed non-protected gaps: `SKILLS.md` now loads `LAUNCH.md` through `/launch-pipeline`; workspace and bootstrap runbooks are preflight-first; `docs/README.md` names the launch entry.
 - Re-attempted `.cursor/INSTRUCTIONS.md`; the fail-closed hook still blocks it.
 - Wrote the last physical owner patch at `docs/handover/protected-launch-route-patch.md` covering root `AGENTS.md`, instruction registry, session startup, bootstrap required files, config validator, CI, and CLI allowlist.
 - After that owner patch, no further physical `.cursor` edits are required for the stack to route as one system. `/launch-pipeline` already works through native skill discovery.

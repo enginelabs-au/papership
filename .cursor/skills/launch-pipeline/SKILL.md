@@ -24,7 +24,7 @@ Read in order:
 
 1. Repository-root `AGENTS.md`.
 2. `.cursor/AGENTS.md` and its complete per-turn context.
-3. `.cursor/instructions/LAUCH.md`.
+3. `.cursor/instructions/LAUNCH.md`.
 4. Every detailed instruction, rule, skill, runbook, plan, workstream artifact, decision, blocker, source file, and test routed by those files.
 
 Run the read-only preflight before selecting a mode:
@@ -44,7 +44,7 @@ Do not run the mutating bootstrap while in Ask or Plan Mode. After Build approva
 5. Present the activation summary defined below. Files are activated automatically; the user is not walked through them one by one.
 6. For consequential new work, enter Cursor Plan Mode and wait for Build. Before Build, remain read-only. The reviewable plan is incomplete unless its closing section is `First post-Build action` and includes `bash .cursor/scripts/bootstrap.sh`.
 7. After Build or explicit Agent-mode implementation authorization, run that exact bootstrap command as the first mutating action and require a successful exit.
-8. Follow the selected mode in `.cursor/instructions/LAUCH.md`.
+8. Follow the selected mode in `.cursor/instructions/LAUNCH.md`.
 9. Keep one parent Agent responsible for orchestration and shared-file materialization.
 10. For substantive work, create or resume the task manifest and classify every canonical role as required or skipped.
 11. Launch each required custom subagent through direct parent Task delegation in dependency order; do not rely on slash syntax or automatic chaining.
@@ -133,7 +133,7 @@ After Build or explicit Agent-mode implementation authorization, also run:
 bash .cursor/scripts/bootstrap.sh
 ```
 
-Before closure, verify all criteria in `.cursor/instructions/LAUCH.md` and `.cursor/instructions/ROLES.md`. Unsupported or missing evidence is not a pass.
+Before closure, verify all criteria in `.cursor/instructions/LAUNCH.md` and `.cursor/instructions/ROLES.md`. Unsupported or missing evidence is not a pass.
 
 ## Failure modes / cautions
 
@@ -148,7 +148,7 @@ Before closure, verify all criteria in `.cursor/instructions/LAUCH.md` and `.cur
 ## Related files
 
 - `../../README.md`
-- `.cursor/instructions/LAUCH.md`
+- `.cursor/instructions/LAUNCH.md`
 - `../../AGENTS.md`
 - `../../INSTRUCTIONS.md`
 - `../../instructions/ROLES.md`
