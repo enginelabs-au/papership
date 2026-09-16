@@ -501,9 +501,11 @@ export default function Blueprint2App() {
     out.engineLabsLoop = loopState || null;
     out.hermesHost = overlay.hermesHost || {
       status: "not_configured",
-      message: "Hermes Host is not configured. Local mock mode — no Cam HostHatch secrets required.",
+      message:
+        "Hermes Host is not configured. Set HERMES_API_BASE_URL (HostHatch tunnel :8642) before Start/Advance.",
       write_tools: false,
       mock: true,
+      api_server: false,
       pin: null,
     };
     out.operatorSeat = overlay.operatorSeat || null;

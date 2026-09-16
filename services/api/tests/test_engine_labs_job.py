@@ -1,5 +1,6 @@
 """Engine Labs managed project + loop job wiring (P-009 increment)."""
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.loop import LOOP_STAGES
@@ -9,6 +10,26 @@ from app.managed_projects import (
     ENGINE_LABS_PROJECT_ID,
     ENGINE_LABS_PROJECT_NAME,
 )
+
+
+@pytest.fixture(autouse=True)
+def _mock_loop_hermes_dispatch(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _fake(**kwargs: object) -> dict:
+        job_id = str(kwargs.get("job_id") or "job")
+        stage = str(kwargs.get("stage") or "request")
+        work_item_id = str(kwargs.get("work_item_id") or "wi")
+        run_id = f"run_test_{job_id}_{stage}"
+        return {
+            "status": "accepted",
+            "run_id": run_id,
+            "http_status": 202,
+            "tool": "memory_read",
+            "idempotency_key": f"{job_id}:{stage}:{work_item_id}",
+            "summary": "Hermes accepted (test dispatch).",
+            "body": {"id": run_id, "status": "queued"},
+        }
+
+    monkeypatch.setattr("app.loop_hermes_bridge.dispatch_loop_stage", _fake)
 
 
 def test_full_domain_catalogue_is_43(client: TestClient, founder_headers: dict[str, str]) -> None:
@@ -69,6 +90,7 @@ def test_start_engine_labs_job_queues_with_work_item(
     assert body.get("current_artifact")
     assert body["current_artifact"]["stage"] == "request"
     assert body["current_artifact"]["body_markdown"]
+    assert body["current_artifact"]["meta"]["hermes_run_id"]
 
     job = client.get(f"/jobs/{body['id']}", headers=founder_headers)
     assert job.status_code == 200

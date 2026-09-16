@@ -462,7 +462,7 @@ export function WorkWorkflows({ v }) {
             </div>
           ) : (
             <div style={{ marginTop: 8, fontSize: 12, color: "var(--t3)" }}>
-              No loop job on this session yet. Start one to queue <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>engine_labs.loop</span> at stage request (offline-safe when Hermes is unset).
+              No loop job on this session yet. Start one to queue <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>engine_labs.loop</span> at stage request. Requires Hermes Host on <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>HERMES_API_BASE_URL</span> (tunnel :8642).
             </div>
           )}
           {v.actionError ? <div style={{ marginTop: 8, fontSize: 12, color: "var(--amber)" }}>{v.actionError}</div> : null}
@@ -889,7 +889,7 @@ export function SettingsView({ v }) {
               <div>Always-on agent box · technical operators</div>
               <div style={{ textAlign: "right", color: "var(--t3)" }}>Write tools · blocked</div>
               <div>Pin · {v.hermesHost.pin || "not set"}</div>
-              <div style={{ textAlign: "right", color: "var(--t3)" }}>{v.hermesHost.mock ? "Local / mock safe" : "Probe only"}</div>
+              <div style={{ textAlign: "right", color: "var(--t3)" }}>{v.hermesHost.api_server ? "Host API ready" : v.hermesHost.mock ? "Host not ready" : "Probe only"}</div>
             </div>
             <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--t3)" }}>Workspace product stays Papership. Hermes Host is the runtime box inside it. Context Music is out of scope.</div>
           </div>

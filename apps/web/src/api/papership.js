@@ -235,10 +235,6 @@ function buildLocalLoopStageArtifact({ stage, workItemId, jobId, title, boundRep
   const slug = String(Math.abs(digest)).slice(0, 8);
   const artifactType = LOOP_STAGE_ARTIFACT_TYPES[stage] || "stage_note";
   const stageLabel = stage.replace(/_/g, " ");
-  const hermesRunId =
-    stage === "assignment" || stage === "isolated_change" || stage === "tests"
-      ? `run_stub_${slug}`
-      : null;
   const lines = [
     `# Loop · ${stageLabel} · ${title}`,
     "",
@@ -247,11 +243,10 @@ function buildLocalLoopStageArtifact({ stage, workItemId, jobId, title, boundRep
     `- **Job:** \`${jobId}\``,
     `- **Repository:** \`${boundRepo}\``,
     "",
-    `## ${stageLabel} output (browser mock)`,
+    `## ${stageLabel} output (browser offline)`,
     "",
-    "This artifact was produced locally because the API was unreachable. The live API writes the same shape to the ledger.",
+    "The Papership API was unreachable. This offline copy is **not** a Hermes run — reconnect the API and Hermes Host, then Start/Advance again.",
   ];
-  if (hermesRunId) lines.push("", `- **Hermes run (stub):** \`${hermesRunId}\``);
   const bodyMarkdown = lines.join("\n");
   const ledgerPath = `.papership/loop/${workItemId}/${stage.replace(/_/g, "-")}.md`;
   return {
@@ -268,11 +263,11 @@ function buildLocalLoopStageArtifact({ stage, workItemId, jobId, title, boundRep
       stage,
       artifact_type: artifactType,
       ledger_path: ledgerPath,
-      hermes_status: "not_configured",
+      hermes_status: "offline_api",
       live_github_open: false,
       hermes_write: false,
-      ...(hermesRunId ? { hermes_run_id: hermesRunId } : {}),
       mock: true,
+      offline: true,
     },
     created_at: new Date().toISOString(),
     mock: true,
@@ -314,6 +309,7 @@ function applyLocalStageWork(state, stage) {
 
 function isLoopTransportError(err) {
   if (!err) return false;
+  if (err.status === 503 || err.status === 422 || err.status === 403 || err.status === 404) return false;
   if (err.name === "TypeError") return true;
   if (err.status === undefined) return /fetch|network|failed/i.test(String(err.message || ""));
   return err.status >= 500 || err.status === 0;
@@ -634,9 +630,11 @@ export async function loadPapershipOverlay() {
       health: mapHealth(await fetchHealth()),
       hermesHost: {
         status: "not_configured",
-        message: "Hermes Host is not configured. Local mock mode — no Cam HostHatch secrets required.",
+        message:
+          "Hermes Host is not configured. Founder loop Start/Advance fail until HERMES_API_BASE_URL points at the Host API (typically http://127.0.0.1:8642 via tunnel).",
         write_tools: false,
         mock: true,
+        api_server: false,
         pin: null,
       },
       operatorSeat: null,
@@ -708,8 +706,9 @@ export async function loadPapershipOverlay() {
         status: health?.hermes || "not_configured",
         message: "Hermes Host status from health probe.",
         write_tools: false,
-        mock: health?.hermes !== "reachable",
-        pin: health?.hermes_pin || null,
+        mock: !(hermesHost?.api_server || health?.hermes === "reachable"),
+        api_server: Boolean(hermesHost?.api_server),
+        pin: health?.hermes_pin || hermesHost?.pin || null,
       },
       operatorSeat,
       engineLabsLoop: coalesceEngineLabsLoop(engineLabsLoop),

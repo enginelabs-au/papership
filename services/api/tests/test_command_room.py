@@ -1,8 +1,28 @@
 """Paid operator seat, Hey Papership defaults, Hermes Host box, no Context Music."""
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.managed_projects import ALL_DOMAIN_IDS, ENGINE_LABS_JOB_PURPOSE, ENGINE_LABS_PROJECT_ID
+
+
+@pytest.fixture(autouse=True)
+def _mock_loop_hermes_dispatch(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _fake(**kwargs: object) -> dict:
+        job_id = str(kwargs.get("job_id") or "job")
+        stage = str(kwargs.get("stage") or "request")
+        work_item_id = str(kwargs.get("work_item_id") or "wi")
+        run_id = f"run_test_{job_id}_{stage}"
+        return {
+            "status": "accepted",
+            "run_id": run_id,
+            "http_status": 202,
+            "tool": "memory_read",
+            "summary": "Hermes accepted (test dispatch).",
+            "body": {"id": run_id},
+        }
+
+    monkeypatch.setattr("app.loop_hermes_bridge.dispatch_loop_stage", _fake)
 
 
 def test_paid_operator_seat_has_all_domains(client: TestClient, founder_headers: dict[str, str]) -> None:

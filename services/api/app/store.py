@@ -1214,7 +1214,9 @@ class Store:
         hermes_status: str = "not_configured",
     ) -> dict[str, Any]:
         """Execute synchronous stage work; persist artifact + governed memory row."""
+        from app.config import load_settings
         from app.loop import LOOP_STAGES
+        from app.loop_hermes_bridge import LoopHermesUnavailableError, dispatch_loop_stage
         from app.loop_stage_work import build_stage_artifact
         from app.managed_projects import ENGINE_LABS_JOB_PURPOSE
 
@@ -1239,6 +1241,20 @@ class Store:
             if proj and proj["bound_repo"]:
                 bound_repo = proj["bound_repo"]
 
+        settings = load_settings()
+        base_url = (settings.hermes_api_base_url or "").strip()
+        try:
+            hermes_dispatch = dispatch_loop_stage(
+                base_url=base_url,
+                stage=stage,
+                work_item_id=work_item_id,
+                job_id=job_id,
+                work_title=row["title"] or "Engine Labs loop",
+                bound_repo=bound_repo,
+            )
+        except LoopHermesUnavailableError as exc:
+            raise StoreError(exc.detail, 503) from exc
+
         built = build_stage_artifact(
             stage=stage,
             work_item_id=work_item_id,
@@ -1246,6 +1262,7 @@ class Store:
             work_title=row["title"] or "Engine Labs loop",
             bound_repo=bound_repo,
             hermes_status=hermes_status,
+            hermes_dispatch=hermes_dispatch,
         )
         now = _now()
         aid = _id("lart")
@@ -1328,6 +1345,7 @@ class Store:
                 "ledger_path": built["ledger_path"],
                 "memory_item_id": mem_id,
                 "hermes_status": hermes_status,
+                "hermes_run_id": hermes_dispatch.get("run_id"),
             },
         )
         self.append_audit(principal_id, "work_item.loop_artifact", "work_item", work_item_id)

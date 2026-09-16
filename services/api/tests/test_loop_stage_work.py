@@ -16,18 +16,27 @@ def test_build_stage_artifact_markdown() -> None:
         work_item_id="wi_test",
         job_id="job_test",
         work_title="First Engine Labs loop",
+        hermes_dispatch={
+            "run_id": "run_live_abc",
+            "tool": "memory_read",
+            "summary": "Research paragraph from Hermes.",
+        },
     )
     assert art["artifact_type"] == "research_brief"
     assert "Research brief" in art["body_markdown"]
     assert art["ledger_path"].startswith(".papership/loop/wi_test/")
+    assert art["meta"]["hermes_run_id"] == "run_live_abc"
+    assert "run_stub" not in art["body_markdown"]
 
 
-def test_assignment_includes_hermes_run_stub() -> None:
+def test_assignment_includes_real_hermes_run_id() -> None:
     art = build_stage_artifact(
         stage="assignment",
         work_item_id="wi_a",
         job_id="job_a",
         work_title="Loop",
         hermes_status="reachable",
+        hermes_dispatch={"run_id": "run_ee41560dd3ee46eb9bef3fcd6615e6ba", "tool": "memory_read"},
     )
-    assert art["meta"]["hermes_run_id"].startswith("run_probe_")
+    assert art["meta"]["hermes_run_id"] == "run_ee41560dd3ee46eb9bef3fcd6615e6ba"
+    assert "run_stub" not in str(art["meta"])

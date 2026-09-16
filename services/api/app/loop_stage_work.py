@@ -1,4 +1,4 @@
-"""Synchronous stage work for engine_labs.loop — produces ledger artifacts (mock-safe)."""
+"""Synchronous stage work for engine_labs.loop — ledger artifacts backed by Hermes Host runs."""
 
 from __future__ import annotations
 
@@ -34,6 +34,7 @@ def build_stage_artifact(
     work_title: str,
     bound_repo: str = "enginelabs-au/papership",
     hermes_status: str = "not_configured",
+    hermes_dispatch: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if stage not in LOOP_STAGES:
         raise ValueError(f"unknown loop stage {stage!r}")
@@ -42,11 +43,10 @@ def build_stage_artifact(
     digest = hashlib.sha256(f"{work_item_id}:{stage}:{job_id}".encode()).hexdigest()[:12]
     title = f"Loop · {stage.replace('_', ' ')} · {work_title}"
 
-    hermes_run_id: str | None = None
-    if stage in {"assignment", "isolated_change", "tests"}:
-        hermes_run_id = f"run_stub_{digest}"
-        if hermes_status == "reachable":
-            hermes_run_id = f"run_probe_{digest}"
+    dispatch = hermes_dispatch or {}
+    hermes_run_id = dispatch.get("run_id")
+    hermes_summary = dispatch.get("summary") or ""
+    hermes_tool = dispatch.get("tool")
 
     lines: list[str] = [
         f"# {title}",
@@ -57,6 +57,29 @@ def build_stage_artifact(
         f"- **Repository:** `{bound_repo}`",
         "",
     ]
+
+    if hermes_run_id:
+        lines.extend(
+            [
+                "## Hermes Host",
+                "",
+                f"- **Run id:** `{hermes_run_id}`",
+                f"- **Tool:** `{hermes_tool or 'memory_read'}` (read-only catalog)",
+                f"- **Host status:** `{hermes_status}`",
+                "",
+            ]
+        )
+        if hermes_summary:
+            lines.extend(["### Response", "", hermes_summary, ""])
+    else:
+        lines.extend(
+            [
+                "## Hermes Host",
+                "",
+                "_No Hermes run id was returned for this stage._",
+                "",
+            ]
+        )
 
     if stage == "request":
         lines.extend(
@@ -81,10 +104,6 @@ def build_stage_artifact(
                 "- `docs/plans/phase_2_development_loop_plan.md`",
                 "- `services/api/app/loop.py` (PRD-B.1 stages)",
                 "",
-                "### Findings",
-                "- Loop jobs must persist work items and produce stage evidence, not only POST stage.",
-                "- Vercel preview runs without Hermes; local worker stubs still write artifacts.",
-                "",
             ]
         )
     elif stage == "specification":
@@ -92,9 +111,9 @@ def build_stage_artifact(
             [
                 "## Specification outline",
                 "",
-                "1. `start_engine_labs_job` creates job + work item + runs request-stage work.",
-                "2. `advance_stage` moves forward and runs work for the new stage.",
-                "3. Artifacts land in `loop_stage_artifacts` and a governed memory row.",
+                "1. `start_engine_labs_job` creates job + work item + runs request-stage work via Hermes.",
+                "2. `advance_stage` moves forward and dispatches a catalogued read run for the new stage.",
+                "3. Artifacts land in `loop_stage_artifacts` with `hermes_run_id` in meta.",
                 "4. UI surfaces `current_artifact` markdown on Work → Workflows.",
                 "",
             ]
@@ -104,11 +123,10 @@ def build_stage_artifact(
             [
                 "## Task list",
                 "",
-                "- [ ] Wire `loop_stage_work` into store start/advance paths",
-                "- [ ] Extend work-item API payload with artifacts",
-                "- [ ] Mirror stage work in browser offline mock",
-                "- [ ] Show artifact panel in WorkWorkflows",
-                "- [ ] Extend API tests for artifact contracts",
+                "- [x] Wire loop stages to Hermes Host API (`POST /v1/runs` + `memory_read`)",
+                "- [x] Fail Start/Advance when Hermes is unset (no stub runs)",
+                "- [ ] Mirror Hermes errors in browser offline path",
+                "- [ ] Show run id + response in Stage output panel",
                 "",
             ]
         )
@@ -118,25 +136,18 @@ def build_stage_artifact(
                 "## Assignment",
                 "",
                 "- **Assignee:** Papership agent (user-equivalent, read-only Hermes)",
-                f"- **Hermes run (stub):** `{hermes_run_id}`",
-                "- Worker pool: local synchronous stub (no live terminal on Vercel).",
+                "- **Hermes:** HostHatch gateway via `HERMES_API_BASE_URL` tunnel",
                 "",
             ]
         )
     elif stage == "isolated_change":
         lines.extend(
             [
-                "## Isolated change stub",
+                "## Isolated change",
                 "",
                 f"- Branch: `loop/{digest}` (dry-run — not pushed)",
                 f"- Patch file: `.papership/loop/{digest}.md`",
-                f"- Hermes run (stub): `{hermes_run_id}`",
-                "",
-                "```markdown",
-                f"# Loop change note {digest}",
-                "",
-                "Placeholder isolated change for founder review.",
-                "```",
+                "- Hermes run captures read-only context for the proposed change.",
                 "",
             ]
         )
@@ -145,9 +156,8 @@ def build_stage_artifact(
             [
                 "## Test plan",
                 "",
-                "- `services/api/tests/test_engine_labs_job.py` — start + advance produce artifacts",
-                "- `services/api/tests/test_loop_stage_work.py` — markdown contracts per stage",
-                f"- Hermes run (stub): `{hermes_run_id}`",
+                "- `services/api/tests/test_engine_labs_job.py` — start + advance with mocked Hermes dispatch",
+                "- `services/api/tests/test_loop_hermes_required.py` — 503 when Host unset",
                 "",
             ]
         )
@@ -156,10 +166,9 @@ def build_stage_artifact(
             [
                 "## Review checklist",
                 "",
-                "- [ ] Stage artifact visible in UI",
+                "- [ ] Stage artifact shows real `hermes_run_id`",
                 "- [ ] Loop history shows work evidence, not only `founder.advance`",
                 "- [ ] Job events include `loop.stage.artifact`",
-                "- [ ] Offline mock writes the same shape to localStorage",
                 "",
             ]
         )
@@ -172,10 +181,6 @@ def build_stage_artifact(
                 f"- **Head:** `loop/{digest}` → **base:** `main`",
                 "- **Live open:** false (GitHub App dry-run default)",
                 "",
-                "### Body stub",
-                "",
-                "Automated loop reached release_proposal with linked ledger artifacts.",
-                "",
             ]
         )
     elif stage == "monitoring":
@@ -184,7 +189,6 @@ def build_stage_artifact(
                 "## Monitoring note",
                 "",
                 "- Watch deployment health after a real release (not activated in R1).",
-                "- Capture first-baseline metrics in verification.md when live.",
                 "",
             ]
         )
@@ -193,8 +197,7 @@ def build_stage_artifact(
             [
                 "## Retained knowledge",
                 "",
-                "Decision: stage transitions without artifacts are rejected — Cam sees markdown",
-                "briefs, task lists, and PR stubs in the ledger for every stage.",
+                "Founder loop stages dispatch real Hermes Host runs; unset Host fails loudly in the UI.",
                 "",
             ]
         )
@@ -212,6 +215,12 @@ def build_stage_artifact(
     }
     if hermes_run_id:
         meta["hermes_run_id"] = hermes_run_id
+    if hermes_tool:
+        meta["hermes_tool"] = hermes_tool
+    if dispatch.get("http_status") is not None:
+        meta["hermes_http_status"] = dispatch.get("http_status")
+    if dispatch.get("idempotency_key"):
+        meta["hermes_idempotency_key"] = dispatch.get("idempotency_key")
 
     return {
         "stage": stage,

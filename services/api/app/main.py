@@ -21,7 +21,7 @@ from app.oauth import annotate_connection, complete_oauth_callback, frontend_red
 from app.github_app import GithubError, installation_permissions, list_pulls, open_pull, probe_github
 from app.github_grants import intersect_repo_grants, may_open_pull
 from app.source_grants import intersect_source_grants, may_live_write
-from app.hermes_health import probe_hermes
+from app.hermes_health import probe_hermes, probe_hermes_api_server
 from app.loop import LOOP_STAGES
 from app.grants import effective_grants
 from app.logging_util import TraceMiddleware, configure_logging
@@ -136,22 +136,31 @@ def create_app(store_path: str | None = None) -> FastAPI:
     @app.get("/hermes/host")
     def hermes_host(_ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
         """Always-on Hermes Host status box for technical operators. Probe only — no write tools."""
-        status = probe_hermes(settings.hermes_api_base_url)
-        configured = bool((settings.hermes_api_base_url or "").strip())
+        probe = probe_hermes_api_server(settings.hermes_api_base_url)
+        status = probe.get("status") or "not_configured"
+        configured = bool(probe.get("configured"))
+        api_ready = probe.get("api_server") is True
         return {
             "product": "Hermes Host",
             "role": "always-on agent box",
             "status": status,
             "configured": configured,
+            "api_server": api_ready,
             "pin": settings.hermes_version_pin or None,
             "write_tools": False,
             "live_production_writes": False,
-            "mock": status in {"not_configured", "unreachable", "error", "serve_ui"},
+            "mock": not api_ready,
             "message": {
-                "reachable": "Hermes Host is reachable. Papership mediates sessions; write tools stay blocked.",
-                "serve_ui": "A Hermes login UI is answering — not the API server. Runs stay blocked.",
-                "unreachable": "Hermes Host is unreachable. Configure HERMES_API_BASE_URL for a local/mock host.",
-                "not_configured": "Hermes Host is not configured. Local mock mode — no Cam HostHatch secrets required.",
+                "reachable": (
+                    "Hermes Host API is reachable on HERMES_API_BASE_URL. "
+                    "Founder loop Start/Advance dispatch read-only Hermes runs."
+                    if api_ready
+                    else "Hermes answers /health but the Host API server is not proven "
+                    "(tunnel to gateway :8642, not login UI :9119)."
+                ),
+                "serve_ui": "A Hermes login UI is answering — point HERMES_API_BASE_URL at the gateway API (:8642 via tunnel).",
+                "unreachable": "Hermes Host is unreachable. Run scripts/hermes-tunnel.sh to HostHatch, then set HERMES_API_BASE_URL=http://127.0.0.1:8642.",
+                "not_configured": "Hermes Host is not configured. Founder loop Start/Advance will fail until HERMES_API_BASE_URL is set (no stub runs).",
                 "error": "Hermes Host probe failed. No write tools were invoked.",
             }.get(status, "Hermes Host status unknown."),
             "context_music": False,
