@@ -105,10 +105,15 @@ test("local sign-in continues without a password check", () => {
   assert.match(app, /email and password are ignored/);
 });
 
-test("Integrations Set up preselects the connector id", () => {
-  const api = readFileSync(join(root, "src/api/papership.js"), "utf8");
+test("command room seat and workflows are deep-linkable", () => {
   const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
-  assert.match(api, /ui\.openWizard\?\.\(provider\)/);
-  assert.match(app, /const openWizard = useCallback/);
-  assert.match(app, /Continue to Slack/);
+  const screens = readFileSync(join(root, "src/blueprint2/screens.jsx"), "utf8");
+  assert.match(app, /#settings\/\$\{toSlug\(setPane/);
+  assert.match(app, /goWorkflows/);
+  assert.match(app, /goSeat/);
+  assert.match(app, /commandRoom/);
+  assert.match(app, /Work · Workflows/);
+  assert.match(screens, /bp2-command-room/);
+  assert.match(screens, /Start Founder loop/);
+  assert.match(screens, /seatSummary/);
 });

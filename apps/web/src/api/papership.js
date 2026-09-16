@@ -1,7 +1,7 @@
 export const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 const SEAT_LABEL = {
-  founder: "Founder",
+  founder: "Paid operator",
   project_lead: "Project Lead",
   operator: "Operator",
   guest: "Guest",
