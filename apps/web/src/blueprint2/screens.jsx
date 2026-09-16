@@ -273,6 +273,18 @@ export function Registry({ v }) {
 export function WorkProjects({ v }) {
   return (
     <div className="bp2-table-wrap" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderBottom: "1px solid var(--line)" }}>
+        <span style={{ font: "600 12px Inter,sans-serif", color: "var(--t3)" }}>Managed projects</span>
+        {typeof v.startEngineLabsJob === "function" ? (
+          <button
+            type="button"
+            onClick={() => void v.startEngineLabsJob()}
+            style={{ height: 28, padding: "0 12px", border: "1px solid var(--line)", background: "var(--canvas)", color: "var(--t1)", borderRadius: 6, font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}
+          >
+            Start Engine Labs loop
+          </button>
+        ) : null}
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,2.4fr) 130px 150px 110px 92px 150px 92px", gap: 10, padding: "9px 14px", borderBottom: "1px solid var(--line)", font: "600 12px Inter,sans-serif", color: "var(--t3)" }}>
         <span>Plan</span><span>Department</span><span>Owner</span><span>Status</span><span>Priority</span><span>Progress</span><span>Due</span>
       </div>
@@ -280,7 +292,7 @@ export function WorkProjects({ v }) {
         <div key={p.key} className="bp2-project-row" onClick={p.open} style={{ display: "grid", gridTemplateColumns: "minmax(0,2.4fr) 130px 150px 110px 92px 150px 92px", gap: 10, alignItems: "center", padding: "10px 14px", borderBottom: "1px solid var(--line2)", cursor: "pointer" }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12.5, fontWeight: 500 }}>{p.name}</div>
-            <div style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.key}</div>
+            <div style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.key}{p.managed ? " · managed" : ""}</div>
           </div>
           <span style={{ fontSize: 12, color: "var(--t2)" }}>{p.dept}</span>
           <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--t2)" }}><span style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#a78bfa)", color: "#fff", font: "600 9px Inter,sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>CD</span>Cam Douglas</span>
@@ -618,7 +630,10 @@ export function ConnectionsView({ v }) {
           {v.domainShells.map((d) => (
             <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
               <span>{d.id} · {d.label}</span>
-              <span style={{ color: "var(--t3)" }}>{d.status} · needs connection</span>
+              <span style={{ color: "var(--t3)" }}>
+                {d.status || "planned"}
+                {d.needs_connection ? " · needs connection" : d.live_write ? "" : " · no live write"}
+              </span>
             </div>
           ))}
         </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API_BASE, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
+import { API_BASE, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
 import { PRODUCT } from "../brand";
 import { useIsMobile } from "../hooks/use-mobile";
 import "./blueprint2.css";
@@ -553,6 +553,22 @@ export default function Blueprint2App() {
         setOverlay(await loadPapershipOverlay());
       } catch (error) {
         setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not record the erasure request." }));
+      }
+    };
+    out.startEngineLabsJob = async () => {
+      const projectId = overlay.managedProjects?.[0]?.id || "proj-engine-labs";
+      try {
+        const result = await startEngineLabsJob(projectId, "Engine Labs loop");
+        setOverlay((prev) => ({
+          ...prev,
+          actionError: "",
+          lastEngineLabsJob: result,
+        }));
+        setOverlay(await loadPapershipOverlay());
+        return result;
+      } catch (error) {
+        setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not start the Engine Labs job." }));
+        throw error;
       }
     };
     void page; void cur;

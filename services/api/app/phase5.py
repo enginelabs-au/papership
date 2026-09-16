@@ -30,7 +30,13 @@ CANONICAL_REFERENCES = {
 }
 
 
-def domain_catalogue() -> list[dict[str, Any]]:
+def domain_catalogue(registry_items: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Full B01–B24 + P01–P19 catalogue. Live connector write stays refused."""
+    from app.managed_projects import full_domain_catalogue
+
+    if registry_items is not None:
+        return full_domain_catalogue(registry_items)
+    # Legacy shell-only view used by older call sites; prefer store-backed path.
     return [
         {
             **row,
@@ -42,9 +48,10 @@ def domain_catalogue() -> list[dict[str, Any]]:
 
 
 def refuse_domain_connect(domain_id: str) -> None:
+    from app.managed_projects import ALL_DOMAIN_IDS
     from app.phase7 import known_shell_ids
 
-    ids = {row["id"] for row in R3_SHELLS} | known_shell_ids()
+    ids = set(ALL_DOMAIN_IDS) | {row["id"] for row in R3_SHELLS} | known_shell_ids()
     if domain_id not in ids:
         raise StoreError("unknown domain", 403)
     raise StoreError("live write refused: domain is a planned catalogue shell", 403)

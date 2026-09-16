@@ -25,6 +25,7 @@ from app.hermes_health import probe_hermes
 from app.loop import LOOP_STAGES
 from app.grants import effective_grants
 from app.logging_util import TraceMiddleware, configure_logging
+from app.managed_projects import ENGINE_LABS_JOB_PURPOSE, ENGINE_LABS_PROJECT_ID
 from app.store import Store, StoreError
 from app.usage import emit_usage, validate_usage_event
 from app import memory_ops, phase5, phase7, rate_card, view_defs
@@ -103,7 +104,25 @@ def create_app(store_path: str | None = None) -> FastAPI:
             "count": len(items),
             "hermes_side_effecting_tools": "catalogued",
             "loop_stages": list(LOOP_STAGES),
+            "first_managed_project_id": ENGINE_LABS_PROJECT_ID,
         }
+
+    @app.get("/projects")
+    def list_projects(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return {"items": store.list_managed_projects(ctx.principal_id)}
+
+    @app.get("/projects/{project_id}")
+    def get_project(project_id: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return store.get_managed_project(ctx.principal_id, project_id)
+
+    @app.post("/projects/{project_id}/jobs")
+    def start_project_job(
+        project_id: str, body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)
+    ) -> JSONResponse:
+        title = str(body.get("title") or "Engine Labs loop")
+        purpose = str(body.get("purpose") or ENGINE_LABS_JOB_PURPOSE)
+        result = store.start_engine_labs_job(ctx.principal_id, project_id, title, purpose=purpose)
+        return JSONResponse(result, status_code=202)
 
     @app.get("/seats/templates")
     def seat_templates(_ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
@@ -636,7 +655,13 @@ def create_app(store_path: str | None = None) -> FastAPI:
 
     @app.get("/domains/catalogue")
     def domain_catalogue(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
-        return {"items": phase5.domain_catalogue() + phase7.domain_shells()}
+        items = phase5.domain_catalogue(store.list_registry())
+        return {
+            "items": items,
+            "count": len(items),
+            "first_managed_project_id": ENGINE_LABS_PROJECT_ID,
+            "live_write": False,
+        }
 
     @app.post("/domains/{domain_id}/connect")
     def connect_domain(domain_id: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
@@ -657,12 +682,21 @@ def create_app(store_path: str | None = None) -> FastAPI:
 
     @app.post("/jobs")
     def post_job(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> JSONResponse:
-        job = store.persist_job(ctx.principal_id, body.get("purpose", "dev.long_step"))
+        purpose = body.get("purpose", "dev.long_step")
+        if purpose == ENGINE_LABS_JOB_PURPOSE or body.get("project_id") == ENGINE_LABS_PROJECT_ID:
+            result = store.start_engine_labs_job(
+                ctx.principal_id,
+                str(body.get("project_id") or ENGINE_LABS_PROJECT_ID),
+                str(body.get("title") or "Engine Labs loop"),
+                purpose=ENGINE_LABS_JOB_PURPOSE,
+            )
+            return JSONResponse(result, status_code=202)
+        job = store.persist_job(ctx.principal_id, purpose)
         # persist-before-202: job is on disk before this response is built
         if settings.test_hooks and os.environ.get("ENGINE_TEST_CRASH_AFTER_PERSIST") == "1":
             raise RuntimeError("crash after persist")
         store.start_job(job["id"], ctx.principal_id)
-        if body.get("purpose", "dev.long_step") == "dev.long_step":
+        if purpose == "dev.long_step":
             store.add_receipt(job["id"], "long_step", body.get("idempotency_key") or f"{job['id']}:long_step")
             store.complete_job(job["id"])
         refreshed = store.get_job(job["id"])

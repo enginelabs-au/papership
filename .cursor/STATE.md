@@ -2,19 +2,47 @@
 
 ## Current Objective
 
-- Live Papership web UI is `docs/ui-blueprint/blueprint-2` exactly (D-21 / D-22) at **`/papership`** (D-32). At `max-width: 767px` the live chrome is the R4 compressed layout from `OrgOS Mobile.dc.html`. Prism-head mark is app/tab icon only, not in-app.
+- First managed project is Papership / Engine Labs. Full B01–B24 + P01–P19 catalogue is visible. Engine Labs loop jobs can be queued (`engine_labs.loop`) without fake-shipping 43 working products. Quark and portability stay out of this increment.
 
 ## Current Status
 
-- Initial development closed. Phases 0–7 complete. Final checklist written. Project blueprints now live under `docs/blueprints/`.
+- Increment in flight on `cursor/engine-labs-job-loop-b87f`: managed project seed, 43-row catalogue, loop job persist-before-202 queued (not auto-run).
 
 ## Project Phase
 
-- Closure. Active plan: `docs/plans/final_implementation_checklist.md`. No Phase 8.
+- Post-closure increment toward the intake registry. Not a new numbered phase. Active plan remains `docs/plans/final_implementation_checklist.md`.
 
 ## Active Plan
 
-- `docs/plans/final_implementation_checklist.md` (status: open — owner walk)
+- `docs/plans/final_implementation_checklist.md` plus this Engine Labs job-loop increment.
+
+## Files in Active Use
+
+- `services/api/app/managed_projects.py`
+- `services/api/app/store.py`
+- `services/api/app/main.py`
+- `services/api/app/phase5.py`
+- `services/api/tests/test_engine_labs_job.py`
+- `apps/web/src/api/papership.js`
+- `apps/web/src/blueprint2/App.jsx`
+- `apps/web/src/blueprint2/screens.jsx`
+- `docs/handover/outstanding-tasks.md`
+
+## Current Working State
+
+- Branch `cursor/engine-labs-job-loop-b87f`. Registry still 43 rows; only B08.01, P01.01, P04.01 move to `configured`. Jobs queue with a work item at `request`. Hermes write and live GitHub open stay false.
+
+## Next Actions
+
+1. Verify API tests for Engine Labs jobs and catalogue.
+2. Open PR; do not merge without owner review.
+3. Do not treat write/external Hermes tools as accepted.
+4. Charges stay off (OT-08).
+5. Repeat open rows from `docs/handover/outstanding-tasks.md`.
+
+## Last Updated
+
+- 2026-09-16T12:45Z — Engine Labs managed project + loop job wiring increment (P-009). Not fake-shipping 43 products.
 
 ## Active Workstream
 
@@ -114,7 +142,7 @@
 
 ## Current Working State
 
-- Branch `main` @ `551bf31` (pushed). No leftover local or remote feature refs. Closed PRs 1–5 still exist as GitHub history.
+- Branch `cursor/engine-labs-job-loop-b87f`. First managed project `proj-engine-labs`. Catalogue 43. Loop jobs queue at `request`.
 - GitHub App `papership-dev` is local. VPS is Hermes only.
 - Local API sources `~/.config/papership/connectors.env`. OT-25 Gmail and OT-26 Slack are both `configured` with `has_token` on the local store. Send stays approval-then-receipt. Vercel still cannot hold these tokens.
 
