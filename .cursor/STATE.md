@@ -6,7 +6,7 @@
 
 ## Current Status
 
-- Increment continues on `cursor/engine-labs-job-loop-b87f` (PR #7): seat entitlements, Hey Papership rename, Workflows Founder loop CTA, Hermes Host probe box. Tests: `test_command_room.py` + prior job-loop suite green.
+- Increment continues on `cursor/engine-labs-job-loop-b87f` (PR #7) tip `edc0713`: command-room work plus Tauri icons CI fix (Node PNG decode, no Pillow). `product-ci` run 35101017265 success.
 
 ## Project Phase
 
@@ -44,6 +44,7 @@
 
 ## Last Updated
 
+- 2026-09-16T13:20Z — Fixed product-ci PIL failure on icons test; tip `edc0713`; run 35101017265 green.
 - 2026-09-16T12:45Z — Engine Labs managed project + loop job wiring increment (P-009). Not fake-shipping 43 products.
 - 2026-09-16T12:50Z — PR #7 open; 37 API tests passed; live curl smoke ok (catalogue 43, job queued).
 
