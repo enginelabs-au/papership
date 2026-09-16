@@ -831,7 +831,9 @@ export default function Blueprint2App() {
     const stage = v.engineLabsLoop?.currentStage || loopJob?.stage;
     if (loopJob?.id && stage) {
       pageChip = `Loop · ${String(stage).replace(/_/g, " ")}`;
-      pageDesc = `Job ${loopJob.id} · ${loopJob.status || "queued"}${v.engineLabsLoop?.mock ? " · browser mock (API unreachable)" : ""}`;
+      const art = v.engineLabsLoop?.currentArtifact;
+      const artHint = art?.artifact_type ? ` · ${art.artifact_type}` : "";
+      pageDesc = `Job ${loopJob.id} · ${loopJob.status || "queued"}${artHint}${v.engineLabsLoop?.mock ? " · browser mock (API unreachable)" : ""}`;
     } else {
       pageDesc = "Founder / Engine Labs loop — press Start; the page title chip shows the live stage.";
     }

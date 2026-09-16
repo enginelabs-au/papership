@@ -400,6 +400,8 @@ export function WorkWorkflows({ v }) {
   const boundRepo = loop?.boundRepo || "enginelabs-au/papership";
   const projectName = loop?.projectName || "Engine Labs · Papership";
   const busy = Boolean(v.loopActionBusy);
+  const artifact = loop?.currentArtifact || loop?.workItem?.current_artifact || job?.current_artifact || null;
+  const artifactBody = artifact?.body_markdown || "";
   return (
     <div className="bp2-workflows" style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 420 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px" }}>
@@ -427,6 +429,12 @@ export function WorkWorkflows({ v }) {
               ) : (
                 <span style={{ color: "var(--green)" }}>Final stage reached on this work item.</span>
               )}
+              {artifact ? (
+                <span>
+                  Stage output · {artifact.artifact_type || "artifact"}
+                  {artifact.ledger_path ? ` · ${artifact.ledger_path}` : ""}
+                </span>
+              ) : null}
             </div>
           ) : (
             <div style={{ marginTop: 8, fontSize: 12, color: "var(--t3)" }}>
@@ -489,6 +497,39 @@ export function WorkWorkflows({ v }) {
               <div style={{ marginTop: 8, font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
                 status={host.status} · write_tools={String(host.write_tools)} · mock={String(host.mock)}
               </div>
+            </div>
+          ) : null}
+          {artifact ? (
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, border: "1px solid var(--blue)", background: "var(--blue-soft)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600 }}>Stage output · {loop?.currentStage || job?.stage || "request"}</div>
+                <span style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>
+                  {artifact.id}
+                  {artifact.meta?.hermes_run_id ? ` · ${artifact.meta.hermes_run_id}` : ""}
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 4 }}>{artifact.title}</div>
+              <pre
+                style={{
+                  marginTop: 10,
+                  padding: 10,
+                  borderRadius: 6,
+                  background: "var(--surface)",
+                  border: "1px solid var(--line2)",
+                  font: "400 11px/1.45 'JetBrains Mono',monospace",
+                  color: "var(--t1)",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  maxHeight: 280,
+                  overflow: "auto",
+                }}
+              >
+                {artifactBody}
+              </pre>
+            </div>
+          ) : job ? (
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, border: "1px dashed var(--line)", color: "var(--t3)", fontSize: 12 }}>
+              No stage artifact yet. Start or advance the loop to produce ledger output.
             </div>
           ) : null}
         </div>

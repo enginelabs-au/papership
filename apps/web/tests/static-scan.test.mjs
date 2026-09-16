@@ -116,6 +116,7 @@ test("command room seat and workflows are deep-linkable", () => {
   assert.match(screens, /bp2-command-room/);
   assert.match(screens, /Start Founder loop/);
   assert.match(screens, /Advance to/);
+  assert.match(screens, /Stage output/);
   assert.match(app, /advanceEngineLabsLoop/);
   assert.match(screens, /seatSummary/);
 });

@@ -59,17 +59,20 @@ def test_start_engine_labs_job_queues_with_work_item(
     )
     assert created.status_code == 202
     body = created.json()
-    assert body["status"] == "queued"
+    assert body["status"] in {"queued", "running"}
     assert body["purpose"] == ENGINE_LABS_JOB_PURPOSE
     assert body["project_id"] == ENGINE_LABS_PROJECT_ID
     assert body["work_item_id"]
     assert body["stage"] == "request"
     assert body["live_github_open"] is False
     assert body["hermes_write"] is False
+    assert body.get("current_artifact")
+    assert body["current_artifact"]["stage"] == "request"
+    assert body["current_artifact"]["body_markdown"]
 
     job = client.get(f"/jobs/{body['id']}", headers=founder_headers)
     assert job.status_code == 200
-    assert job.json()["status"] == "queued"
+    assert job.json()["status"] == "running"
     assert job.json()["project_id"] == ENGINE_LABS_PROJECT_ID
     assert job.json()["work_item_id"] == body["work_item_id"]
     assert job.json()["run"]["purpose"] == ENGINE_LABS_JOB_PURPOSE
@@ -80,6 +83,8 @@ def test_start_engine_labs_job_queues_with_work_item(
     assert work.json()["project_id"] == ENGINE_LABS_PROJECT_ID
     assert work.json()["job_id"] == body["id"]
     assert len(work.json()["loop"]) >= 1
+    assert work.json()["current_artifact"]["artifact_type"] == "intake_brief"
+    assert len(work.json()["artifacts"]) >= 1
 
     detail = client.get(f"/projects/{ENGINE_LABS_PROJECT_ID}", headers=founder_headers)
     assert detail.status_code == 200
@@ -94,6 +99,8 @@ def test_start_engine_labs_job_queues_with_work_item(
     )
     assert advanced.status_code == 200
     assert advanced.json()["stage"] == "research"
+    assert advanced.json()["current_artifact"]["stage"] == "research"
+    assert advanced.json()["current_artifact"]["artifact_type"] == "research_brief"
 
     detail2 = client.get(f"/projects/{ENGINE_LABS_PROJECT_ID}", headers=founder_headers)
     assert detail2.json()["jobs"][0]["stage"] == "research"
@@ -110,7 +117,8 @@ def test_post_jobs_routes_engine_labs_purpose(
     assert created.status_code == 202
     body = created.json()
     assert body["purpose"] == ENGINE_LABS_JOB_PURPOSE
-    assert body["status"] == "queued"
+    assert body["status"] in {"queued", "running"}
+    assert body.get("current_artifact")
     assert body["project_id"] == ENGINE_LABS_PROJECT_ID
 
 

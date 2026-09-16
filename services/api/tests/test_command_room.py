@@ -47,8 +47,9 @@ def test_operator_template_can_start_loop(client: TestClient, founder_headers: d
         headers=headers,
     )
     assert queued.status_code == 202
-    assert queued.json()["status"] == "queued"
+    assert queued.json()["status"] in {"queued", "running"}
     assert queued.json()["hermes_write"] is False
+    assert queued.json().get("current_artifact")
 
 
 def test_hermes_host_is_probe_only(client: TestClient, founder_headers: dict[str, str]) -> None:

@@ -216,6 +216,102 @@ export const ENGINE_LABS_LOOP_STAGES = [
 ];
 export const ENGINE_LABS_LOOP_LOCAL_KEY = "papership-engine-labs-loop";
 
+const LOOP_STAGE_ARTIFACT_TYPES = {
+  request: "intake_brief",
+  research: "research_brief",
+  specification: "spec_outline",
+  plan: "task_list",
+  assignment: "assignment_record",
+  isolated_change: "change_stub",
+  tests: "test_plan",
+  review: "review_checklist",
+  release_proposal: "pr_draft_stub",
+  monitoring: "monitoring_note",
+  retained_knowledge: "knowledge_summary",
+};
+
+function buildLocalLoopStageArtifact({ stage, workItemId, jobId, title, boundRepo = "enginelabs-au/papership" }) {
+  const digest = `${workItemId}:${stage}:${jobId}`.split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
+  const slug = String(Math.abs(digest)).slice(0, 8);
+  const artifactType = LOOP_STAGE_ARTIFACT_TYPES[stage] || "stage_note";
+  const stageLabel = stage.replace(/_/g, " ");
+  const hermesRunId =
+    stage === "assignment" || stage === "isolated_change" || stage === "tests"
+      ? `run_stub_${slug}`
+      : null;
+  const lines = [
+    `# Loop · ${stageLabel} · ${title}`,
+    "",
+    `- **Stage:** \`${stage}\``,
+    `- **Work item:** \`${workItemId}\``,
+    `- **Job:** \`${jobId}\``,
+    `- **Repository:** \`${boundRepo}\``,
+    "",
+    `## ${stageLabel} output (browser mock)`,
+    "",
+    "This artifact was produced locally because the API was unreachable. The live API writes the same shape to the ledger.",
+  ];
+  if (hermesRunId) lines.push("", `- **Hermes run (stub):** \`${hermesRunId}\``);
+  const bodyMarkdown = lines.join("\n");
+  const ledgerPath = `.papership/loop/${workItemId}/${stage.replace(/_/g, "-")}.md`;
+  return {
+    id: `lart_local_${slug}_${stage}`,
+    work_item_id: workItemId,
+    job_id: jobId,
+    stage,
+    artifact_type: artifactType,
+    title: `Loop · ${stageLabel} · ${title}`,
+    body_markdown: bodyMarkdown,
+    ledger_path: ledgerPath,
+    memory_item_id: `mem_local_${slug}`,
+    meta: {
+      stage,
+      artifact_type: artifactType,
+      ledger_path: ledgerPath,
+      hermes_status: "not_configured",
+      live_github_open: false,
+      hermes_write: false,
+      ...(hermesRunId ? { hermes_run_id: hermesRunId } : {}),
+      mock: true,
+    },
+    created_at: new Date().toISOString(),
+    mock: true,
+  };
+}
+
+function applyLocalStageWork(state, stage) {
+  const workItem = state.workItem;
+  const job = state.job;
+  if (!workItem?.id || !job?.id) return state;
+  const artifact = buildLocalLoopStageArtifact({
+    stage,
+    workItemId: workItem.id,
+    jobId: job.id,
+    title: workItem.title || "Engine Labs loop",
+    boundRepo: state.boundRepo,
+  });
+  const artifacts = [...(state.artifacts || []), artifact];
+  const loopEvents = [
+    ...(workItem.loop || []),
+    { stage, evidence: `loop.stage.artifact:${artifact.id}` },
+  ];
+  const workItemNext = { ...workItem, stage, loop: loopEvents };
+  const jobNext = { ...job, stage, status: "running" };
+  return buildEngineLabsLoopState({
+    projectId: state.projectId,
+    projectName: state.projectName,
+    boundRepo: state.boundRepo,
+    loopStages: state.loopStages,
+    job: jobNext,
+    workItem: workItemNext,
+    currentStage: stage,
+    loopEventCount: loopEvents.length,
+    artifacts,
+    currentArtifact: artifact,
+    mock: true,
+  });
+}
+
 function isLoopTransportError(err) {
   if (!err) return false;
   if (err.name === "TypeError") return true;
@@ -251,22 +347,38 @@ function buildEngineLabsLoopState({
   currentStage,
   loopEventCount,
   mock = false,
+  artifacts = null,
+  currentArtifact = null,
 }) {
   const stages = loopStages?.length ? loopStages : ENGINE_LABS_LOOP_STAGES;
   const stage = currentStage || workItem?.stage || job?.stage || null;
   const idx = stage ? stages.indexOf(stage) : -1;
   const nextStage =
     job && idx >= 0 && idx < stages.length - 1 ? stages[idx + 1] : job ? null : null;
+  const resolvedArtifacts =
+    artifacts ??
+    workItem?.artifacts ??
+    (currentArtifact || workItem?.current_artifact ? [currentArtifact || workItem?.current_artifact].filter(Boolean) : []);
+  const resolvedCurrent =
+    currentArtifact ?? workItem?.current_artifact ?? (resolvedArtifacts.length ? resolvedArtifacts[resolvedArtifacts.length - 1] : null);
   return {
     projectId: projectId || ENGINE_LABS_PROJECT_ID,
     projectName: projectName || "Engine Labs · Papership",
     boundRepo: boundRepo || "enginelabs-au/papership",
     loopStages: stages,
     job: job && stage ? { ...job, stage } : job,
-    workItem,
+    workItem: workItem
+      ? {
+          ...workItem,
+          artifacts: resolvedArtifacts,
+          current_artifact: resolvedCurrent,
+        }
+      : workItem,
     currentStage: stage,
     nextStage,
     loopEventCount: loopEventCount ?? (workItem?.loop?.length || 0),
+    artifacts: resolvedArtifacts,
+    currentArtifact: resolvedCurrent,
     mock,
   };
 }
@@ -296,7 +408,7 @@ function localStartEngineLabsJob(projectId, title = "Engine Labs loop") {
     job_id: jid,
     loop: [{ stage, evidence: "engine_labs.job.start" }],
   };
-  const state = buildEngineLabsLoopState({
+  let state = buildEngineLabsLoopState({
     projectId,
     job,
     workItem,
@@ -304,8 +416,9 @@ function localStartEngineLabsJob(projectId, title = "Engine Labs loop") {
     loopEventCount: 1,
     mock: true,
   });
+  state = applyLocalStageWork(state, stage);
   writeLocalEngineLabsLoop(state);
-  return job;
+  return { ...job, stage, status: "running", current_artifact: state.currentArtifact, mock: true };
 }
 
 function localAdvanceEngineLabsLoopStage(workItemId, stage, evidence) {
@@ -313,9 +426,9 @@ function localAdvanceEngineLabsLoopStage(workItemId, stage, evidence) {
   if (!prev?.workItem?.id || prev.workItem.id !== workItemId) {
     throw new Error("No local loop job. Start the Founder loop first.");
   }
-  const loopEvents = [...(prev.workItem.loop || []), { stage, evidence }];
+  const loopEvents = [...(prev.workItem.loop || []), { stage, evidence: `founder.advance.${stage}` }];
   const workItem = { ...prev.workItem, stage, loop: loopEvents };
-  const state = buildEngineLabsLoopState({
+  let state = buildEngineLabsLoopState({
     projectId: prev.projectId,
     projectName: prev.projectName,
     boundRepo: prev.boundRepo,
@@ -324,10 +437,13 @@ function localAdvanceEngineLabsLoopStage(workItemId, stage, evidence) {
     workItem,
     currentStage: stage,
     loopEventCount: loopEvents.length,
+    artifacts: prev.artifacts,
+    currentArtifact: prev.currentArtifact,
     mock: true,
   });
+  state = applyLocalStageWork(state, stage);
   writeLocalEngineLabsLoop(state);
-  return workItem;
+  return state.workItem;
 }
 
 export function coalesceEngineLabsLoop(apiLoop) {
@@ -401,6 +517,8 @@ export async function fetchEngineLabsLoopState(projectId = ENGINE_LABS_PROJECT_I
       workItem,
       currentStage,
       loopEventCount: (workItem.loop || []).length,
+      artifacts: workItem.artifacts,
+      currentArtifact: workItem.current_artifact,
       mock: false,
     });
     writeLocalEngineLabsLoop(state);
