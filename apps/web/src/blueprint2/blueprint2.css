@@ -1,30 +1,38 @@
-/* Blueprint-2 tokens — exact copy of docs/ui-blueprint/blueprint-2/OrgOS.dc.html */
+/* Blueprint-2 chrome + blueprint-3 surface tokens (docs/ui-blueprint/blueprint-3/Papership.dc.html) */
 .bp2-root {
-  --canvas: #faf8f4;
+  --canvas: #f4f1e9;
   --surface: #ffffff;
-  --raised: #f1eee6;
-  --t1: #1a1224;
-  --t2: #63738a;
-  --t3: #617083;
-  --line: rgba(26, 18, 36, 0.11);
-  --line2: rgba(26, 18, 36, 0.06);
-  --hover: rgba(26, 18, 36, 0.04);
-  --wash: linear-gradient(180deg, #f7f4ee, #f3efe6, #faf8f4);
-  --navfield: #6d28d9;
-  --navfield2: #5b21b6;
-  --navink: #efe7ff;
-  --navink2: #c4b5fd;
+  --raised: #ebe5d7;
+  --sink: #e3dccb;
+  --chrome: #e9e3d4;
+  --t1: #1d1522;
+  --t2: #564d63;
+  --t3: #5d5468;
+  --line: rgba(29, 21, 34, 0.11);
+  --line2: rgba(29, 21, 34, 0.055);
+  --hover: rgba(29, 21, 34, 0.04);
+  --wash: linear-gradient(180deg, #f0ebe2, #ebe5d7, #f4f1e9);
+  --brand: #6d28d9;
+  --brand-h: #5b21b6;
+  --brand-soft: rgba(109, 40, 217, 0.1);
+  --brand-ink: #ffffff;
+  --navfield: var(--brand);
+  --navfield2: var(--brand-h);
+  --navink: #f6f1ff;
+  --navink2: #ded3ff;
   --blue: #2563eb;
   --blue-h: #1d4ed8;
   --blue-soft: rgba(37, 99, 235, 0.1);
-  --green: #059669;
-  --red: #e11d48;
-  --amber: #d97706;
-  --green-soft: rgba(5, 150, 105, 0.1);
-  --red-soft: rgba(225, 29, 72, 0.08);
-  --amber-soft: rgba(217, 119, 6, 0.1);
-  --shadow: 0 1px 2px rgba(26, 18, 36, 0.05), 0 8px 24px rgba(26, 18, 36, 0.07);
-  --shadow-lg: 0 24px 64px rgba(26, 18, 36, 0.18);
+  --green: #047857;
+  --red: #c8123f;
+  --amber: #a8560a;
+  --cyan: #0e7490;
+  --green-soft: rgba(4, 120, 87, 0.1);
+  --red-soft: rgba(200, 18, 63, 0.08);
+  --amber-soft: rgba(168, 86, 10, 0.1);
+  --cyan-soft: rgba(14, 116, 144, 0.1);
+  --shadow: 0 1px 1px rgba(29, 21, 34, 0.035), 0 2px 6px rgba(29, 21, 34, 0.05);
+  --shadow-lg: 0 26px 68px rgba(29, 21, 34, 0.2);
   height: 100dvh;
   min-height: 640px;
   display: flex;
@@ -40,16 +48,22 @@
 }
 
 .bp2-root[data-theme="dark"] {
-  --canvas: #0b0614;
-  --surface: #16101f;
-  --raised: #1c1528;
+  --canvas: #0d0814;
+  --surface: #171020;
+  --raised: #1d1529;
+  --sink: #110b1a;
+  --chrome: #140e1d;
   --t1: #f2eef8;
-  --t2: #9fb0cc;
-  --t3: #a9b8d2;
+  --t2: #b3aac4;
+  --t3: #a79fb8;
   --line: rgba(242, 238, 248, 0.12);
-  --line2: rgba(242, 238, 248, 0.07);
-  --hover: rgba(242, 238, 248, 0.05);
-  --wash: linear-gradient(180deg, #0b0614, #12081e, #0a0e22);
+  --line2: rgba(242, 238, 248, 0.06);
+  --hover: rgba(242, 238, 248, 0.045);
+  --wash: linear-gradient(180deg, #0d0814, #12081e, #0d0814);
+  --brand: #a78bfa;
+  --brand-h: #c4b5fd;
+  --brand-soft: rgba(167, 139, 250, 0.16);
+  --brand-ink: #1a1224;
   --navfield: #16082e;
   --navfield2: #1d0b3a;
   --navink: #f2eef8;
@@ -68,16 +82,22 @@
 }
 
 .bp2-root[data-theme="dimmed"] {
-  --canvas: #1e2438;
-  --surface: #232840;
-  --raised: #2a3050;
-  --t1: #eef1fa;
-  --t2: #a6b2cf;
-  --t3: #b3bed8;
-  --line: rgba(238, 241, 250, 0.12);
-  --line2: rgba(238, 241, 250, 0.07);
-  --hover: rgba(238, 241, 250, 0.05);
-  --wash: linear-gradient(180deg, #1e2438, #222842, #1e2438);
+  --canvas: #1f2434;
+  --surface: #262c40;
+  --raised: #2b324a;
+  --sink: #1a1e2c;
+  --chrome: #232838;
+  --t1: #eef0fa;
+  --t2: #a9b3d1;
+  --t3: #b6c0dc;
+  --line: rgba(238, 240, 250, 0.12);
+  --line2: rgba(238, 240, 250, 0.065);
+  --hover: rgba(238, 240, 250, 0.05);
+  --wash: linear-gradient(180deg, #1f2434, #222842, #1f2434);
+  --brand: #a78bfa;
+  --brand-h: #c4b5fd;
+  --brand-soft: rgba(167, 139, 250, 0.17);
+  --brand-ink: #1a1224;
   --navfield: #181d2e;
   --navfield2: #202641;
   --navink: #eef1fa;
@@ -167,9 +187,70 @@
   margin-bottom: 11px;
 }
 
+.bp2-command-greet {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.bp2-command-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bp2-command-tile {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 11px 12px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.bp2-command-tile:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.bp2-command-room-card {
+  border-left: 3px solid var(--brand);
+}
+
+.bp2-workflows-strip {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.bp2-workflows-strip-seg {
+  flex: 1 1 72px;
+  min-width: 72px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--line2);
+  overflow: hidden;
+}
+
+.bp2-workflows-strip-seg span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+
 @media (max-width: 900px) {
   .bp2-command-room {
     grid-template-columns: 1fr !important;
+  }
+
+  .bp2-command-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

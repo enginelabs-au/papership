@@ -71,7 +71,7 @@ const BOTTOM_TABS = ["today", "work", "inbox"];
 const RAIL_TABS = ["people", "data", "files", "integrations", "settings"];
 const NARROW_PX = 768;
 const PAGES = {
-  today: { t: "Today", d: "What needs you now — Tuesday 15 September, 14:41 AEST", subs: ["Overview", "Decisions", "Running", "Registry"], counts: { Decisions: "2", Running: "3" } },
+  today: { t: "Today", d: "Command room — what needs you now (blueprint-3 tiles on blueprint-2 chrome)", subs: ["Overview", "Decisions", "Running", "Registry"], counts: { Decisions: "2", Running: "3" } },
   work: { t: "Work", d: "Plans, assignments and the development loop — the native work ledger", subs: ["Projects", "Issues", "Board", "Roadmap", "Workflows", "Wiki"] },
   inbox: { t: "Inbox", d: "Ticketed conversations across connected channels", subs: ["All", "Mentions", "Starred", "Archived"], counts: { All: "4" } },
   people: { t: "People", d: "Seats, teams and invitations", subs: ["People", "Teams", "Pending invites"] },
@@ -347,6 +347,14 @@ export default function Blueprint2App() {
     setHey(false);
     closeMobileChrome();
   }, [closeMobileChrome]);
+  const goDecisions = useCallback(() => {
+    setTab("today");
+    setSub((s) => ({ ...s, today: "Decisions" }));
+    setRoute(null);
+    setPalette(false);
+    setHey(false);
+    closeMobileChrome();
+  }, [closeMobileChrome]);
   const openSlide = useCallback((s) => () => setSlide(s), []);
   const routeTo = useCallback((r) => () => { setRoute(r); setPalette(false); }, []);
 
@@ -363,6 +371,7 @@ export default function Blueprint2App() {
       goSeat,
       goWorkflows,
       goDomains,
+      goDecisions,
       modes: ["Ask", "Analyse", "Plan", "Draft", "Execute", "Review", "Automate"].map((m) => {
         const on = m === "Ask"; const off = m === "Automate";
         return { label: off ? "Automate · coming later" : m, cursor: off ? "not-allowed" : "pointer", bg: on ? "var(--blue-soft)" : "transparent", bd: on ? "var(--blue)" : "var(--line)", ink: off ? "var(--t3)" : on ? "var(--blue)" : "var(--t2)" };
@@ -582,6 +591,47 @@ export default function Blueprint2App() {
           charges: "Off · trial card only",
           contextMusic: false,
         };
+    out.commandGreet = {
+      title: "Good afternoon, Cam.",
+      meta: "Command room from blueprint-3 — seat, Founder loop, and domain catalogue stay on the existing Today · Work · Workflows routes.",
+    };
+    const loopJobPreview = overlay.lastEngineLabsJob || overlay.engineLabsLoop?.job;
+    const loopStagePreview = loopJobPreview?.stage || overlay.engineLabsLoop?.currentStage;
+    const loopStageLabel = loopStagePreview ? String(loopStagePreview).replace(/_/g, " ") : "not started";
+    out.commandTiles = [
+      {
+        label: "Needs you",
+        value: String(out.decisions.length),
+        meta: out.decisions.length ? "decisions on Today" : "all clear",
+        dot: out.decisions.length ? DOTS.warn : DOTS.ok,
+        ink: out.decisions.length ? "var(--amber)" : "var(--green)",
+        go: goDecisions,
+      },
+      {
+        label: "Founder loop",
+        value: loopStageLabel,
+        meta: "Work · Workflows",
+        dot: loopJobPreview ? DOTS.run : DOTS.idle,
+        ink: "var(--brand)",
+        go: goWorkflows,
+      },
+      {
+        label: "Domains",
+        value: String(out.seatSummary.domainCount),
+        meta: "Today · Registry",
+        dot: DOTS.ok,
+        ink: "var(--t1)",
+        go: goDomains,
+      },
+      {
+        label: "Running",
+        value: String(out.runs.filter((r) => r.status === "Running").length),
+        meta: "runs in flight",
+        dot: DOTS.run,
+        ink: "var(--brand)",
+        go: go("today"),
+      },
+    ];
     out.commandRoom = [
       {
         id: "seat",
@@ -813,7 +863,7 @@ export default function Blueprint2App() {
     };
     void page; void cur;
     return applyPapershipOverlay(out, overlay, { openWizard, setModal });
-  }, [theme, tab, sub, setPane, grants, go, goSeat, goWorkflows, goDomains, openSlide, routeTo, overlay, isMobile, openWizard, loopActionBusy]);
+  }, [theme, tab, sub, setPane, grants, go, goSeat, goWorkflows, goDomains, goDecisions, openSlide, routeTo, overlay, isMobile, openWizard, loopActionBusy]);
 
   const page = PAGES[tab] || PAGES.today;
   const cur = sub[tab] || DFLT[tab];

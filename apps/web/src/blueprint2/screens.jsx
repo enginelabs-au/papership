@@ -40,20 +40,44 @@ export function SubNav({ items }) {
 export function TodayOverview({ v }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {v.commandGreet ? (
+        <div className="bp2-command-greet">
+          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-.25px" }}>{v.commandGreet.title}</div>
+          <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 4, lineHeight: 1.45 }}>{v.commandGreet.meta}</div>
+        </div>
+      ) : null}
+      {v.commandTiles?.length ? (
+        <div className="bp2-command-tiles">
+          {v.commandTiles.map((tile) => (
+            <button key={tile.label} type="button" className="bp2-command-tile" onClick={tile.go}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: tile.dot, flex: "none" }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--t3)", letterSpacing: ".04em", textTransform: "uppercase" }}>{tile.label}</span>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-.3px", color: tile.ink, marginTop: 6 }}>{tile.value}</div>
+              <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)", marginTop: 3 }}>{tile.meta}</div>
+            </button>
+          ))}
+        </div>
+      ) : null}
       {v.commandRoom?.length ? (
-        <div className="bp2-command-room" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 10 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 9 }}>Quick paths</div>
+          <div className="bp2-command-room" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 10 }}>
           {v.commandRoom.map((card) => (
             <button
               key={card.id}
               type="button"
+              className="bp2-command-room-card"
               onClick={card.go}
-              style={{ textAlign: "left", border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 10, padding: "12px 14px", cursor: "pointer", color: "inherit", font: "inherit" }}
+              style={{ textAlign: "left", border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 10, padding: "12px 14px", cursor: "pointer", color: "inherit", font: "inherit", boxShadow: "var(--shadow)" }}
             >
               <div style={{ fontSize: 13, fontWeight: 600 }}>{card.title}</div>
               <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)", marginTop: 4 }}>{card.meta}</div>
               <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 6 }}>{card.body}</div>
             </button>
           ))}
+          </div>
         </div>
       ) : null}
       <div className="bp2-composer" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, boxShadow: "var(--shadow)", padding: "14px 16px 13px" }}>
@@ -466,6 +490,15 @@ export function WorkWorkflows({ v }) {
           ) : null}
         </div>
       </div>
+      {stages.length ? (
+        <div className="bp2-workflows-strip" aria-hidden="true">
+          {stages.map((n) => (
+            <div key={n.label} className="bp2-workflows-strip-seg" title={n.label}>
+              <span style={{ width: n.current ? "100%" : n.done ? "100%" : "28%", background: n.current ? "var(--brand)" : n.done ? "var(--green)" : "var(--line)" }} />
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div style={{ display: "flex", gap: 14, flex: 1, minHeight: 280 }}>
         <div className="bp2-workflows-lib" style={{ width: 180, flex: "none", background: "var(--raised)", border: "1px solid var(--line2)", borderRadius: 10, padding: 10 }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Loop stages</div>
