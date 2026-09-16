@@ -35,7 +35,7 @@ Every sub-agent brief must include:
 - required validation/evidence
 - completion criteria
 
-Every sub-agent must read `/AGENTS.md`, `/INSTRUCTIONS.md`, `/instructions/ROLES.md`, `/instructions/LAUCH.md` when the assignment belongs to a launched product lifecycle, and the core context required by its canonical role, plus the active plan, task manifest, role charter, predecessor handoff, and instruction files relevant to its assignment. A role starts by verifying or completing its charter and exhaustive plan; delegation is not permission to implement before that plan exists.
+Every sub-agent must read `/AGENTS.md`, `/INSTRUCTIONS.md`, `/instructions/ROLES.md`, `/instructions/LAUNCH.md` when the assignment belongs to a launched product lifecycle, and the core context required by its canonical role, plus the active plan, task manifest, role charter, predecessor handoff, and instruction files relevant to its assignment. A role starts by verifying or completing its charter and exhaustive plan; delegation is not permission to implement before that plan exists.
 
 ## Write ownership
 

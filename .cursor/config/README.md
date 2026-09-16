@@ -26,7 +26,7 @@ Their supporting implementation belongs in organized subdirectories:
 
 - Native project entry: repository-root `AGENTS.md`.
 - Detailed operating contract: `/AGENTS.md`.
-- Practical product entry: `/skills/launch-pipeline/SKILL.md` and `/instructions/LAUCH.md`.
+- Practical product entry: `/skills/launch-pipeline/SKILL.md` and `/instructions/LAUNCH.md`.
 - Instruction routing: `/INSTRUCTIONS.md` and `/instructions/`.
 - Native specialist adapters: `/agents/`.
 - Native reusable workflows: `/skills/`.

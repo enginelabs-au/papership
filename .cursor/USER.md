@@ -13,7 +13,7 @@ Store durable user-specific instructions and preferences here. Add new durable i
 - Prefer direct execution over asking the user to perform agent-capable work.
 - Operate autonomously unless blocked by credentials, permissions, a consequential design decision, destructive risk, or a material safety/security/privacy concern.
 - For new projects and major implementations, use sequential phase planning beginning with `docs/plans/phase_0_foundations_plan.md`.
-- Use `/launch-pipeline` and `/instructions/LAUCH.md` as the single practical entry point for raw ideas, major changes, workstream resumption, remediation, and final closure.
+- Use `/launch-pipeline` and `/instructions/LAUNCH.md` as the single practical entry point for raw ideas, major changes, workstream resumption, remediation, and final closure.
 - Require `/launch-pipeline` to run read-only preflight first. Every pre-Build Cursor plan must close by suggesting `bash .cursor/scripts/bootstrap.sh` as the first post-Build action, then run that command after Build or explicit Agent-mode implementation authorization.
 - Use the adaptive gated role pipeline for substantive multi-domain work: require exhaustive role planning before action, document required and skipped roles, and preserve evidence-backed handoffs under `docs/workstreams/`.
 - Require independent security re-verification after blocking remediation and a project-lead owner handoff for consequential product or release work.

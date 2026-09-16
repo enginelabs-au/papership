@@ -263,7 +263,7 @@ Prefer built-in project scripts and official tooling over improvised alternative
 
 **How to access**
 
-- Invoke `/launch-pipeline` in Cursor Agent, or ask the parent Agent to follow `/instructions/LAUCH.md`.
+- Invoke `/launch-pipeline` in Cursor Agent, or ask the parent Agent to follow `/instructions/LAUNCH.md`.
 
 **Common operations**
 
@@ -278,7 +278,7 @@ Prefer built-in project scripts and official tooling over improvised alternative
 **Related files**
 
 - `/skills/launch-pipeline/SKILL.md`
-- `/instructions/LAUCH.md`
+- `/instructions/LAUNCH.md`
 - `/INSTRUCTIONS.md`
 - `/instructions/ROLES.md`
 - `/STATE.md`

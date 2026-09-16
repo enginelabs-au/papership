@@ -80,7 +80,7 @@ repository-root/
       growth-marketing-subagent.md
       project-lead-subagent.md
     instructions/
-      LAUCH.md
+      LAUNCH.md
       PROJECT_PLANNING.md
       STRATEGY.md
       SUBAGENTS.md
@@ -143,7 +143,7 @@ After authorized bootstrap completes:
 2. Read every installed file under `/instructions/` and `/rules/` once for the session.
 3. Read the complete core per-turn set defined in `AGENTS.md`.
 4. Resume the `Active Plan` in `STATE.md` when one exists.
-5. Read `/instructions/LAUCH.md` for a raw idea, major change, resume, remediation, or closure; its native entry is `/skills/launch-pipeline/SKILL.md`.
+5. Read `/instructions/LAUNCH.md` for a raw idea, major change, resume, remediation, or closure; its native entry is `/skills/launch-pipeline/SKILL.md`.
 6. If there is no active project plan and the user has supplied a new project or major feature request, activate `/instructions/PROJECT_PLANNING.md`.
 7. Activate `/instructions/STRATEGY.md` when discovery, market validation, product definition, architecture synthesis, or launch strategy is material.
 8. Activate `/instructions/ROLES.md` and create `docs/workstreams/<task-id>/manifest.md` when specialist routing or stage gates are material.

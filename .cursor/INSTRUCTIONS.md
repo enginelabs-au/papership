@@ -16,7 +16,7 @@ This file is the canonical registry and router for detailed agent instructions. 
 
 | Instruction | Activate when | Primary output |
 |---|---|---|
-| `/instructions/LAUCH.md` | Explicit `/launch-pipeline` invocation for a new idea, major change, resume, remediation, or closure | Preflight-first lifecycle routing, activation summary, adaptive role pipeline, and owner handoff |
+| `/instructions/LAUNCH.md` | Explicit `/launch-pipeline` invocation for a new idea, major change, resume, remediation, or closure | Preflight-first lifecycle routing, activation summary, adaptive role pipeline, and owner handoff |
 | `/instructions/PROJECT_PLANNING.md` | New project, major feature, migration, multi-system implementation, or work requiring multiple phases | Sequential plans under `docs/plans/` and final implementation checklist |
 | `/instructions/STRATEGY.md` | Raw product idea, market/problem validation, competitive analysis, product architecture, MVP definition, or launch/distribution strategy | Blueprint under `docs/blueprints/` |
 | `/instructions/SUBAGENTS.md` | Task can be safely decomposed, parallel research/review is useful, or an independent verification pass is warranted | Bounded sub-agent briefs and integrated findings |

@@ -8,7 +8,7 @@ For a raw idea, major change, active-workstream resume, remediation, or closure,
 /launch-pipeline
 ```
 
-The explicit-only native skill at `skills/launch-pipeline/SKILL.md` routes to `instructions/LAUCH.md`. It runs read-only preflight first, asks only for unresolved consequential decisions, and presents one activation summary. After Build or explicit Agent-mode implementation authorization, `scripts/bootstrap.sh` is the first mutating gate.
+The explicit-only native skill at `skills/launch-pipeline/SKILL.md` routes to `instructions/LAUNCH.md`. It runs read-only preflight first, asks only for unresolved consequential decisions, and presents one activation summary. After Build or explicit Agent-mode implementation authorization, `scripts/bootstrap.sh` is the first mutating gate.
 
 Repository-root `AGENTS.md` is the native project-wide entry. It routes every substantive turn into this directory's `AGENTS.md` and core context.
 

@@ -76,7 +76,7 @@
 
 ## Active Instructions
 
-- `/instructions/LAUCH.md`, `/instructions/PROJECT_PLANNING.md`, `/instructions/SUBAGENTS.md`, `/instructions/ROLES.md`.
+- `/instructions/LAUNCH.md`, `/instructions/PROJECT_PLANNING.md`, `/instructions/SUBAGENTS.md`, `/instructions/ROLES.md`.
 
 ## Active Items
 
