@@ -25,3 +25,5 @@
 - Validation: `node .cursor/skills/launch-pipeline/scripts/preflight.mjs` and launch/config validators after the rename.
 
 - 2026-09-16T13:20Z — CI fix on PR #7: `icon-fullbleed.test.mjs` now decodes RGBA PNG in Node (no PIL). Tip `edc0713`. product-ci https://github.com/enginelabs-au/papership/actions/runs/35101017265 success. Command-room work unchanged.
+
+- 2026-09-16T13:35Z — Surfaced A1/A3 in UI on PR #7 tip `9eaae27`: Today command-room cards + hash routes `#settings/plan`, `#work/workflows`, `#today/registry`. CDP verified.
