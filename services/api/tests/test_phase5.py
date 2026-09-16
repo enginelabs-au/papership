@@ -183,9 +183,11 @@ def test_capacity_native_not_hr(client, founder_headers) -> None:
 def test_r3_shells_deny_live_write(client, founder_headers) -> None:
     catalogue = client.get("/domains/catalogue", headers=founder_headers)
     assert catalogue.status_code == 200
-    ids = {row["id"] for row in catalogue.json()["items"]}
-    assert {"B04", "B13", "B22"} <= ids
-    assert all(row["live_write"] is False for row in catalogue.json()["items"])
+    items = catalogue.json()["items"]
+    ids = {row["id"] for row in items}
+    assert len(items) == 43
+    assert {"B04", "B13", "B22", "B08", "P01"} <= ids
+    assert all(row["live_write"] is False for row in items)
     refused = client.post("/domains/B04/connect", headers=founder_headers)
     assert refused.status_code == 403
     unknown = client.post("/domains/B99/connect", headers=founder_headers)

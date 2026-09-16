@@ -30,7 +30,12 @@ CANONICAL_REFERENCES = {
 }
 
 
-def domain_catalogue() -> list[dict[str, Any]]:
+def domain_catalogue(registry_rows: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    from app.capability_registry import domain_catalogue_items
+
+    items = domain_catalogue_items(registry_rows)
+    if items:
+        return items
     return [
         {
             **row,
@@ -42,9 +47,9 @@ def domain_catalogue() -> list[dict[str, Any]]:
 
 
 def refuse_domain_connect(domain_id: str) -> None:
-    from app.phase7 import known_shell_ids
+    from app.store import CAPABILITY_IDS
 
-    ids = {row["id"] for row in R3_SHELLS} | known_shell_ids()
+    ids = {cap.split(".")[0] for cap in CAPABILITY_IDS}
     if domain_id not in ids:
         raise StoreError("unknown domain", 403)
     raise StoreError("live write refused: domain is a planned catalogue shell", 403)

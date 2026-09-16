@@ -74,6 +74,7 @@ Do not store secret values here. Charges stay off until a later owner flip.
 | OT-66 | done | — | DO→Hatch overlay complete. Secrets that existed on DO are on Hatch (live auth kept; DO auth parked under `from-do`). Preserve apply OK (`vps-20260914T1819Z`). Gmail cron removed. Fork `main` `bc4ddbf10c`, private `.hermes` `main` `101f836`. Hatch `/health` 200. Owner may destroy the DigitalOcean droplet. |
 | OT-67 | done | — | Hatch Tailscale MagicDNS is `hermes-droplet-campbell` (no `-1`). DigitalOcean Tailscale logged out; `tailscaled` disabled. `*-do` SSH is public IPv4. Residual: offline machines-page row until console/API delete. |
 | OT-68 | done | — | Sydney tmux clock. Root cause: status-right `%H`/`%M` were expanded by tmux before `date`. Fixed with `%%H:%%M … %%Z` in ~/.tmux.conf, hermes-term, preserve, Desktop terminal-persist. Live status showed AEST. Owner confirmed complete. |
+| OT-69 | in_progress | agent | Domains/capabilities + Engine Labs self-job loop. Branch `cursor/engine-labs-operator-loop-ee2c`: MD-backed 43-row catalogue (`capability_registry.py`), B08.01 → `configured` (0.1.6-loop), `/engine-labs/*` jobs (Papership active, MCG paused, Quark/portability refused), Today UI start/advance. Not `working`; no execute_release; Hermes write stays unauthorized. Tests: API 28 + web static-scan 14. PR pending. |
 
 ## Standing rules for this list
 

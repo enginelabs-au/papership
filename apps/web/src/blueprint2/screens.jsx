@@ -56,6 +56,30 @@ export function TodayOverview({ v }) {
         </div>
       </div>
 
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)" }}>Engine Labs operator loop</div>
+            <div style={{ fontSize: 13, marginTop: 6, color: "var(--t1)" }}>
+              {v.engineJob
+                ? `${v.engineJob.title} · ${v.engineJob.status} · ${v.engineJob.work_item?.stage || "request"}`
+                : "First managed project is Papership itself. MCG stays paused. Quark and portability stay separate."}
+            </div>
+            <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)", marginTop: 6 }}>
+              request → research → specification → plan → assignment → isolated change → tests → review → release proposal → monitoring → retained knowledge
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void (v.engineJob ? v.advanceEngineLabsJob?.() : v.startEngineLabsJob?.())}
+            style={{ height: 32, padding: "0 12px", border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer" }}
+          >
+            {v.engineJob ? "Advance stage" : "Start Engine Labs job"}
+          </button>
+        </div>
+        {v.actionError ? <div style={{ marginTop: 10, fontSize: 12, color: "var(--red)" }}>{v.actionError}</div> : null}
+      </div>
+
       <div>
         <div className="bp2-health-head" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 9 }}>
           <h2 style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)" }}>System health</h2>
@@ -616,9 +640,9 @@ export function ConnectionsView({ v }) {
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Company domains</div>
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
           {v.domainShells.map((d) => (
-            <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
+            <div key={d.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
               <span>{d.id} · {d.label}</span>
-              <span style={{ color: "var(--t3)" }}>{d.status} · needs connection</span>
+              <span style={{ color: "var(--t3)" }}>{d.status}{d.needs_connection ? " · needs connection" : ""} · live write refused</span>
             </div>
           ))}
         </div>
@@ -788,7 +812,7 @@ export function WorkItemView({ v }) {
     <div className="bp2-item" style={{ display: "grid", gridTemplateColumns: "minmax(0,1.4fr) 280px", gap: 16 }}>
       <div>
         <div style={{ display: "flex", gap: 0, marginBottom: 16, overflow: "auto" }}>
-          {v.loop.map((s, i) => (
+          {(v.loop || []).map((s, i) => (
             <div key={s.label} style={{ display: "flex", alignItems: "center" }}>
               <div style={{ width: 86, textAlign: "center" }}>
                 <div style={{ width: 22, height: 22, borderRadius: "50%", background: s.fill, border: `2px solid ${s.ring}`, color: s.numInk, font: "600 10px Inter,sans-serif", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>{s.n}</div>
@@ -799,8 +823,25 @@ export function WorkItemView({ v }) {
           ))}
         </div>
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>Engine Labs self-job</div>
+          {v.engineJob ? (
+            <div style={{ fontSize: 12.5, color: "var(--t2)" }}>
+              {v.engineJob.request || v.engineJob.title}
+              <div style={{ marginTop: 8, color: "var(--t3)" }}>Release stays a proposal. Hermes write/external accepted stays unauthorized.</div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 12.5, color: "var(--t2)" }}>
+              No Engine Labs job yet. Start one against Papership. MCG is paused. Quark and portability stay out of this loop.
+              <div style={{ marginTop: 12 }}>
+                <button type="button" onClick={() => void v.startEngineLabsJob?.()} style={{ height: 30, padding: "0 12px", border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer" }}>Start Engine Labs job</button>
+              </div>
+            </div>
+          )}
+          {v.actionError ? <div style={{ marginTop: 10, fontSize: 12, color: "var(--red)" }}>{v.actionError}</div> : null}
+        </div>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 14, marginTop: 12 }}>
           <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 10 }}>Runs on this item</div>
-          {v.itemRuns.map((r) => (
+          {(v.itemRuns || []).map((r) => (
             <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid var(--line2)" }}>
               <span style={{ font: "500 11.5px 'JetBrains Mono',monospace" }}>{r.id}</span>
               <span style={{ flex: 1 }}>{r.mode}</span>
@@ -808,10 +849,11 @@ export function WorkItemView({ v }) {
               <button type="button" onClick={r.open} style={{ height: 24, padding: "0 8px", border: "1px solid var(--line)", borderRadius: 6, background: "var(--canvas)", cursor: "pointer" }}>Open</button>
             </div>
           ))}
+          {!v.itemRuns?.length ? <div style={{ fontSize: 12, color: "var(--t3)" }}>No Hermes runs on this job. Ledger stages advance without inventing runtime receipts.</div> : null}
         </div>
       </div>
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 14 }}>
-        {v.itemDetails.map((d) => (
+        {(v.itemDetails || []).map((d) => (
           <div key={d.k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid var(--line2)", fontSize: 12 }}>
             <span style={{ color: "var(--t3)" }}>{d.k}</span><span style={d.style ? { fontFamily: "'JetBrains Mono',monospace" } : undefined}>{d.v}</span>
           </div>

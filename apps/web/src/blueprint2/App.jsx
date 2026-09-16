@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API_BASE, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
+import { API_BASE, advanceEngineLabsJob, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, startEngineLabsJobRun, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
 import { PRODUCT } from "../brand";
 import { useIsMobile } from "../hooks/use-mobile";
 import "./blueprint2.css";
@@ -555,6 +555,35 @@ export default function Blueprint2App() {
         setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not record the erasure request." }));
       }
     };
+    out.startEngineLabsJob = async () => {
+      try {
+        const job = await startEngineLabsJob(
+          "Walk the Papership / Engine Labs self-job on the ledger.",
+          "Papership operator loop",
+        );
+        await startEngineLabsJobRun(job.id);
+        setOverlay(await loadPapershipOverlay());
+        setRoute({ kind: "work-item" });
+        setTab("work");
+      } catch (error) {
+        setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not start the Engine Labs job." }));
+      }
+    };
+    out.advanceEngineLabsJob = async () => {
+      const job = (overlay.engineLabs?.jobs || [])[0];
+      const stages = overlay.engineLabs?.ready?.loop_stages || overlay.loopStages || [];
+      if (!job?.work_item || !stages.length) return;
+      const current = job.work_item.stage;
+      const idx = stages.indexOf(current);
+      const next = stages[Math.min(idx + 1, stages.length - 1)];
+      if (!next || next === current) return;
+      try {
+        await advanceEngineLabsJob(job.id, next, `ui:${next}`);
+        setOverlay(await loadPapershipOverlay());
+      } catch (error) {
+        setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not advance the Engine Labs job." }));
+      }
+    };
     void page; void cur;
     return applyPapershipOverlay(out, overlay, { openWizard, setModal });
   }, [theme, tab, sub, setPane, grants, go, openSlide, routeTo, overlay, isMobile, openWizard]);
@@ -566,11 +595,27 @@ export default function Blueprint2App() {
   let pageDesc = page.d;
   let pageChip = "";
   let pageActions = [{ label: "Start a run", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: () => setHey(true) }];
-  if (tab === "work") pageActions = [{ label: "Filter", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: () => {} }, { label: "New issue", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => {} }];
+  if (tab === "work") pageActions = [
+    { label: "Filter", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: () => {} },
+    { label: "Start Engine Labs job", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => void v.startEngineLabsJob?.() },
+  ];
   if (tab === "files") pageActions = [{ label: "Upload", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => setModal("upload") }];
   if (tab === "integrations") pageActions = [{ label: "Add connection", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => openWizard() }];
   if (tab === "people") pageActions = [{ label: "Invite person", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => setModal("invite") }];
-  if (rk === "work-item") { pageTitle = "CCO-245 · Interception hardening for T2-1"; pageDesc = "Work item · Platform · Cam Douglas · due 24 Sep"; pageChip = "In progress"; pageActions = [{ label: "Back to Work", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("work") }]; }
+  if (rk === "work-item") {
+    const job = v.engineJob;
+    pageTitle = job?.title || "Papership / Engine Labs job";
+    pageDesc = job
+      ? `${job.project?.name || "Papership"} · stage ${job.work_item?.stage || "request"} · execute_release refused`
+      : "Start an Engine Labs self-job when the local API session is present.";
+    pageChip = job?.status || "ready";
+    pageActions = [
+      { label: "Back to Work", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("work") },
+      ...(job
+        ? [{ label: "Advance stage", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => void v.advanceEngineLabsJob?.() }]
+        : [{ label: "Start Engine Labs job", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => void v.startEngineLabsJob?.() }]),
+    ];
+  }
   if (rk === "run") { pageTitle = "run_7f21c · Isolated change for CCO-245"; pageDesc = "Run · sponsor Cam Douglas · acting as Papership agent (user-equivalent)"; pageChip = "Running"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
   if (rk === "account") { pageTitle = "Account"; pageDesc = "Your profile and sign-in — not an organisation setting"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
   if (rk === "memory") { pageTitle = "Memory"; pageDesc = v.memoryNote || "Governed memory with provenance"; pageChip = v.adaptedBadge || ""; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }

@@ -112,3 +112,17 @@ test("Integrations Set up preselects the connector id", () => {
   assert.match(app, /const openWizard = useCallback/);
   assert.match(app, /Continue to Slack/);
 });
+
+test("Engine Labs loop client helpers exist", () => {
+  const api = readFileSync(join(root, "src/api/papership.js"), "utf8");
+  const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
+  const screens = readFileSync(join(root, "src/blueprint2/screens.jsx"), "utf8");
+  assert.match(api, /export async function startEngineLabsJob/);
+  assert.match(api, /\/engine-labs\/jobs/);
+  assert.match(api, /\/engine-labs\/ready/);
+  assert.match(api, /registry: registry\.items/);
+  assert.match(app, /startEngineLabsJob/);
+  assert.match(screens, /Engine Labs operator loop/);
+  assert.match(screens, /MCG stays paused/);
+  assert.doesNotMatch(screens, /working product shipped/);
+});

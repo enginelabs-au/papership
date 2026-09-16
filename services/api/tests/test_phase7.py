@@ -68,6 +68,7 @@ def test_r4_shells_deny_live_write(client: TestClient, founder_headers: dict[str
     catalogue = client.get("/domains/catalogue", headers=founder_headers)
     ids = {row["id"] for row in catalogue.json()["items"]}
     assert {"B14", "B19", "B20", "B21", "B24"} <= ids
+    assert len(catalogue.json()["items"]) == 43
     assert all(row["live_write"] is False for row in catalogue.json()["items"])
     refused = client.post("/domains/B14/connect", headers=founder_headers)
     assert refused.status_code == 403

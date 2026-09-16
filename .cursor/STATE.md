@@ -2,27 +2,30 @@
 
 ## Current Objective
 
-- Live Papership web UI is `docs/ui-blueprint/blueprint-2` exactly (D-21 / D-22) at **`/papership`** (D-32). At `max-width: 767px` the live chrome is the R4 compressed layout from `OrgOS Mobile.dc.html`. Prism-head mark is app/tab icon only, not in-app.
+- Wire the planned B01–B24 / P01–P19 domain + capability surface and the Engine Labs self-job operator loop (first managed project = Papership itself). MCG paused; Quark/portability stay separate. Do not fake-ship 43 products as `working`.
 
 ## Current Status
 
-- Initial development closed. Phases 0–7 complete. Final checklist written. Project blueprints now live under `docs/blueprints/`.
+- Implementation on branch `cursor/engine-labs-operator-loop-ee2c`. Registry MD-backed (43 rows); B08.01 → `configured` (0.1.6-loop); `/engine-labs/*` job API + Today UI start/advance. Tests: API 28 passed; web static-scan 14 passed.
 
 ## Project Phase
 
-- Closure. Active plan: `docs/plans/final_implementation_checklist.md`. No Phase 8.
+- Closure residual increment (domains + Engine Labs loop). Active plan still `docs/plans/final_implementation_checklist.md`. No Phase 8.
 
 ## Active Plan
 
-- `docs/plans/final_implementation_checklist.md` (status: open — owner walk)
+- Branch work: domains/capabilities + Engine Labs operator loop PR.
+- Owner walk: `docs/plans/final_implementation_checklist.md`
 
 ## Active Workstream
 
 - `docs/workstreams/20260910-engine-labs-company-os/manifest.md` (Tier 3; G11 PASS)
+- Slice: Engine Labs operator loop + full registry catalogue (this PR)
 
 ## Active Role and Gate
 
-- G11 PASS (2026-09-12). Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later). OQ-G2 recorded locally.
+- Software-engineer implementation slice (domains + loop). No Cam decision blocked.
+- G11 PASS residuals unchanged: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later).
 
 ## Predecessor Handoff
 
@@ -87,12 +90,16 @@
 
 - `/STATE.md`
 - `docs/handover/outstanding-tasks.md`
-- `docs/handover/future-tasks.md`
-- `docs/workstreams/20260913-d25-repass/security-engineer-subagent/handoff.md`
-- `docs/plans/final_implementation_checklist.md`
+- `docs/capabilities.md`
+- `services/api/app/capability_registry.py`
+- `services/api/app/engine_labs.py`
+- `services/api/app/main.py`
+- `services/api/app/store.py`
+- `services/api/app/phase5.py`
 - `apps/web/src/api/papership.js`
 - `apps/web/src/blueprint2/App.jsx`
-- `scripts/generate-papership-icons.py`
+- `apps/web/src/blueprint2/screens.jsx`
+- `docs/plans/final_implementation_checklist.md`
 
 ## Open Blockers
 
@@ -114,22 +121,22 @@
 
 ## Current Working State
 
-- Branch `main` @ `551bf31` (pushed). No leftover local or remote feature refs. Closed PRs 1–5 still exist as GitHub history.
+- Branch `cursor/engine-labs-operator-loop-ee2c` from `main` @ `95b15cb` (LAUNCH rename). OT-69 in progress: MD-backed 43-row catalogue, Engine Labs jobs API, UI start/advance, B08 configured not working.
+- Assumptions: first managed project is Papership/Engine Labs; MCG jobs 403; Quark/portability refused; `execute_release` and Hermes write stay unauthorized.
 - GitHub App `papership-dev` is local. VPS is Hermes only.
 - Local API sources `~/.config/papership/connectors.env`. OT-25 Gmail and OT-26 Slack are both `configured` with `has_token` on the local store. Send stays approval-then-receipt. Vercel still cannot hold these tokens.
 
 ## Next Actions
 
-1. Repeat `docs/handover/outstanding-tasks.md` open rows every turn. OT-50 and OT-68 done.
+1. Push PR for domains + Engine Labs loop; merge when green.
 2. Do not treat write/external Hermes tools as `accepted`.
 3. Charges stay off until a later owner flip (OT-08, parked).
-4. Live Hermes is HostHatch `hermes@100.82.91.60`. Tailscale MagicDNS is `hermes-droplet-campbell` (no `-1`). DigitalOcean Tailscale is logged out; `*-do` SSH is public IPv4 only. Do not start a second gateway there.
-5. Hermes git backups stay on **`main`** for Hatch (`hermes-agent` fork + private `.hermes` `fabf5d9`). Do not park the live VPS tree on a side branch. `hermes update` still pulls Nous; preserve wrappers restore local patches. **Auto-preserve:** every `hermes-agent` commit runs `preserve/githooks/post-commit` (snapshot + named `agent-commit` patch); every `hermes update` / post-merge still snapshot→apply→extras. Owner does not need to ask per patch.
-6. HostHatch Cursor CLI is installed. Portable control plane is `/home/hermes/agent-instructions/.cursor` plus user rules under the hermes home Cursor directory. New projects: `~/bin/init-cursor-project`.
-7. Hatch Cursor always starts in tmux (`~/bin/agent` / `~/bin/cursor-agent`) with Run Everything persisted (`approvalMode=unrestricted`). Owner off-switch: `~/.cursor/tmux.off` / `~/.cursor/run-everything.off` or `CURSOR_VPS_TMUX=0` / `CURSOR_VPS_RUN_EVERYTHING=0`.
+4. Repeat `docs/handover/outstanding-tasks.md` open rows every turn.
+5. Live Hermes is HostHatch `hermes@100.82.91.60`. Tailscale MagicDNS is `hermes-droplet-campbell` (no `-1`).
 
 ## Last Updated
 
+- 2026-09-16T12:45Z — OT-69: Engine Labs operator loop + full domain catalogue on `cursor/engine-labs-operator-loop-ee2c`. API 28 / web 14 passed.
 - 2026-09-12T18:48Z — OT-38: Hermes Desktop chrome overlay (CSS + rollback + model-pill slot). Unsigned rebuild installed.
 - 2026-09-12T18:58Z — OT-39: claude-design skill wired to `::preview` (Desktop live canvas). Droplet + local skill copies updated.
 - 2026-09-13T13:45Z — OT-40: droplet not down; Desktop SSH to root timed out under load; auth.json ownership restored.

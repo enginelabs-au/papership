@@ -27,7 +27,7 @@ from app.grants import effective_grants
 from app.logging_util import TraceMiddleware, configure_logging
 from app.store import Store, StoreError
 from app.usage import emit_usage, validate_usage_event
-from app import memory_ops, phase5, phase7, rate_card, view_defs
+from app import engine_labs, memory_ops, phase5, phase7, rate_card, view_defs
 
 SIGNED_URL_TTL = 300
 
@@ -636,7 +636,52 @@ def create_app(store_path: str | None = None) -> FastAPI:
 
     @app.get("/domains/catalogue")
     def domain_catalogue(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
-        return {"items": phase5.domain_catalogue() + phase7.domain_shells()}
+        return {"items": phase5.domain_catalogue(store.list_registry())}
+
+    @app.get("/engine-labs/ready")
+    def engine_labs_ready(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        if not store.has_grant(ctx.principal_id, "ledger.read") and not store.has_grant(
+            ctx.principal_id, "org.admin"
+        ):
+            raise HTTPException(status_code=403, detail="denied")
+        return engine_labs.readiness()
+
+    @app.get("/engine-labs/projects")
+    def engine_labs_projects(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return {"items": engine_labs.list_projects(store, ctx.principal_id)}
+
+    @app.get("/engine-labs/jobs")
+    def engine_labs_jobs(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return {"items": engine_labs.list_jobs(store, ctx.principal_id)}
+
+    @app.post("/engine-labs/jobs")
+    def create_engine_labs_job(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return engine_labs.create_job(store, ctx.principal_id, body)
+
+    @app.get("/engine-labs/jobs/{job_id}")
+    def get_engine_labs_job(job_id: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return engine_labs.get_job(store, ctx.principal_id, job_id)
+
+    @app.post("/engine-labs/jobs/{job_id}/start")
+    def start_engine_labs_job(job_id: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return engine_labs.start_job(store, ctx.principal_id, job_id)
+
+    @app.post("/engine-labs/jobs/{job_id}/stage")
+    def stage_engine_labs_job(
+        job_id: str, body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)
+    ) -> dict[str, Any]:
+        return engine_labs.advance_job(
+            store,
+            ctx.principal_id,
+            job_id,
+            str(body.get("stage") or ""),
+            body.get("evidence"),
+        )
+
+    @app.post("/engine-labs/jobs/{job_id}/execute-release")
+    def execute_engine_labs_release(job_id: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        engine_labs.refuse_execute_release()
+        return {"id": job_id}
 
     @app.post("/domains/{domain_id}/connect")
     def connect_domain(domain_id: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:

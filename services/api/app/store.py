@@ -186,8 +186,10 @@ class Store:
         self._migrate_phase5()
         self._migrate_oauth()
         from app.phase7 import migrate_phase7
+        from app.engine_labs import migrate_engine_labs
 
         migrate_phase7(self)
+        migrate_engine_labs(self)
         self.flush()
 
     def flush(self) -> None:
@@ -562,6 +564,9 @@ class Store:
             self._seed_registry()
             self._seed_phase4(tenant_id="tenant-founder")
             self._seed_phase5(tenant_id="tenant-founder")
+            from app.engine_labs import seed_managed_projects
+
+            seed_managed_projects(self, "tenant-founder")
             self.flush()
             return
         now = _now()
@@ -605,6 +610,9 @@ class Store:
         self._seed_registry()
         self._seed_phase4(tenant_id="tenant-founder")
         self._seed_phase5(tenant_id="tenant-founder")
+        from app.engine_labs import seed_managed_projects
+
+        seed_managed_projects(self, "tenant-founder")
         self.append_audit("principal-founder", "seed", "organisation", "org-founder")
         self.flush()
 
@@ -656,36 +664,13 @@ class Store:
         }
 
     def _seed_registry(self) -> None:
-        if self.conn.execute("SELECT COUNT(*) AS c FROM registry").fetchone()["c"] >= 43:
-            return
-        now = _now()
-        for cap in CAPABILITY_IDS:
-            domain = cap.split(".")[0]
-            hermes_tool = False
-            status = "planned"
-            row = {
-                "domain_id": domain,
-                "capability_id": cap,
-                "user_outcome": f"Seed row {cap}",
-                "owner": "native",
-                "read_actions": ["read"],
-                "write_actions": ["write"],
-                "data_authority": "native",
-                "required_grants": ["registry.read"],
-                "dependencies": [],
-                "interface_components": ["registry"],
-                "release_phase": "07 / R1",
-                "implementation_status": status,
-                "acceptance_evidence": "n/a — planned row",
-                "registry_version": "0.1.0-phase0",
-                "status_changed_at": now,
-                "status_evidence": "phase-1-seed",
-                "hermes_side_effecting_tool": hermes_tool,
-                "hermes_side_effecting_tools": "catalogued",
-            }
+        from app.capability_registry import load_capability_rows
+
+        for row in load_capability_rows():
+            payload = dict(row)
             self.conn.execute(
                 "INSERT OR REPLACE INTO registry (capability_id, domain_id, payload) VALUES (?, ?, ?)",
-                (cap, domain, json.dumps(row)),
+                (payload["capability_id"], payload["domain_id"], json.dumps(payload)),
             )
 
     def principal(self, principal_id: str) -> dict[str, Any]:

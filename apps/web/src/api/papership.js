@@ -277,6 +277,30 @@ export function formatPlanTier(plan) {
   return { label: plan.label, price, tokens, overage, note: plan.note || "" };
 }
 
+function emptyEngineLabs() {
+  return {
+    ready: null,
+    projects: [],
+    jobs: [],
+  };
+}
+
+export async function startEngineLabsJob(request, title) {
+  return postPapershipJson("/engine-labs/jobs", {
+    project: "papership",
+    request,
+    title: title || request,
+  });
+}
+
+export async function startEngineLabsJobRun(jobId) {
+  return postPapershipJson(`/engine-labs/jobs/${jobId}/start`, {});
+}
+
+export async function advanceEngineLabsJob(jobId, stage, evidence) {
+  return postPapershipJson(`/engine-labs/jobs/${jobId}/stage`, { stage, evidence });
+}
+
 export async function loadPapershipOverlay() {
   const jwt = await ensureLocalSession();
   if (!jwt) {
@@ -297,15 +321,17 @@ export async function loadPapershipOverlay() {
       personalisation: defaultPersonalisation(),
       view: { fallback: true, personalisation: false },
       domains: [],
+      registry: [],
       packs: [],
       proposals: [],
       evidence: [],
       references: defaultReferences(),
       schedules: [],
+      engineLabs: emptyEngineLabs(),
     };
   }
   try {
-    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, references, schedules, packs, proposals, evidence, erasure, rateCard, health] = await Promise.all([
+    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, registry, references, schedules, packs, proposals, evidence, erasure, rateCard, health, engineReady, engineProjects, engineJobs] = await Promise.all([
       fetchPapershipJson("/people"),
       fetchPapershipJson("/teams"),
       fetchPapershipJson("/inbox"),
@@ -316,6 +342,7 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/settings/personalisation"),
       fetchPapershipJson("/views/current"),
       fetchPapershipJson("/domains/catalogue"),
+      fetchPapershipJson("/registry"),
       fetchPapershipJson("/references"),
       fetchPapershipJson("/schedules"),
       fetchPapershipJson("/packs"),
@@ -324,6 +351,9 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/erasure/status").catch(() => ({ status: "none", destroyed: false, items: [] })),
       fetchPapershipJson("/billing/rate-card").catch(() => TRIAL_RATE_CARD),
       fetchHealth(),
+      fetchPapershipJson("/engine-labs/ready").catch(() => null),
+      fetchPapershipJson("/engine-labs/projects").catch(() => ({ items: [] })),
+      fetchPapershipJson("/engine-labs/jobs").catch(() => ({ items: [] })),
     ]);
     return {
       source: "api",
@@ -342,6 +372,8 @@ export async function loadPapershipOverlay() {
       personalisation,
       view,
       domains: domains.items || [],
+      registry: registry.items || [],
+      loopStages: registry.loop_stages || [],
       packs: packs.items || [],
       proposals: proposals.items || [],
       evidence: evidence.items || [],
@@ -350,6 +382,11 @@ export async function loadPapershipOverlay() {
       health: mapHealth(health),
       references,
       schedules: schedules.items || [],
+      engineLabs: {
+        ready: engineReady,
+        projects: engineProjects.items || [],
+        jobs: engineJobs.items || [],
+      },
     };
   } catch (error) {
     return {
@@ -370,11 +407,13 @@ export async function loadPapershipOverlay() {
       personalisation: defaultPersonalisation(),
       view: { fallback: true, personalisation: false },
       domains: [],
+      registry: [],
       packs: [],
       proposals: [],
       evidence: [],
       references: defaultReferences(),
       schedules: [],
+      engineLabs: emptyEngineLabs(),
     };
   }
 }
@@ -648,6 +687,80 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
   out.schedules = overlay.schedules || [];
   out.erasure = overlay.erasure || { status: "none", destroyed: false, items: [] };
   out.actionError = overlay.actionError || "";
+  out.engineLabs = overlay.engineLabs || emptyEngineLabs();
+  const registryRows = overlay.registry || [];
+  if (registryRows.length) {
+    const chip = (s) =>
+      s === "working"
+        ? { bg: "var(--green-soft)", ink: "var(--green)", dot: "var(--green)", action: "Open" }
+        : s === "configured"
+          ? { bg: "var(--blue-soft)", ink: "var(--blue)", dot: "var(--blue)", action: "Review" }
+          : s === "unavailable"
+            ? { bg: "var(--red-soft)", ink: "var(--red)", dot: "var(--red)", action: "Recover" }
+            : { bg: "var(--line2)", ink: "var(--t3)", dot: "var(--t3)", action: "Plan" };
+    const labelByDomain = Object.fromEntries((overlay.domains || []).map((d) => [d.id, d.label]));
+    const mapped = registryRows.map((row) => {
+      const status = row.implementation_status || "planned";
+      return {
+        code: row.domain_id,
+        label: labelByDomain[row.domain_id] || row.user_outcome || row.capability_id,
+        status,
+        ...chip(status),
+      };
+    });
+    const business = mapped.filter((row) => row.code.startsWith("B"));
+    const platform = mapped.filter((row) => row.code.startsWith("P"));
+    out.registrySections = [
+      { title: "Business domains", range: "B01–B24 · 24 groups", rows: business },
+      { title: "Platform domains", range: "P01–P19 · 19 groups", rows: platform },
+    ];
+    const cnt = (s) => String(mapped.filter((r) => r.status === s).length);
+    out.registryFilters = [
+      { label: "All", n: String(mapped.length), dot: "var(--t3)", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)" },
+      { label: "Working", n: cnt("working"), dot: "var(--green)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+      { label: "Configured", n: cnt("configured"), dot: "var(--blue)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+      { label: "Planned", n: cnt("planned"), dot: "var(--t3)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+      { label: "Unavailable", n: cnt("unavailable"), dot: "var(--red)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+    ];
+  }
+  const activeJob = (out.engineLabs.jobs || [])[0];
+  if (activeJob?.work_item) {
+    const stages = out.engineLabs.ready?.loop_stages || overlay.loopStages || [];
+    const current = activeJob.work_item.stage;
+    const idx = stages.indexOf(current);
+    out.engineJob = activeJob;
+    out.loop = stages.map((stage, i) => {
+      const done = idx >= 0 && i < idx;
+      const active = stage === current;
+      const future = idx < 0 ? i > 0 : i > idx;
+      const label = stage
+        .split("_")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+      return {
+        n: String(i + 1),
+        label: label === "Release Proposal" ? "Approved release" : label,
+        fill: done ? "var(--green)" : active ? "var(--blue)" : "var(--surface)",
+        ring: done ? "var(--green)" : active ? "var(--blue)" : "var(--line)",
+        numInk: future ? "var(--t3)" : "#fff",
+        line: done ? "var(--green)" : active ? "linear-gradient(90deg,var(--blue),var(--line))" : "var(--line2)",
+        ink: future ? "var(--t3)" : "var(--t1)",
+        fw: active ? "700" : "500",
+      };
+    });
+    out.itemDetails = [
+      { k: "Job", v: activeJob.id, style: true },
+      { k: "Project", v: activeJob.project?.name || "Papership / Engine Labs", style: true },
+      { k: "Stage", v: current },
+      { k: "Status", v: activeJob.status },
+      { k: "Release", v: "Proposal only · execute refused" },
+    ];
+    out.itemRuns = [];
+  }
+  if (out.healthStamp !== undefined && out.engineLabs.ready) {
+    out.healthStamp = out.engineLabs.ready.loop_ready ? "Engine Labs loop ready · Papership first" : out.healthStamp;
+  }
+  if (out.actionError === undefined) out.actionError = "";
   if (overlay.health?.kpis?.length) {
     out.healthStamp = overlay.health.stamp || "Last check now";
     out.kpis = overlay.health.kpis;
