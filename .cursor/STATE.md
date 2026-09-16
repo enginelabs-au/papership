@@ -6,7 +6,7 @@
 
 ## Current Status
 
-- Increment continues on `cursor/engine-labs-job-loop-b87f` (PR #7) tip `edc0713`: command-room work plus Tauri icons CI fix (Node PNG decode, no Pillow). `product-ci` run 35101017265 success.
+- Increment continues on `cursor/engine-labs-job-loop-b87f` (PR #7) tip `9eaae27`: command-room UI deep links + Today cards for paid seat and Workflows. CDP-verified `#settings/plan` and `#work/workflows`.
 
 ## Project Phase
 
