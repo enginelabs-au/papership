@@ -43,6 +43,7 @@
 ## Last Updated
 
 - 2026-09-16T12:45Z — Engine Labs managed project + loop job wiring increment (P-009). Not fake-shipping 43 products.
+- 2026-09-16T12:50Z — PR #7 open; 37 API tests passed; live curl smoke ok (catalogue 43, job queued).
 
 ## Active Workstream
 
