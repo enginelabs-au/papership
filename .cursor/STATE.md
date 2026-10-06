@@ -2,22 +2,39 @@
 
 ## Current Objective
 
-- Knowledge Layer Phase 0 is recorded (D-36). Papership is the Knowledge Layer for agents. KL-P1 has not started. Company OS behaviour stays. Charges stay off. Hermes write/external `accepted` stays unauthorized.
+- Knowledge Layer KL-P11 optional economics is `implemented_pending_security`. A material can carry a list model. Charges stay off. KL-P10 is `complete` (security PASS). KL-P9 is `complete` (security PASS). Registrar DNS for `papership.com.au` is still GoDaddy (OT-89). Hermes write/external `accepted` stays unauthorized.
 
 ## Current Status
 
-- KL-P0 `complete_conditional`. Security verdict CONDITIONAL. No high or critical finding. KL-SEC-01 and KL-SEC-02 are open code seams with later due points. Product trees were not edited.
+- KL-P0 `complete_conditional`. KL-P1 is `complete_conditional`. KL-P2 through KL-P6 are `complete` (security PASS). KL-P7 is `complete_conditional` (security PASS; registrar DNS remains). KL-P8, KL-P9, and KL-P10 are `complete` (security PASS). KL-P11 is `implemented_pending_security`. KL-SEC-01 and KL-SEC-02 from Phase 0 remain open.
 
 ## Project Phase
 
-- KL-P0 architecture alignment. Not a Company OS phase. "No Phase 8" still means the Company OS series ended at phase 7.
+- KL-P7 is `complete_conditional`. KL-P8 and KL-P9 are `complete`. KL-P10 is `complete`. KL-P11 is implemented and waiting on security. "No Phase 8" still means the Company OS series ended at phase 7. It does not forbid Knowledge Layer KL-P8.
 
 ## Active Plan
 
-- `docs/plans/knowledge-layer/phase_0_architecture_alignment_plan.md`
+- `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md` (`implemented_pending_security`)
+- `docs/plans/knowledge-layer/phase_10_lifecycle_fabric_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_9_mobile_companion_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_8_desktop_bridge_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_7_web_consolidation_plan.md` (`complete_conditional`)
+- `docs/plans/knowledge-layer/phase_6_knowledge_api_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_5_trust_impact_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_4_context_plan_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_3_federated_registry_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_2_context_graph_plan.md` (`complete`)
 
 ## Files in Active Use
 
+- `services/api/app/knowledge_layer.py`
+- `services/api/tests/test_knowledge_api.py`
+- `services/api/tests/test_trust_impact.py`
+- `docs/knowledge-layer/KNOWLEDGE_API.md`
+- `services/api/tests/test_context_plans.py`
+- `services/api/tests/test_context_graph.py`
+- `services/api/tests/test_knowledge_layer.py`
+- `packages/contracts/src/entities.ts`
 - `services/api/app/managed_projects.py`
 - `services/api/app/store.py`
 - `services/api/app/main.py`
@@ -36,13 +53,46 @@
 
 ## Next Actions
 
-1. Repeat open rows from `docs/handover/outstanding-tasks.md` (none open).
-2. Do not treat write/external Hermes tools as accepted.
-3. Charges stay off (OT-08).
-4. Do not start KL-P1 until the owner asks, and only after `docs/plans/knowledge-layer/phase_1_workspace_foundation_plan.md` exists.
+1. Repeat open rows from `docs/handover/outstanding-tasks.md` (OT-89, OT-96).
+2. Record the KL-P11 security verdict when it returns. Do not start KL-P12 unless the owner asks.
+3. Do not treat write/external Hermes tools as accepted.
+4. Charges stay off (OT-08).
 
 ## Last Updated
 
+- 2026-10-06T16:35Z — KL-P10 security PASS recorded. Project lead accepted. Phase complete. Not committed. KL-P11 stays on its own review. KL-P12 not started.
+- 2026-10-06T16:30Z — KL-P11 optional economics implemented. A human can attach free, listed, or unavailable to a material. Charges stay off. Pytest 8 passed. Contracts 16 passed. Web scan 15 passed. Browser checked Materials at 1280 and 390. Security review in progress. Not committed. KL-P12 not started.
+- 2026-10-06T16:20Z — Owner asked to plan KL-P11 while KL-P10 security was still open. Optional economics plan drafted. A material can carry a list model. Charges stay off. Implementation not started. Not committed. KL-P12 not started.
+- 2026-10-06T16:12Z — KL-P9 security PASS recorded. Project lead accepted. Phase complete. Not committed. KL-P10 stays on its own review. KL-P11 not started.
+- 2026-10-06T16:10Z — KL-P10 Lifecycle Fabric implemented. A stage event cites a context plan and version ids. Pytest 15 passed. Web scan 15 passed. Browser checked Workflows at 1280 and 390. Security review in progress. Not committed. KL-P11 not started.
+- 2026-10-06T15:50Z — Owner asked to plan KL-P10 while KL-P9 security was still open. Lifecycle Fabric plan drafted. A stage event cites a context plan and version ids. Schedules stay unused. Implementation not started. Not committed. KL-P11 not started.
+- 2026-10-06T15:40Z — KL-P9 Mobile Companion implemented. Approve and reject update a pending approval. An agent cannot decide. Browser checked Decisions at 1280 and 390. Security review in progress. Not committed. KL-P10 not started.
+- 2026-10-06T15:29Z — KL-P8 security PASS recorded. Project lead accepted. Phase complete. Not committed. KL-P9 plan stays a draft.
+- 2026-10-06T15:30Z — Owner asked to plan KL-P9 while KL-P8 security was still open. Mobile Companion plan drafted. Implementation not started.
+- 2026-10-06T15:25Z — Owner asked again to implement KL-P8. Implementation already in the tree. Security review still open. Not committed. KL-P9 not started.
+- 2026-10-06T15:10Z — KL-P8 Desktop Bridge implemented. Local file pointer is owner-only. Desktop hashes in Rust and keeps the path in the app-data map. Browser at 1280 and 390 has no picker. Security review in progress. Not committed. KL-P9 not started.
+- 2026-10-06T14:16Z — KL-P7 security PASS recorded. Project lead accepted `complete_conditional`. Registrar DNS remains. Not committed. KL-P8 plan stays a draft.
+- 2026-10-06T14:15Z — Owner asked to plan KL-P8 while KL-P7 security was still open. Desktop Bridge plan drafted. Implementation not started.
+- 2026-10-06T14:12Z — KL-P7 implemented. Domain attached on Vercel project `papership` only. CORS allowlist updated. Local browser checked at 1280 and 390. Public DNS still GoDaddy. Security review in progress. Not committed. KL-P8 not started.
+- 2026-10-06T14:06Z — KL-P6 security PASS recorded. Project lead accepted. Phase complete. Not committed. KL-P7 plan stays a draft.
+- 2026-10-06T14:05Z — Owner asked to plan KL-P7 while KL-P6 security was still open. Web consolidation plan drafted. Implementation not started.
+- 2026-10-06T14:02Z — KL-P6 Knowledge API implemented. Pytest 14 passed. Contracts 16 passed. Web scan 15 passed. Browser checked the no-plan agent at 1280 and 390. Security review in progress. Not committed. KL-P7 not started.
+- 2026-10-06T13:57Z — Owner asked to plan KL-P6. Knowledge API plan drafted. Implementation not started.
+- 2026-10-06T13:54Z — KL-P5 security PASS recorded. Project lead accepted. Phase complete. Not committed. KL-P6 not started.
+- 2026-10-06T13:49Z — KL-P5 Trust and Impact implemented. Pytest 11 passed. Contracts 16 passed. Web scan 15 passed. Browser checked the no-plan agent at 1280 and 390. Security review in progress. Not committed. KL-P6 not started.
+- 2026-10-06T13:43Z — KL-P4 security PASS recorded. Project lead accepted. Phase complete. Not committed. KL-P5 plan stays a draft.
+- 2026-10-06T13:41Z — Owner asked to plan KL-P5. Trust and Impact plan drafted. Implementation not started. KL-P4 security still open.
+- 2026-10-06T13:37Z — KL-P4 ContextPlan implemented. Pytest 9 passed. Contracts 16 passed. Web scan 15 passed. Browser checked the no-plan agent at 1280 and 390. Security review in progress. Not committed. KL-P5 not started.
+- 2026-10-06T13:35Z — Owner asked to plan KL-P4. ContextPlan plan drafted. Implementation not started.
+- 2026-10-06T13:32Z — KL-P3 security PASS recorded. Project lead accepted. KL-P4 not started. Not committed.
+- 2026-10-06T13:30Z — KL-P3 Papership Registry implemented. Materials are packs plus artifact and attachment objects. Tests passed. Browser checked at 1280 and 390. Security review not yet recorded. Not committed.
+- 2026-10-06T13:25Z — Owner asked to plan KL-P3. Plan completed to the phase template. Materials exclude the capability catalogue. Implementation not started.
+- 2026-10-06T13:20Z — KL-P2 security PASS recorded. Project lead accepted. KL-P3 plan drafted. Not committed. KL-P3 not implemented.
+- 2026-10-06T13:15Z — KL-P2 Context Graph implemented. Overlay tables, projection, supersede, relationships, Knowledge detail. Tests passed. Browser checked at 1280 and 390. Security review not yet recorded. Not committed.
+- 2026-10-06T13:40Z — KL-P1 security CONDITIONAL. Session and guest-list residuals remediated. Not BLOCKED.
+- 2026-10-06T13:30Z — KL-P2 Context Graph plan drafted. Implementation not started. KL-P1 security review still open.
+- 2026-10-06T13:20Z — KL-P1 Workspace foundation implemented. Security review is the remaining gate. Not committed.
+- 2026-10-06T13:05Z — KL-P1 Workspace foundation plan drafted. Implementation not started.
 - 2026-10-06T12:50Z — KL-P0 architecture alignment recorded (D-36). Security CONDITIONAL. Product code unchanged. KL-P1 not started.
 - 2026-10-06T11:53Z — Merged PR #7 to main; closed PR #8 as redundant; deleted leftover feature remotes. GitHub now has only `main`.
 - 2026-09-16T14:16Z — Added `docs/ui-blueprint/blueprint-3` from owner Papership UI Mockups drop. Live chrome stays blueprint-2.
@@ -52,11 +102,21 @@
 
 ## Active Workstream
 
-- `docs/workstreams/20261006-knowledge-layer/manifest.md` (Tier 2; KL-P0 CONDITIONAL)
+- `docs/workstreams/20261006-knowledge-layer-p11/manifest.md` (Tier 3; implemented_pending_security)
+- `docs/workstreams/20261006-knowledge-layer-p10/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p9/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p8/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p7/manifest.md` (Tier 3; complete_conditional, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p6/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p5/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p4/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p3/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p2/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p1/manifest.md` (Tier 3; complete_conditional)
 
 ## Active Role and Gate
 
-- KL-P0 security CONDITIONAL. Owner handoff: `docs/workstreams/20261006-knowledge-layer/delivery/owner-handoff.md`. Company OS G11 PASS remains historical. Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later).
+- KL-P7 is `complete_conditional`. KL-P8 and KL-P9 are `complete` (security PASS). KL-P10 is `complete` (security PASS). KL-P11 is `implemented_pending_security` (OT-96). Registrar DNS remains (OT-89). KL-P0 security remains CONDITIONAL. Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later).
 
 ## Predecessor Handoff
 
@@ -110,7 +170,7 @@
 
 ## Active Instructions
 
-- `/instructions/LAUNCH.md`, `/instructions/PROJECT_PLANNING.md`, `/instructions/SUBAGENTS.md`, `/instructions/ROLES.md`.
+- `/instructions/PROJECT_PLANNING.md`, `/instructions/ROLES.md`.
 
 ## Active Items
 

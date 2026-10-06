@@ -1,16 +1,16 @@
 {
-  "checked_at": "2026-09-12T10:53:12.797Z",
+  "checked_at": "2026-10-06T14:35:12.990Z",
   "wrap": "apps/web blueprint-2 via Tauri 2 mobile (Capacitor fallback not activated)",
   "api": "same Papership cloud API; tokens belong in OS keychain/keystore",
   "oauth": "system browser only",
   "store_submission": "not in G11 scope",
   "rustc": {
     "ok": true,
-    "text": "rustc 1.84.1 (e71f9a9a9 2025-01-27) (Homebrew)"
+    "text": "rustc 1.90.0-nightly (adcb3d3b4 2025-07-31)"
   },
   "cargo": {
     "ok": true,
-    "text": "cargo 1.84.1"
+    "text": "cargo 1.90.0-nightly (9b296973b 2025-07-25)"
   },
   "xcode": {
     "ok": true,

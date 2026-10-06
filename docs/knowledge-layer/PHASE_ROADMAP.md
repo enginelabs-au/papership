@@ -60,7 +60,18 @@ Later phases are done only when these stories are possible. KL-P0 records them s
 
 | Phase | Plan file |
 |---|---|
-| KL-P0 | `docs/plans/knowledge-layer/phase_0_architecture_alignment_plan.md` |
-| KL-P1 onward | Generated only after the previous phase is verified |
+| KL-P0 | `docs/plans/knowledge-layer/phase_0_architecture_alignment_plan.md` (`complete_conditional`) |
+| KL-P1 | `docs/plans/knowledge-layer/phase_1_workspace_foundation_plan.md` (`complete_conditional`) |
+| KL-P2 | `docs/plans/knowledge-layer/phase_2_context_graph_plan.md` (`complete`; security PASS) |
+| KL-P3 | `docs/plans/knowledge-layer/phase_3_federated_registry_plan.md` (`complete`; security PASS) |
+| KL-P4 | `docs/plans/knowledge-layer/phase_4_context_plan_plan.md` (`complete`; security PASS) |
+| KL-P5 | `docs/plans/knowledge-layer/phase_5_trust_impact_plan.md` (`complete`; security PASS) |
+| KL-P6 | `docs/plans/knowledge-layer/phase_6_knowledge_api_plan.md` (`complete`; security PASS) |
+| KL-P7 | `docs/plans/knowledge-layer/phase_7_web_consolidation_plan.md` (`complete_conditional`; security PASS; registrar DNS remains) |
+| KL-P8 | `docs/plans/knowledge-layer/phase_8_desktop_bridge_plan.md` (`complete`; security PASS) |
+| KL-P9 | `docs/plans/knowledge-layer/phase_9_mobile_companion_plan.md` (`complete`, security PASS) |
+| KL-P10 | `docs/plans/knowledge-layer/phase_10_lifecycle_fabric_plan.md` (`complete`, security PASS) |
+| KL-P11 | `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md` (`implemented_pending_security`) |
+| KL-P12 onward | Generated only after the previous phase is verified |
 
 Company OS plans `docs/plans/phase_0_foundations_plan.md` through `phase_7_ecosystem_mobile_plan.md` are historical. Do not append Knowledge Layer tasks to them.

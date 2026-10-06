@@ -11,11 +11,12 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from pydantic import BaseModel, ConfigDict, Field
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 
 from app.auth import AuthContext, auth_dep, issue_local_founder_token, require_reauth
-from app.config import load_settings
+from app.config import cors_allowlist, load_settings
 from app.connectors import get_connector, list_connectors
 from app.oauth import annotate_connection, complete_oauth_callback, frontend_redirect, oauth_readiness, start_oauth_connect
 from app.github_app import GithubError, installation_permissions, list_pulls, open_pull, probe_github
@@ -32,6 +33,15 @@ from app import memory_ops, phase5, phase7, rate_card, view_defs
 
 SIGNED_URL_TTL = 300
 
+
+class ApprovalBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    approval_class: str = Field(min_length=1)
+    target_id: str = Field(min_length=1)
+    target_version: str = "1"
+    requester_id: str | None = None
+    decision: str | None = None
+
 logger = configure_logging()
 
 
@@ -45,17 +55,7 @@ def create_app(store_path: str | None = None) -> FastAPI:
     app = FastAPI(title="Papership API", version="0.1.0")
     app.state.settings = settings
     app.state.store = store
-    origins = list(settings.cors_origins) or [
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-        "http://127.0.0.1:4173",
-        "http://localhost:4173",
-        "http://127.0.0.1:1420",
-        "http://localhost:1420",
-        "http://tauri.localhost",
-        "https://tauri.localhost",
-        "tauri://localhost",
-    ]
+    origins = cors_allowlist(settings.cors_origins)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -477,14 +477,18 @@ def create_app(store_path: str | None = None) -> FastAPI:
         }
 
     @app.post("/approvals")
-    def create_approval(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+    def create_approval(body: ApprovalBody, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        decision = body.decision or "approved"
+        if decision not in {"requested", "approved", "rejected"}:
+            raise StoreError("invalid decision", 422)
         return store.decide_approval(
-            approval_class=body["approval_class"],
-            requester_id=body.get("requester_id", ctx.principal_id),
+            approval_class=body.approval_class,
+            requester_id=body.requester_id or ctx.principal_id,
             decider_id=ctx.principal_id,
-            target_id=body["target_id"],
-            target_version=body.get("target_version", "1"),
+            target_id=body.target_id,
+            target_version=body.target_version or "1",
             tenant_id=ctx.tenant_id,
+            decision=decision,
         )
 
     @app.post("/grants/effective")
@@ -957,6 +961,9 @@ def create_app(store_path: str | None = None) -> FastAPI:
         )
         return result
 
+    from app.knowledge_layer import register_routes
+
+    register_routes(app, store)
     return app
 
 

@@ -203,6 +203,9 @@ class Store:
         from app.phase7 import migrate_phase7
 
         migrate_phase7(self)
+        from app.knowledge_layer import migrate_workspace
+
+        migrate_workspace(self)
         self.flush()
 
     def flush(self) -> None:
@@ -1053,17 +1056,52 @@ class Store:
         target_id: str,
         target_version: str,
         tenant_id: str,
+        decision: str = "approved",
     ) -> dict[str, Any]:
-        if (
-            approval_class in SELF_APPROVAL_REFUSED
-            or approval_class.removeprefix("approval.")
-            in {"release", "erasure", "billing", "org.admin"}
-        ) and requester_id == decider_id:
-            raise StoreError("self-approval refused", 403)
+        if decision == "requested":
+            if not (
+                self.has_grant(decider_id, "memory.write")
+                or self.has_grant(decider_id, approval_class)
+                or self.has_grant(decider_id, "org.admin")
+            ):
+                raise StoreError("missing grant", 403)
+            aid = _id("appr")
+            self.conn.execute(
+                """INSERT INTO approvals (id, tenant_id, approval_class, requester_id, target_id, target_version, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (aid, tenant_id, approval_class, requester_id, target_id, target_version, "pending"),
+            )
+            self.flush()
+            return {"id": aid, "status": "pending"}
+        if decision not in {"approved", "rejected"}:
+            raise StoreError("invalid decision", 422)
+        decider = self.principal(decider_id)
+        if decider["kind"] != "human" or decider["tenant_id"] != tenant_id:
+            raise StoreError("missing grant", 403)
         if not self.has_grant(decider_id, approval_class) and not self.has_grant(
             decider_id, "org.admin"
         ):
             raise StoreError("approval grant missing", 403)
+        found = self.conn.execute(
+            """
+            SELECT id, requester_id FROM approvals
+            WHERE tenant_id = ? AND approval_class = ? AND target_id = ? AND target_version = ? AND status = 'pending'
+            ORDER BY rowid DESC
+            LIMIT 1
+            """,
+            (tenant_id, approval_class, target_id, target_version),
+        ).fetchone()
+        if found is not None:
+            self._refuse_self_approval(approval_class, found["requester_id"], decider_id)
+            self.conn.execute(
+                "UPDATE approvals SET status = ? WHERE id = ? AND tenant_id = ?",
+                (decision, found["id"], tenant_id),
+            )
+            self.flush()
+            return {"id": found["id"], "status": decision}
+        if decision == "rejected":
+            raise StoreError("not found", 404)
+        self._refuse_self_approval(approval_class, requester_id, decider_id)
         aid = _id("appr")
         self.conn.execute(
             """INSERT INTO approvals (id, tenant_id, approval_class, requester_id, target_id, target_version, status)
@@ -1072,6 +1110,14 @@ class Store:
         )
         self.flush()
         return {"id": aid, "status": "approved"}
+
+    def _refuse_self_approval(self, approval_class: str, requester_id: str, decider_id: str) -> None:
+        if (
+            approval_class in SELF_APPROVAL_REFUSED
+            or approval_class.removeprefix("approval.")
+            in {"release", "erasure", "billing", "org.admin"}
+        ) and requester_id == decider_id:
+            raise StoreError("self-approval refused", 403)
 
     def void_approval_if_changed(self, target_id: str, new_version: str) -> int:
         cur = self.conn.execute(
@@ -1203,7 +1249,46 @@ class Store:
             item["meta"] = json.loads(raw) if isinstance(raw, str) else raw
         except json.JSONDecodeError:
             item["meta"] = {}
+        tenant_id, plan_id = self._work_item_lifecycle_ref(work_item_id)
+        item.update(self.lifecycle_citation(tenant_id, plan_id))
         return item
+
+    def _work_item_lifecycle_ref(self, work_item_id: str) -> tuple[str | None, str | None]:
+        row = self.conn.execute("SELECT * FROM work_items WHERE id=?", (work_item_id,)).fetchone()
+        if not row:
+            return None, None
+        keys = set(row.keys())
+        tenant_id = row["tenant_id"] if "tenant_id" in keys else None
+        plan_id = row["context_plan_id"] if "context_plan_id" in keys else None
+        return tenant_id, plan_id
+
+    def lifecycle_citation(self, tenant_id: str | None, context_plan_id: str | None) -> dict[str, Any]:
+        """Ids already stored on this tenant's context plan. No body and no external call."""
+        empty: dict[str, Any] = {"context_plan_id": None, "version_ids": []}
+        if not tenant_id or not context_plan_id:
+            return empty
+        try:
+            plan = self.conn.execute(
+                "SELECT id FROM context_plans WHERE id = ? AND tenant_id = ?",
+                (context_plan_id, tenant_id),
+            ).fetchone()
+            if not plan:
+                return empty
+            rows = self.conn.execute(
+                """
+                SELECT version_id FROM context_plan_citations
+                WHERE plan_id = ? AND tenant_id = ?
+                ORDER BY created_at ASC
+                LIMIT 40
+                """,
+                (context_plan_id, tenant_id),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            return empty
+        return {
+            "context_plan_id": context_plan_id,
+            "version_ids": [str(row["version_id"]) for row in rows],
+        }
 
     def run_engine_labs_stage_work(
         self,
@@ -1333,6 +1418,10 @@ class Store:
                 "UPDATE jobs SET status='running', updated_at=? WHERE id=?",
                 (now, job_id),
             )
+        citation = self.lifecycle_citation(
+            row["tenant_id"],
+            row["context_plan_id"] if "context_plan_id" in row.keys() else None,
+        )
         self._add_event(
             job_id,
             row["tenant_id"],
@@ -1346,6 +1435,8 @@ class Store:
                 "memory_item_id": mem_id,
                 "hermes_status": hermes_status,
                 "hermes_run_id": hermes_dispatch.get("run_id"),
+                "context_plan_id": citation["context_plan_id"],
+                "version_ids": citation["version_ids"],
             },
         )
         self.append_audit(principal_id, "work_item.loop_artifact", "work_item", work_item_id)
@@ -1362,6 +1453,8 @@ class Store:
             "memory_item_id": mem_id,
             "meta": built["meta"],
             "created_at": now,
+            "context_plan_id": citation["context_plan_id"],
+            "version_ids": citation["version_ids"],
         }
 
     def advance_stage(

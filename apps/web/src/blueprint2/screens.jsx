@@ -141,7 +141,7 @@ export function TodayOverview({ v }) {
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 14px", borderBottom: "1px solid var(--line2)" }}>
             <span style={{ fontSize: 12.5, fontWeight: 600 }}>Required decisions</span>
-            <span style={{ display: "inline-flex", alignItems: "center", height: 20, padding: "0 8px", borderRadius: 10, background: "var(--amber-soft)", color: "var(--amber)", font: "600 10.5px Inter,sans-serif" }}>2 waiting</span>
+            <span style={{ display: "inline-flex", alignItems: "center", height: 20, padding: "0 8px", borderRadius: 10, background: "var(--amber-soft)", color: "var(--amber)", font: "600 10.5px Inter,sans-serif" }}>{v.approvalsLive ? ((v.decisions || []).some((d) => d.pending) ? `${(v.decisions || []).filter((d) => d.pending).length} waiting` : "Nothing is waiting") : "2 waiting"}</span>
           </div>
           {(v.narrow ? v.decisions.slice(0, 1) : v.decisions).map((d) => (
             <div key={d.action} style={{ padding: "12px 14px", borderBottom: "1px solid var(--line2)" }}>
@@ -213,10 +213,13 @@ export function TodayOverview({ v }) {
 }
 
 export function TodayDecisions({ v }) {
+  const rows = v.decisionsLong || [];
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {v.decisionsLong.map((d) => (
-        <div key={d.action} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "15px 16px" }}>
+      {v.decisionsNote ? <div style={{ fontSize: 14, fontWeight: 600 }}>{v.decisionsNote}</div> : null}
+      {v.actionError ? <div style={{ fontSize: 12.5, color: "var(--red)" }}>{v.actionError}</div> : null}
+      {rows.map((d) => (
+        <div key={`${d.action}-${d.target}-${d.version}`} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "15px 16px" }}>
           <div className="bp2-dec-card" style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
             <span style={{ width: 9, height: 9, borderRadius: "50%", background: d.dot, marginTop: 5, flex: "none" }} />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -230,8 +233,14 @@ export function TodayDecisions({ v }) {
               <p style={{ margin: "9px 0 0", fontSize: 12.5, color: "var(--t2)", maxWidth: "70ch" }}>{d.why}</p>
             </div>
             <div className="bp2-dec-side" style={{ display: "flex", flexDirection: "column", gap: 7, width: 150, flex: "none" }}>
-              <button type="button" className="bp2-hit" onClick={d.approve} style={{ height: 30, border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 12.5px Inter,sans-serif", cursor: "pointer" }}>Approve</button>
-              <button type="button" className="bp2-hit" onClick={d.reject} style={{ height: 30, border: "1px solid var(--line)", background: "var(--surface)", color: "var(--t1)", borderRadius: 6, font: "600 12.5px Inter,sans-serif", cursor: "pointer" }}>Reject</button>
+              {d.pending || !d.live ? (
+                <>
+                  <button type="button" className="bp2-hit" onClick={d.approve} style={{ height: 30, border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 12.5px Inter,sans-serif", cursor: "pointer" }}>Approve</button>
+                  <button type="button" className="bp2-hit" onClick={d.reject} style={{ height: 30, border: "1px solid var(--line)", background: "var(--surface)", color: "var(--t1)", borderRadius: 6, font: "600 12.5px Inter,sans-serif", cursor: "pointer" }}>Reject</button>
+                </>
+              ) : (
+                <span style={{ fontSize: 12, color: "var(--t3)" }}>{d.when}</span>
+              )}
             </div>
           </div>
         </div>
@@ -281,6 +290,7 @@ export function TodayRunning({ v }) {
 export function Registry({ v }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ fontSize: 12.5, color: "var(--t3)" }}>Capability catalogue for this organisation. The Papership Registry is a later surface.</div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         {v.registryFilters.map((f) => (
           <button key={f.label} type="button" style={{ display: "flex", alignItems: "center", gap: 7, height: 30, padding: "0 11px", border: `1px solid ${f.bd}`, background: f.bg, color: f.ink, borderRadius: 8, font: "500 12px Inter,sans-serif", cursor: "pointer" }}>
@@ -575,7 +585,7 @@ export function WorkWiki() {
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 48, textAlign: "center" }}>
       <div style={{ fontSize: 14, fontWeight: 600 }}>No wiki pages yet</div>
-      <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 6 }}>Plans and decisions live in Files until a page is created.</div>
+      <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 6 }}>Files and Wiki are not the knowledge record.</div>
     </div>
   );
 }
@@ -678,6 +688,7 @@ export function PeopleView({ v }) {
   if (!v.people?.length) {
     return (
       <div>
+        <div style={{ fontSize: 12, color: "var(--t3)", marginBottom: 10 }}>Organisation context for this seat. People stay a directory.</div>
         {seatCard}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 40, textAlign: "center" }}>
           <div style={{ fontSize: 14, fontWeight: 600 }}>No people to show</div>
@@ -688,6 +699,7 @@ export function PeopleView({ v }) {
   }
   return (
     <div>
+      <div style={{ fontSize: 12, color: "var(--t3)", marginBottom: 10 }}>Organisation context for this seat. People stay a directory.</div>
       {seatCard}
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
         {v.people.map((p) => (
@@ -738,7 +750,22 @@ export function InvitesView() {
   );
 }
 
-export function DataView({ v }) {
+export function DataView({ v, sub }) {
+  if (sub === "Events" && (v.approvalsLive || v.auditError)) {
+    const rows = v.auditRows || [];
+    return (
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+        {v.auditError ? <div style={{ padding: 14, fontSize: 12.5, color: "var(--red)" }}>{v.auditError}</div> : null}
+        {rows.length ? rows.map((row) => (
+          <div key={`${row.created_at}-${row.action}-${row.target_id}`} style={{ display: "grid", gridTemplateColumns: "minmax(0,1.2fr) minmax(0,1fr) 160px", gap: 10, padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
+            <span>{row.action}</span>
+            <span style={{ color: "var(--t3)" }}>{row.actor_id} · {row.target_type} · {row.target_id}</span>
+            <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{row.created_at}</span>
+          </div>
+        )) : <div style={{ padding: 16, fontSize: 12.5, color: "var(--t3)" }}>No audit records yet.</div>}
+      </div>
+    );
+  }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div className="bp2-trace-kpis" style={{ display: "grid", gridTemplateColumns: "repeat(4,minmax(0,1fr))", gap: 12 }}>
@@ -770,6 +797,8 @@ export function DataView({ v }) {
 
 export function FilesView({ v }) {
   return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div style={{ fontSize: 12.5, color: "var(--t3)" }}>Files are document intake. They are not the knowledge record.</div>
     <div className="bp2-files" style={{ display: "grid", gridTemplateColumns: "200px minmax(0,1fr) 240px", gap: 12 }}>
       <div style={{ background: "var(--raised)", border: "1px solid var(--line2)", borderRadius: 10, padding: 8 }}>
         {v.folders.map((f) => (
@@ -794,12 +823,14 @@ export function FilesView({ v }) {
         ))}
       </div>
     </div>
+    </div>
   );
 }
 
 export function ConnectionsView({ v }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+    <div style={{ fontSize: 12.5, color: "var(--t3)" }}>Organisation context. Integrations stay connections, not the knowledge record.</div>
     <div className="bp2-connections" style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 12 }}>
       {v.connections.map((c) => (
         <div key={c.name} style={{ background: "var(--surface)", border: `1px solid ${c.bd}`, borderRadius: 10, padding: 14 }}>
@@ -928,6 +959,14 @@ export function SettingsView({ v }) {
                 <span>{r.k}</span><span style={{ color: "var(--t2)" }}>{r.v}</span>
               </div>
             ))}
+          </div>
+        ) : v.set_permissions && v.permissionsLive ? (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: 12.5, color: "var(--t3)" }}>Grants on this seat. This screen does not change them.</div>
+            {(v.callerGrants || []).map((grant) => (
+              <div key={grant} style={{ padding: "10px 0", borderBottom: "1px solid var(--line2)", font: "500 12.5px 'JetBrains Mono',monospace" }}>{grant}</div>
+            ))}
+            {(v.callerGrants || []).length ? null : <div style={{ marginTop: 12, fontSize: 12.5, color: "var(--t3)" }}>No grants on this seat.</div>}
           </div>
         ) : v.set_permissions ? (
           <div style={{ marginTop: 16 }}>
@@ -1123,6 +1162,180 @@ export function RunDetailView({ v }) {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function contextLine(value) {
+  return value || "No context plan";
+}
+
+function contextDetail(agent, plan) {
+  const base = contextLine(agent.context_plan_id);
+  if (!agent.context_plan_id || !plan || plan.id !== agent.context_plan_id) return base;
+  const ids = (plan.citations || []).map((row) => row.version_id).filter(Boolean);
+  return ids.length ? `${base} · ${ids.join(", ")}` : base;
+}
+
+function missingLine(agent, plan, error) {
+  if (!agent.context_plan_id) return "Unavailable until a later phase";
+  if (error) return error;
+  if (!plan || plan.id !== agent.context_plan_id) return "Loading this plan.";
+  return plan.gap || "No gap recorded";
+}
+
+function trustLine(agent, signals, error) {
+  if (!agent.context_plan_id) return "No trust assessment";
+  if (error) return error;
+  if (!signals || signals.plan_id !== agent.context_plan_id) return "Loading this plan.";
+  const parts = (signals.signals || []).flatMap((row) => {
+    if (!row.trust) return [];
+    const label = row.trust.source === "pack_review" ? `pack review ${row.trust.verdict}` : row.trust.verdict;
+    return [`${row.version_id} ${label}`];
+  });
+  return parts.length ? parts.join(", ") : "No trust assessment";
+}
+
+function impactLine(agent, signals, error) {
+  if (!agent.context_plan_id) return "No impact recorded";
+  if (error) return error;
+  if (!signals || signals.plan_id !== agent.context_plan_id) return "Loading this plan.";
+  const parts = (signals.signals || []).flatMap((row) => (row.impact ? [`${row.version_id} ${row.impact}`] : []));
+  return parts.length ? parts.join(", ") : "No impact recorded";
+}
+
+export function AgentsView({ v }) {
+  const rows = v.agents || [];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {v.agentsError ? <div style={{ fontSize: 12.5, color: "var(--red)" }}>{v.agentsError}</div> : null}
+      {rows.length ? rows.map((agent) => (
+        <button key={agent.principal_id} type="button" onClick={() => v.openAgent?.(agent.principal_id)} style={{ textAlign: "left", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "12px 14px", cursor: "pointer" }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{agent.display_name}</div>
+          <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4 }}>{agent.purpose || "Not recorded"} · {contextLine(agent.context_plan_id)}</div>
+        </button>
+      )) : <div style={{ fontSize: 13, color: "var(--t2)" }}>No agents in this organisation.</div>}
+    </div>
+  );
+}
+
+export function KnowledgeView({ v }) {
+  const rows = v.knowledgeObjects || [];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {v.desktopBridge ? (
+        <button type="button" onClick={() => v.addLocalFile?.()} style={{ alignSelf: "flex-start", border: "1px solid var(--line)", background: "var(--surface)", color: "var(--t1)", borderRadius: 8, padding: "8px 12px", font: "600 12.5px Inter,sans-serif", cursor: "pointer" }}>Add a local file</button>
+      ) : null}
+      {v.localFileError ? <div style={{ fontSize: 12.5, color: "var(--red)" }}>{v.localFileError}</div> : null}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+        {v.knowledgeError ? <div style={{ padding: 14, fontSize: 12.5, color: "var(--red)" }}>{v.knowledgeError}</div> : null}
+        {rows.length ? rows.map((row) => (
+          <button key={row.id} type="button" onClick={() => v.openKnowledge?.(row.id)} style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", width: "100%", textAlign: "left", padding: "10px 14px", border: 0, borderBottom: "1px solid var(--line2)", background: "transparent", fontSize: 12.5, cursor: "pointer", color: "inherit" }}>
+            <span style={{ flex: "1 1 160px" }}>{row.title}{row.source_kind === "local_file" ? " · This file stays on this machine." : ""}</span>
+            <span style={{ color: "var(--t3)" }}>{row.kind}</span>
+            <span style={{ color: "var(--t3)" }}>{row.class}</span>
+            <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>v{row.version}</span>
+          </button>
+        )) : <div style={{ padding: 16, fontSize: 12.5, color: "var(--t3)" }}>No knowledge objects for this seat.</div>}
+      </div>
+    </div>
+  );
+}
+
+function economicLabel(row) {
+  if (row.economic_model === "free") return "Free";
+  if (row.economic_model === "unavailable") return "Unavailable";
+  if (row.economic_model === "listed") return `Listed · $${row.list_usd}`;
+  return "No economic model";
+}
+
+export function MaterialsView({ v }) {
+  const rows = v.materials || [];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+        {v.materialsError ? <div style={{ padding: 14, fontSize: 12.5, color: "var(--red)" }}>{v.materialsError}</div> : null}
+        {rows.length ? rows.map((row) => (
+          <div key={row.id} style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
+            <span style={{ flex: "1 1 160px" }}>{row.title}</span>
+            <span style={{ color: "var(--t3)" }}>{row.kind}</span>
+            <span style={{ color: "var(--t3)" }}>{row.class}</span>
+            <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{row.locator}</span>
+            <span style={{ color: "var(--t2)" }}>{economicLabel(row)}</span>
+          </div>
+        )) : <div style={{ padding: 16, fontSize: 12.5, color: "var(--t3)" }}>No materials for this seat.</div>}
+      </div>
+    </div>
+  );
+}
+
+export function KnowledgeDetail({ v, objectId }) {
+  const detail = v.knowledgeDetail?.object?.id === objectId ? v.knowledgeDetail : null;
+  if (v.knowledgeDetailError) {
+    return <div style={{ fontSize: 12.5, color: "var(--red)" }}>{v.knowledgeDetailError}</div>;
+  }
+  if (!detail) {
+    return <div style={{ fontSize: 12.5, color: "var(--t3)" }}>Loading this object.</div>;
+  }
+  const versions = detail.versions || [];
+  const relationships = detail.relationships || [];
+  const rows = [
+    ["Title", detail.object.title],
+    ["Kind", detail.object.kind],
+    ["Class", detail.object.class],
+    ["Source", detail.object.source_kind === "local_file" ? "This file stays on this machine." : `${detail.object.source_kind} · ${detail.source?.locator || detail.object.source_id}`],
+    ["Owner", detail.object.owner_principal_id || "Not recorded"],
+    ["Versions", versions.length ? versions.map((row) => `v${row.version_number} ${row.class}`).join(", ") : "No versions recorded."],
+    ["Relationships", relationships.length ? relationships.map((row) => row.relationship).join(", ") : "No relationships yet."],
+    ["Context", "No context plan"],
+  ];
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+      {rows.map(([label, value]) => (
+        <div key={label} style={{ display: "grid", gridTemplateColumns: "140px minmax(0,1fr)", gap: 12, padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
+          <span style={{ color: "var(--t3)" }}>{label}</span>
+          <span>{value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function AgentDetail({ v, agentId }) {
+  const agent = (v.agents || []).find((row) => row.principal_id === agentId);
+  if (!agent) {
+    return <div style={{ fontSize: 13, color: "var(--t2)" }}>{v.agentsError || "This agent is not in the current organisation."}</div>;
+  }
+  const named = (v.knowledgeObjects || []).filter((row) => row.owner_principal_id === agent.principal_id || row.source_id === agent.principal_id);
+  const plan = v.contextPlan?.id === agent.context_plan_id ? v.contextPlan : null;
+  const contextValue = agent.context_plan_id && v.contextPlanError
+    ? v.contextPlanError
+    : contextDetail(agent, plan);
+  const sections = [
+    ["Identity", `${agent.principal_id} · ${agent.kind} · ${agent.display_name}`],
+    ["Role", agent.purpose || "Not recorded"],
+    ["Task", agent.task ? `${agent.task.id} · ${agent.task.purpose}` : "Idle"],
+    ["Knowledge", named.length ? named.map((row) => row.title).join(", ") : "No knowledge objects name this agent."],
+    ["Context", contextValue],
+    ["Capabilities", v.hermesHost?.message || v.hermesHost?.status || "Host status is not loaded."],
+    ["Memory", named.length ? named.map((row) => `v${row.version}`).join(", ") : "No memory rows name this agent."],
+    ["Authority", (agent.grants || []).length ? agent.grants.join(", ") : "No grants on this agent."],
+    ["Sources", named.length ? named.map((row) => row.source).join(", ") : "No sources recorded."],
+    ["Versions", named.length ? named.map((row) => `${row.title} v${row.version}`).join(", ") : "No versions recorded."],
+    ["Trust", trustLine(agent, v.contextSignals, v.contextSignalsError)],
+    ["Impact", impactLine(agent, v.contextSignals, v.contextSignalsError)],
+    ["Cost", "Unavailable until a later phase"],
+    ["Missing", missingLine(agent, plan, v.contextPlanError)],
+    ["Approval", "No approval is attached to this agent."],
+  ];
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+      {sections.map(([label, value]) => (
+        <div key={label} style={{ display: "grid", gridTemplateColumns: "140px minmax(0,1fr)", gap: 12, padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
+          <span style={{ color: "var(--t3)" }}>{label}</span>
+          <span>{value}</span>
+        </div>
+      ))}
     </div>
   );
 }

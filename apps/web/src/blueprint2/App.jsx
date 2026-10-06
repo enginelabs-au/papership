@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API_BASE, applyPapershipOverlay, clearStoredSession, coalesceEngineLabsLoop, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, advanceEngineLabsLoopStage, fetchEngineLabsLoopState, ENGINE_LABS_PROJECT_ID, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
+import { API_BASE, applyPapershipOverlay, clearStoredSession, coalesceEngineLabsLoop, ensureLocalSession, fetchPapershipJson, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, advanceEngineLabsLoopStage, fetchEngineLabsLoopState, ENGINE_LABS_PROJECT_ID, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
 import { PRODUCT } from "../brand";
 import { useIsMobile } from "../hooks/use-mobile";
 import "./blueprint2.css";
 import { Ico, PATHS, SearchIco } from "./svg";
 import {
   AccountView,
+  AgentDetail,
+  AgentsView,
   ConnectionsView,
   DataView,
   FilesView,
+  KnowledgeDetail,
+  KnowledgeView,
+  MaterialsView,
   InboxView,
   InvitesView,
   MemoryView,
@@ -64,11 +69,13 @@ const TABDEF = {
   data: { label: "Data", d: PATHS.data },
   files: { label: "Files", d: PATHS.files },
   integrations: { label: "Integrations", d: PATHS.plug },
+  agents: { label: "Agents", d: PATHS.today },
+  knowledge: { label: "Knowledge", d: PATHS.files },
   settings: { label: "Settings", d: PATHS.settings },
 };
-const TAB_KEYS = ["today", "work", "inbox", "people", "data", "files", "integrations", "settings"];
+const TAB_KEYS = ["today", "work", "inbox", "people", "data", "files", "integrations", "agents", "knowledge", "settings"];
 const BOTTOM_TABS = ["today", "work", "inbox"];
-const RAIL_TABS = ["people", "data", "files", "integrations", "settings"];
+const RAIL_TABS = ["people", "data", "files", "integrations", "agents", "knowledge", "settings"];
 const NARROW_PX = 768;
 const PAGES = {
   today: { t: "Today", d: "Command room — what needs you now (blueprint-3 tiles on blueprint-2 chrome)", subs: ["Overview", "Decisions", "Running", "Registry"], counts: { Decisions: "2", Running: "3" } },
@@ -78,9 +85,11 @@ const PAGES = {
   data: { t: "Data", d: "Run traces, canonical metrics and platform health — not a BI product", subs: ["Metrics", "AI traces", "Events", "Alerts"] },
   files: { t: "Files", d: "Document intake, plans, decisions and handover", subs: [] },
   integrations: { t: "Integrations", d: "Connected systems, grants and the capability registry", subs: ["Connected", "Available", "Unavailable"] },
+  agents: { t: "Agents", d: "Who is working in this organisation, and what context is attached.", subs: ["Roster"] },
+  knowledge: { t: "Knowledge", d: "Objects this seat may see. Class, source, and version.", subs: ["Objects", "Materials"] },
   settings: { t: "Settings", d: "Organisation defaults, grants, retention and appearance", subs: [] },
 };
-const DFLT = { today: "Overview", work: "Issues", inbox: "All", people: "People", data: "AI traces", integrations: "Connected" };
+const DFLT = { today: "Overview", work: "Issues", inbox: "All", people: "People", data: "AI traces", integrations: "Connected", agents: "Roster", knowledge: "Objects" };
 const SETTINGS_PANES = ["General", "AI & Agents", "Notifications", "Security", "Permissions", "Plan", "Team", "Appearance", "Data & retention", "Personalisation", "Docs"];
 const navBtn = { width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(196,181,253,.34)", background: "rgba(255,255,255,.06)", borderRadius: 8, color: "var(--navink)", cursor: "pointer" };
 
@@ -111,6 +120,15 @@ function parseNavHash(raw) {
     return { tab, setPane: pane, sub: null };
   }
   if (tab === "files") return { tab, setPane: null, sub: null };
+  if (tab === "agents" && detail && detail !== "roster") {
+    return { tab, setPane: null, sub: "Roster", route: { kind: "agent", id: detailRaw } };
+  }
+  if (tab === "knowledge" && detail === "materials") {
+    return { tab, setPane: null, sub: "Materials" };
+  }
+  if (tab === "knowledge" && detail && detail !== "objects") {
+    return { tab, setPane: null, sub: "Objects", route: { kind: "knowledge-object", id: detailRaw } };
+  }
   const page = PAGES[tab];
   const sub = page.subs.find((s) => toSlug(s) === detail) || DFLT[tab] || page.subs[0] || null;
   return { tab, setPane: null, sub };
@@ -202,6 +220,12 @@ export default function Blueprint2App() {
   const [createOpen, setCreateOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
   const [route, setRoute] = useState(null);
+  const [knowledgeDetail, setKnowledgeDetail] = useState(null);
+  const [knowledgeDetailError, setKnowledgeDetailError] = useState("");
+  const [contextPlan, setContextPlan] = useState(null);
+  const [contextPlanError, setContextPlanError] = useState("");
+  const [contextSignals, setContextSignals] = useState(null);
+  const [contextSignalsError, setContextSignalsError] = useState("");
   const [setPane, setSetPane] = useState("Permissions");
   const [streaming, setStreaming] = useState(true);
   const [grants, setGrants] = useState({ branch: true, change: true, check: true, release: false });
@@ -210,6 +234,7 @@ export default function Blueprint2App() {
   const [wizardError, setWizardError] = useState("");
   const [oauthNote, setOauthNote] = useState("");
   const [loopActionBusy, setLoopActionBusy] = useState(false);
+  const [localFileError, setLocalFileError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -225,7 +250,7 @@ export default function Blueprint2App() {
     const parsed = parseNavHash(raw);
     if (!parsed) return;
     setTab(parsed.tab);
-    setRoute(null);
+    setRoute(parsed.route || null);
     if (parsed.setPane) setSetPane(parsed.setPane);
     if (parsed.sub) setSub((s) => ({ ...s, [parsed.tab]: parsed.sub }));
   }, []);
@@ -237,6 +262,73 @@ export default function Blueprint2App() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, [authed, applyNavHash]);
+
+  useEffect(() => {
+    if (route?.kind !== "knowledge-object" || !route.id) {
+      setKnowledgeDetail(null);
+      setKnowledgeDetailError("");
+      return;
+    }
+    let cancelled = false;
+    setKnowledgeDetail(null);
+    setKnowledgeDetailError("");
+    fetchPapershipJson(`/knowledge/objects/${encodeURIComponent(route.id)}`)
+      .then((body) => {
+        if (!cancelled) setKnowledgeDetail(body);
+      })
+      .catch((error) => {
+        if (!cancelled) setKnowledgeDetailError(error.message || "Could not load this object.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [route]);
+
+  const agentPlanId = route?.kind === "agent"
+    ? (overlay.agents || []).find((row) => row.principal_id === route.id)?.context_plan_id || ""
+    : "";
+
+  useEffect(() => {
+    if (route?.kind !== "agent" || !agentPlanId) {
+      setContextPlan(null);
+      setContextPlanError("");
+      return;
+    }
+    let cancelled = false;
+    setContextPlan(null);
+    setContextPlanError("");
+    fetchPapershipJson(`/knowledge/plans/${encodeURIComponent(agentPlanId)}`)
+      .then((body) => {
+        if (!cancelled) setContextPlan(body);
+      })
+      .catch((error) => {
+        if (!cancelled) setContextPlanError(error.message || "Could not load this context plan.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [route, agentPlanId]);
+
+  useEffect(() => {
+    if (route?.kind !== "agent" || !agentPlanId) {
+      setContextSignals(null);
+      setContextSignalsError("");
+      return;
+    }
+    let cancelled = false;
+    setContextSignals(null);
+    setContextSignalsError("");
+    fetchPapershipJson(`/knowledge/plans/${encodeURIComponent(agentPlanId)}/signals`)
+      .then((body) => {
+        if (!cancelled) setContextSignals(body);
+      })
+      .catch((error) => {
+        if (!cancelled) setContextSignalsError(error.message || "Could not load trust and impact.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [route, agentPlanId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || !authed) return;
@@ -718,7 +810,43 @@ export default function Blueprint2App() {
       { id: "run_7f21c", mode: "Execute", status: "Running", dot: DOTS.run, open: routeTo({ kind: "run" }) },
       { id: "run_7f0b2", mode: "Analyse", status: "Completed", dot: DOTS.ok, open: routeTo({ kind: "run" }) },
     ];
-    out.itemDetails = [{ k: "Key", v: "CCO-245", style: true }, { k: "Plan", v: "PLAN-019", style: true }, { k: "Department", v: "Platform" }, { k: "Sponsor", v: "Cam Douglas" }, { k: "Repository", v: "GitHub · Papership" }];
+    out.itemDetails = [{ k: "Key", v: "CCO-245", style: true }, { k: "Plan", v: "PLAN-019", style: true }, { k: "Context plan", v: "No context plan" }, { k: "Department", v: "Platform" }, { k: "Sponsor", v: "Cam Douglas" }, { k: "Repository", v: "GitHub · Papership" }];
+    out.openAgent = (id) => {
+      setRoute({ kind: "agent", id });
+      setPalette(false);
+      closeMobileChrome();
+    };
+    out.openKnowledge = (id) => {
+      setRoute({ kind: "knowledge-object", id });
+      setPalette(false);
+      closeMobileChrome();
+    };
+    out.desktopBridge = typeof window !== "undefined" && Boolean(window.__TAURI_INTERNALS__);
+    out.localFileError = localFileError;
+    out.addLocalFile = async () => {
+      const invoke = window.__TAURI_INTERNALS__?.invoke;
+      if (!invoke) return;
+      setLocalFileError("");
+      try {
+        const picked = await invoke("bridge_pick_local_file");
+        if (!picked) return;
+        const created = await postPapershipJson("/knowledge/local-files", {
+          title: picked.title,
+          digest: picked.digest,
+          byte_size: picked.byte_size,
+        });
+        await invoke("bridge_bind_local_file", { object_id: created.id, digest: picked.digest });
+        setOverlay(await loadPapershipOverlay());
+      } catch (error) {
+        setLocalFileError(error.message || "Could not add this file.");
+      }
+    };
+    out.knowledgeDetail = knowledgeDetail;
+    out.knowledgeDetailError = knowledgeDetailError;
+    out.contextPlan = contextPlan;
+    out.contextPlanError = contextPlanError;
+    out.contextSignals = contextSignals;
+    out.contextSignalsError = contextSignalsError;
     const RS = [
       { label: "Scope confirmed", when: "14:29:04", receipt: "Sponsor Cam Douglas · item CCO-245", done: true },
       { label: "Read the change surface", when: "14:29:51", receipt: "Read 3 files. No secrets were read.", done: true },
@@ -864,8 +992,34 @@ export default function Blueprint2App() {
       }
     };
     void page; void cur;
-    return applyPapershipOverlay(out, overlay, { openWizard, setModal });
-  }, [theme, tab, sub, setPane, grants, go, goSeat, goWorkflows, goDomains, goDecisions, openSlide, routeTo, overlay, isMobile, openWizard, loopActionBusy]);
+    const decideApproval = async (row, decision = "approved") => {
+      try {
+        await postPapershipJson("/approvals", {
+          approval_class: row.approval_class,
+          target_id: row.target_id,
+          target_version: row.target_version,
+          requester_id: row.requester_id,
+          decision,
+        });
+        const fresh = await loadPapershipOverlay();
+        setOverlay({ ...fresh, actionError: "" });
+      } catch (error) {
+        setOverlay((prev) => ({
+          ...prev,
+          actionError: error.message || "Approval was refused.",
+        }));
+      }
+    };
+    const merged = applyPapershipOverlay(out, overlay, { openWizard, setModal, decideApproval });
+    merged.knowledgeDetail = knowledgeDetail;
+    merged.knowledgeDetailError = knowledgeDetailError;
+    merged.contextPlan = contextPlan;
+    merged.contextPlanError = contextPlanError;
+    merged.contextSignals = contextSignals;
+    merged.contextSignalsError = contextSignalsError;
+    merged.openKnowledge = out.openKnowledge;
+    return merged;
+  }, [theme, tab, sub, setPane, grants, go, goSeat, goWorkflows, goDomains, goDecisions, openSlide, routeTo, overlay, isMobile, openWizard, loopActionBusy, closeMobileChrome, knowledgeDetail, knowledgeDetailError, contextPlan, contextPlanError, contextSignals, contextSignalsError, localFileError]);
 
   const page = PAGES[tab] || PAGES.today;
   const cur = sub[tab] || DFLT[tab];
@@ -885,12 +1039,30 @@ export default function Blueprint2App() {
       pageChip = `Loop · ${String(stage).replace(/_/g, " ")}`;
       const art = v.engineLabsLoop?.currentArtifact;
       const artHint = art?.artifact_type ? ` · ${art.artifact_type}` : "";
-      pageDesc = `Job ${loopJob.id} · ${loopJob.status || "queued"}${artHint}${v.engineLabsLoop?.mock ? " · browser mock (API unreachable)" : ""}`;
+      const planId = art?.context_plan_id || "";
+      const versionCount = Array.isArray(art?.version_ids) ? art.version_ids.length : 0;
+      const planSentence = planId ? `Context plan ${planId} · ${versionCount} versions` : "No context plan";
+      pageDesc = `Job ${loopJob.id} · ${loopJob.status || "queued"}${artHint} · ${planSentence}${v.engineLabsLoop?.mock ? " · browser mock (API unreachable)" : ""}`;
     } else {
       pageDesc = "Founder / Engine Labs loop — press Start; the page title chip shows the live stage.";
     }
   }
-  if (rk === "work-item") { pageTitle = "CCO-245 · Interception hardening for T2-1"; pageDesc = "Work item · Platform · Cam Douglas · due 24 Sep"; pageChip = "In progress"; pageActions = [{ label: "Back to Work", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("work") }]; }
+  if (rk === "work-item") { pageTitle = "CCO-245 · Interception hardening for T2-1"; pageDesc = "Work item · Platform · Cam Douglas · due 24 Sep · No context plan"; pageChip = "In progress"; pageActions = [{ label: "Back to Work", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("work") }]; }
+  if (rk === "agent") {
+    const agent = (v.agents || []).find((row) => row.principal_id === route.id);
+    pageTitle = agent?.display_name || "Agent";
+    pageDesc = agent?.context_plan_id ? `Context plan ${agent.context_plan_id}` : "No context plan";
+    pageActions = [{ label: "Back to Agents", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("agents") }];
+  }
+  if (!rk && tab === "knowledge" && cur === "Materials") {
+    pageTitle = "Papership Registry";
+    pageDesc = "Candidates this organisation can see. Skill hosts, MCP directories, and publisher catalogues are not connected. Charges stay off.";
+  }
+  if (rk === "knowledge-object") {
+    pageTitle = v.knowledgeDetail?.object?.title || "Knowledge object";
+    pageDesc = "No context plan";
+    pageActions = [{ label: "Back to Knowledge", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("knowledge") }];
+  }
   if (rk === "run") { pageTitle = "run_7f21c · Isolated change for CCO-245"; pageDesc = "Run · sponsor Cam Douglas · acting as Papership agent (user-equivalent)"; pageChip = "Running"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
   if (rk === "account") { pageTitle = "Account"; pageDesc = "Your profile and sign-in — not an organisation setting"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
   if (rk === "memory") { pageTitle = "Memory"; pageDesc = v.memoryNote || "Governed memory with provenance"; pageChip = v.adaptedBadge || ""; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
@@ -903,6 +1075,10 @@ export default function Blueprint2App() {
     const on = s === cur;
     let count = (page.counts || {})[s] || "";
     if (tab === "inbox" && s === "All") count = String((v.threads || []).length);
+    if (tab === "today" && s === "Decisions" && v.approvalsLive) {
+      const waiting = (v.decisions || []).filter((d) => d.pending).length;
+      count = waiting ? String(waiting) : "0";
+    }
     return { label: s, go: setSubTab(tab, s), bg: on ? "var(--surface)" : "transparent", ink: on ? "var(--t1)" : "var(--t3)", fw: on ? "600" : "500", sh: on ? "0 1px 2px rgba(26,18,36,.08)" : "none", count, cbg: on ? "var(--blue-soft)" : "var(--line2)", cink: on ? "var(--blue)" : "var(--t3)" };
   });
 
@@ -1138,6 +1314,8 @@ export default function Blueprint2App() {
                   ) : null}
                   <PageHead title={pageTitle} desc={pageDesc} chip={pageChip} actions={pageActions} />
                   {!route && page.subs.length > 0 ? <SubNav items={subnav} /> : null}
+                  {rk === "agent" && <AgentDetail v={v} agentId={route.id} />}
+                  {rk === "knowledge-object" && <KnowledgeDetail v={v} objectId={route.id} />}
                   {rk === "work-item" && <WorkItemView v={v} />}
                   {rk === "run" && <RunDetailView v={v} />}
                   {rk === "account" && <AccountView v={v} />}
@@ -1156,9 +1334,12 @@ export default function Blueprint2App() {
                   {!route && tab === "people" && cur === "People" && <PeopleView v={v} />}
                   {!route && tab === "people" && cur === "Teams" && <TeamsView v={v} />}
                   {!route && tab === "people" && cur === "Pending invites" && <InvitesView />}
-                  {!route && tab === "data" && <DataView v={v} />}
+                  {!route && tab === "data" && <DataView v={v} sub={cur} />}
                   {!route && tab === "files" && <FilesView v={v} />}
                   {!route && tab === "integrations" && <ConnectionsView v={v} />}
+                  {!route && tab === "agents" && <AgentsView v={v} />}
+                  {!route && tab === "knowledge" && cur === "Materials" && <MaterialsView v={v} />}
+                  {!route && tab === "knowledge" && cur !== "Materials" && <KnowledgeView v={v} />}
                   {!route && tab === "settings" && <SettingsView v={v} />}
                 </div>
               </div>
@@ -1187,36 +1368,26 @@ export default function Blueprint2App() {
                   <button type="button" title="Close panel" onClick={() => setHey(false)} style={{ width: 26, height: 26, border: 0, background: "transparent", color: "var(--t3)", borderRadius: 6, cursor: "pointer", marginBottom: 4 }}>✕</button>
                 </div>
                 <div style={{ flex: 1, overflow: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ alignSelf: "flex-end", maxWidth: "86%", background: "var(--blue-soft)", border: "1px solid rgba(37,99,235,.22)", borderRadius: 10, padding: "9px 11px", fontSize: 12.5 }}>Take CCO-245 through an isolated change and run the checks. Don’t push anything to main.</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      <div style={{ fontSize: 12.5, color: "var(--t1)" }}>I’ve created an isolated change on <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>change/cco-245-interception</span> and run the checks — 14 tests passed. To go further I need your approval to open a dry-run pull request<span style={{ display: "inline-block", width: 7, height: 14, background: "var(--blue)", verticalAlign: -2, marginLeft: 2, animation: "ogcaret 1s steps(1) infinite" }} /></div>
-                      <div style={{ border: "1px solid var(--line)", borderRadius: 9, overflow: "hidden", background: "var(--canvas)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 11px", borderBottom: "1px solid var(--line2)" }}>
-                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--blue)", animation: "ogblink 1.4s infinite" }} />
-                          <span style={{ font: "600 11.5px Inter,sans-serif", flex: 1 }}>run_7f21c · running</span>
-                          <a href="#run" onClick={(e) => { e.preventDefault(); setRoute({ kind: "run" }); }}>Open run</a>
-                        </div>
-                        <div style={{ padding: "9px 11px", fontSize: 11.5, color: "var(--t2)" }}>Read 3 files · wrote 142 lines · ran tests: 14 passed · 12m 04s elapsed</div>
-                      </div>
-                      <div style={{ border: "1px solid var(--amber)", borderRadius: 9, overflow: "hidden", background: "var(--amber-soft)" }}>
-                        <div style={{ padding: "10px 11px 9px" }}>
-                          <div style={{ font: "600 12px Inter,sans-serif" }}>Approval needed</div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 6, font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
-                            <span>Action · open a dry-run pull request</span>
-                            <span>Target · GitHub · Papership · change/cco-245-interception</span>
-                            <span>Version · rev 8f3c1ad</span>
-                          </div>
-                          <div style={{ display: "flex", gap: 7, marginTop: 10 }}>
-                            <button type="button" className="bp2-hit" onClick={() => setModal("approve")} style={{ height: 27, padding: "0 12px", border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>Approve</button>
-                            <button type="button" className="bp2-hit" onClick={() => setModal("reject")} style={{ height: 27, padding: "0 12px", border: "1px solid var(--line)", background: "var(--surface)", color: "var(--t1)", borderRadius: 6, font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>Reject</button>
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "var(--raised)", fontSize: 11.5, color: "var(--t2)" }}>
+                  <div style={{ fontSize: 12.5, color: "var(--t2)" }}>{v.decisionsNote || "Approvals come from the organisation ledger."}</div>
+                  {v.actionError ? <div style={{ fontSize: 12, color: "var(--red)" }}>{v.actionError}</div> : null}
+                  {(v.approvalsLive ? v.decisions : []).map((d) => (
+                    <div key={`${d.action}-${d.target}-${d.version}`} style={{ border: "1px solid var(--line)", borderRadius: 9, padding: "10px 11px", background: "var(--canvas)" }}>
+                      <div style={{ font: "600 12px Inter,sans-serif" }}>{d.action}</div>
+                      <div style={{ marginTop: 6, font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>Target · {d.target}</div>
+                      <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>Version · {d.version}</div>
+                      <div style={{ marginTop: 6, fontSize: 12, color: "var(--t3)" }}>{d.why}</div>
+                      {d.pending ? (
+                        <button type="button" className="bp2-hit" onClick={d.approve} style={{ marginTop: 10, height: 27, padding: "0 12px", border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>Approve</button>
+                      ) : null}
+                    </div>
+                  ))}
+                  {v.approvalsLive && !(v.decisions || []).length ? (
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>Nothing is waiting for your approval.</div>
+                  ) : null}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "var(--raised)", fontSize: 11.5, color: "var(--t2)" }}>
                         <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ flex: "none" }}><circle cx="8" cy="8" r="6" /><path d="M8 5.2v3.4M8 10.8h.01" strokeLinecap="round" /></svg>
                         Closing this panel won’t stop the work.
                       </div>
-                  </div>
                 </div>
                 <div style={{ flex: "none", borderTop: "1px solid var(--line2)", padding: "10px 12px 12px", display: "flex", flexDirection: "column", gap: 9 }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>

@@ -61,3 +61,5 @@ Server-side transitions are the source for these events. Clients emit navigation
 ## What the Workspace shows
 
 From KL-P1, an operator can inspect role, task, active context, source, version, and approvals. Gaps, automatic resolution, and impact scores stay empty or clearly unavailable until their phases. See [CLIENT_ARCHITECTURE.md](CLIENT_ARCHITECTURE.md).
+
+From KL-P10, a recorded loop stage cites the work item's context plan id and that plan's version ids. The citation is identifiers only and does not call the runtime.

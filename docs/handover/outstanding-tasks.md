@@ -78,6 +78,29 @@ Do not store secret values here. Charges stay off until a later owner flip.
 | OT-71 | done | — | Owner Papership UI mockups copied to `docs/ui-blueprint/blueprint-3` (233 files + SOURCE). Live chrome stays blueprint-2. |
 | OT-72 | done | — | Owner merged all live feature work to `main` (PR #7). Closed PR #8 as superseded (conflicts with #7). Deleted remotes `cursor/engine-labs-job-loop-b87f`, `cursor/engine-labs-operator-loop-ee2c`, `cursor/rename-lauch-to-launch-8c4d`. GitHub now has only `main`. |
 | OT-73 | done | papership | Knowledge Layer Phase 0 (D-36): architecture set in `docs/knowledge-layer/`, plan `docs/plans/knowledge-layer/phase_0_architecture_alignment_plan.md`. Security CONDITIONAL (KL-SEC-01 and KL-SEC-02 remain code seams). No product code change. KL-P1 not started. |
+| OT-74 | done | papership | KL-P1 plan drafted at `docs/plans/knowledge-layer/phase_1_workspace_foundation_plan.md`. Implementation followed in the same day. |
+| OT-75 | done | papership | KL-P1 security review is CONDITIONAL, not BLOCKED. Session titles and guest ledger reads were tightened in `knowledge_layer.py`. KL-P2 implementation still waits for an owner ask. |
+| OT-76 | done | papership | KL-P2 Context Graph plan drafted at `docs/plans/knowledge-layer/phase_2_context_graph_plan.md`. Implementation followed in the same day. |
+| OT-77 | done | papership | KL-P2 Context Graph security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. |
+| OT-78 | done | papership | KL-P3 Federated Registry plan is at `docs/plans/knowledge-layer/phase_3_federated_registry_plan.md`. Implementation followed in the same day. |
+| OT-79 | done | papership | KL-P3 Papership Registry security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P4 is not started. |
+| OT-80 | done | papership | KL-P4 Resolver plan is at `docs/plans/knowledge-layer/phase_4_context_plan_plan.md`. A ContextPlan cites version ids or records a gap. Implementation followed in the same day. |
+| OT-81 | done | papership | KL-P4 ContextPlan security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P5 is planned and not implemented. |
+| OT-82 | done | papership | KL-P5 Trust and Impact plan is at `docs/plans/knowledge-layer/phase_5_trust_impact_plan.md`. Assessments and observations cite a version id. No score and no chain-of-thought. Implementation followed in the same day. |
+| OT-83 | done | papership | KL-P5 Trust and Impact security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P6 is not started. |
+| OT-84 | done | papership | KL-P6 Knowledge API plan is at `docs/plans/knowledge-layer/phase_6_knowledge_api_plan.md`. Implementation followed in the same day. |
+| OT-85 | done | papership | KL-P6 Knowledge API security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P7 is planned and not implemented. |
+| OT-86 | done | papership | KL-P7 Web consolidation plan is at `docs/plans/knowledge-layer/phase_7_web_consolidation_plan.md`. Implementation followed in the same day. |
+| OT-87 | done | papership | KL-P7 Web consolidation security review is PASS. The phase is `complete_conditional` because registrar DNS still does not serve the Workspace. KL-P8 is planned and not implemented. |
+| OT-88 | done | papership | KL-P8 Desktop Bridge plan is at `docs/plans/knowledge-layer/phase_8_desktop_bridge_plan.md`. Implementation is in the tree. A local file stays on the machine. The API stores a title, digest, and size. |
+| OT-89 | open | papership | Point `papership.com.au` nameservers off `ns09.domaincontrol.com` and `ns10.domaincontrol.com` so `https://papership.com.au/papership` serves the Workspace. The domain is already attached to Vercel project `papership`. |
+| OT-90 | done | papership | KL-P8 Desktop Bridge security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P9 is planned and not implemented. |
+| OT-91 | done | papership | KL-P9 Mobile Companion plan is at `docs/plans/knowledge-layer/phase_9_mobile_companion_plan.md`. Implementation is in the tree. A phone approves or rejects through the existing approval API. |
+| OT-92 | done | papership | KL-P9 Mobile Companion security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P10 stays on its own review. |
+| OT-93 | done | papership | KL-P10 Lifecycle Fabric plan is at `docs/plans/knowledge-layer/phase_10_lifecycle_fabric_plan.md`. A stage event cites a context plan and version ids. |
+| OT-94 | done | papership | KL-P10 Lifecycle Fabric security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P11 stays on its own review. |
+| OT-95 | done | papership | KL-P11 optional economics plan is at `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md`. A material can carry a list model. Charges stay off. |
+| OT-96 | open | papership | KL-P11 optional economics is implemented and waiting on the security review. The phase stays `implemented_pending_security` until that verdict is recorded and is not BLOCKED. |
 
 ## Standing rules for this list
 

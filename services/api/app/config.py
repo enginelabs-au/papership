@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 API_ENV_ALLOWLIST = frozenset(
@@ -100,6 +101,38 @@ def _get(name: str, default: str = "") -> str:
     if name in PHASE2_ENV_NAMES:
         raise RuntimeError(f"phase-2 env must not be read: {name}")
     return os.environ.get(name, default)
+
+
+LOCAL_BROWSER_ORIGINS = (
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:4173",
+    "http://localhost:4173",
+    "http://127.0.0.1:1420",
+    "http://localhost:1420",
+    "http://tauri.localhost",
+    "https://tauri.localhost",
+    "tauri://localhost",
+)
+PAPERSHIP_WEB_ORIGIN = "https://papership.com.au"
+
+
+def cors_allowlist(configured: Sequence[str]) -> list[str]:
+    """Local, Tauri, and the Papership web origin, plus any explicit extras.
+
+    A configured list adds origins. It does not remove the defaults.
+    A wildcard origin is rejected.
+    """
+    allowed: list[str] = []
+    for origin in (*LOCAL_BROWSER_ORIGINS, PAPERSHIP_WEB_ORIGIN, *configured):
+        item = origin.strip()
+        if not item:
+            continue
+        if item == "*":
+            raise RuntimeError("wildcard CORS origin is not allowed")
+        if item not in allowed:
+            allowed.append(item)
+    return allowed
 
 
 def load_settings() -> Settings:

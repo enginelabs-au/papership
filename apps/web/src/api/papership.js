@@ -651,10 +651,16 @@ export async function loadPapershipOverlay() {
       references: defaultReferences(),
       schedules: [],
       engineLabsLoop: coalesceEngineLabsLoop(null),
+      agents: [],
+      knowledgeObjects: [],
+      materials: [],
+      approvals: [],
+      auditRecords: [],
+      callerGrants: [],
     };
   }
   try {
-    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, operatorSeat, engineLabsLoop] = await Promise.all([
+    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, operatorSeat, engineLabsLoop, agents, knowledge, materials, approvals, audit] = await Promise.all([
       fetchPapershipJson("/people"),
       fetchPapershipJson("/teams"),
       fetchPapershipJson("/inbox"),
@@ -677,6 +683,11 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/hermes/host").catch(() => null),
       fetchPapershipJson("/seats/operator").catch(() => null),
       fetchEngineLabsLoopState().catch(() => null),
+      fetchPapershipJson("/agents").catch((error) => ({ error: error.message, agents: null })),
+      fetchPapershipJson("/knowledge/objects").catch((error) => ({ error: error.message, objects: null })),
+      fetchPapershipJson("/registry/materials").catch((error) => ({ error: error.message, materials: null })),
+      fetchPapershipJson("/approvals").catch((error) => ({ error: error.message, approvals: null })),
+      fetchPapershipJson("/audit").catch((error) => ({ error: error.message, records: null })),
     ]);
     return {
       source: "api",
@@ -714,6 +725,17 @@ export async function loadPapershipOverlay() {
       engineLabsLoop: coalesceEngineLabsLoop(engineLabsLoop),
       references,
       schedules: schedules.items || [],
+      agents: Array.isArray(agents?.agents) ? agents.agents : [],
+      agentsError: agents?.error || "",
+      callerGrants: Array.isArray(agents?.caller_grants) ? agents.caller_grants : null,
+      knowledgeObjects: Array.isArray(knowledge?.objects) ? knowledge.objects : [],
+      knowledgeError: knowledge?.error || "",
+      materials: Array.isArray(materials?.materials) ? materials.materials : [],
+      materialsError: materials?.error || "",
+      approvals: Array.isArray(approvals?.approvals) ? approvals.approvals : null,
+      approvalsError: approvals?.error || "",
+      auditRecords: Array.isArray(audit?.records) ? audit.records : [],
+      auditError: audit?.error || "",
     };
   } catch (error) {
     return {
@@ -741,6 +763,14 @@ export async function loadPapershipOverlay() {
       references: defaultReferences(),
       schedules: [],
       engineLabsLoop: coalesceEngineLabsLoop(null),
+      agents: [],
+      knowledgeObjects: [],
+      materials: [],
+      materialsError: error.message,
+      approvals: null,
+      auditRecords: [],
+      callerGrants: null,
+      approvalsError: error.message,
     };
   }
 }
@@ -1083,6 +1113,59 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
     }));
     const fixtureKeys = new Set(mapped.map((p) => p.key));
     out.projects = [...mapped, ...out.projects.filter((p) => !fixtureKeys.has(p.key))];
+  }
+  if (overlay.source === "api" || overlay.source === "error" || overlay.source === "loading") {
+    const decide = controls.decideApproval || (() => {});
+    const rows = Array.isArray(overlay.approvals) ? overlay.approvals : [];
+    const mappedApprovals = rows.map((row) => {
+      const pending = row.status === "pending";
+      return {
+        action: row.approval_class,
+        target: row.target_id,
+        version: row.target_version,
+        when: row.status,
+        why: pending ? "Waiting for a decision." : `Recorded as ${row.status}.`,
+        changed: false,
+        pending,
+        live: true,
+        approve: pending ? () => decide(row, "approved") : () => {},
+        reject: pending ? () => decide(row, "rejected") : () => {},
+        dot: pending ? "var(--amber)" : row.status === "rejected" ? "var(--red)" : "var(--green)",
+        view: () => {},
+      };
+    });
+    out.decisions = mappedApprovals;
+    out.decisionsLong = mappedApprovals;
+    out.approvalsLive = overlay.source === "api" || overlay.source === "error" || overlay.source === "loading";
+    out.decisionsNote = overlay.approvalsError
+      || (overlay.source === "loading"
+        ? "Loading approvals…"
+        : mappedApprovals.length
+          ? ""
+          : "Nothing is waiting for your approval.");
+    if (out.commandTiles?.[0]) {
+      const waiting = mappedApprovals.filter((row) => row.pending).length;
+      out.commandTiles[0].value = String(waiting);
+      out.commandTiles[0].meta = waiting ? "decisions on Today" : "all clear";
+      out.commandTiles[0].dot = waiting ? "var(--amber)" : "var(--green)";
+      out.commandTiles[0].ink = waiting ? "var(--amber)" : "var(--green)";
+    }
+    out.agents = overlay.agents || [];
+    out.knowledgeObjects = overlay.knowledgeObjects || [];
+    out.materials = overlay.materials || [];
+    out.materialsError = overlay.materialsError || "";
+    out.auditRows = overlay.auditRecords || [];
+    out.callerGrants = overlay.callerGrants || [];
+    out.permissionsLive = overlay.source === "api" && Array.isArray(overlay.callerGrants);
+    out.knowledgeError = overlay.knowledgeError || "";
+    out.agentsError = overlay.agentsError || "";
+    out.auditError = overlay.auditError || "";
+    out.actionError = overlay.actionError || "";
+    out.notifications = (out.notifications || []).filter((item) => !String(item.text || "").includes("dry-run"));
+    out.paletteGroups = (out.paletteGroups || []).map((group) => ({
+      ...group,
+      items: (group.items || []).filter((item) => !String(item.label || "").includes("dry-run")),
+    }));
   }
   return out;
 }

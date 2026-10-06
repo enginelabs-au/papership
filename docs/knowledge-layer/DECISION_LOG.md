@@ -46,7 +46,7 @@ Impact and knowledge events reuse `usage.py` rules: dotted names, identifier and
 |---|---|---|---|
 | KL-O1 | Is Compose Postgres plus `migrations/001_init.sql` the future store, or abandoned? | Before KL-P4 | Stay on SQLite behind KL-D3. Do not port the drifted SQL file as-is |
 | KL-O2 | Which dispatch path is canonical: worker poll loop or API subprocess bridge? | Before KL-P4 | Neither is extended. KL-D4 replaces both for knowledge calls |
-| KL-O3 | Do `schedules` and `strategy_records` feed the Lifecycle Fabric? | Before KL-P10 | Leave unused. Do not build a second scheduler on them without a consumer |
+| KL-O3 | Do `schedules` and `strategy_records` feed the Lifecycle Fabric? | Adopted by the KL-P10 plan | Leave unused. Do not build a second scheduler |
 | KL-O4 | Does `packages/ui` become the web design system or stay retired with `apps/desktop/src`? | Before KL-P1 visual work, else KL-P7 | Live chrome stays blueprint-2 CSS. Do not import `packages/ui` into `apps/web` in KL-P0 or by default in KL-P1 |
 | KL-O5 | What is empty `internal/engine-labs/`? | Next hygiene pass | Leave it. Do not put Knowledge Layer code there |
 | KL-O6 | When does live chrome move from blueprint-2 to blueprint-3? | Owner, before any visual replacement | KL-P1 maps information architecture inside blueprint-2 |

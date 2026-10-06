@@ -5,9 +5,9 @@ One platform. Four client modes. They share agent identity, ContextPlans, contex
 | Client | Role | Repository today | Phase |
 |---|---|---|---|
 | Machine / API | Resolution, acquisition, outcomes for external agents | `services/api` REST and `packages/contracts` | KL-P6 makes this the product contract |
-| Web / Cloud | Human operation, inspection, publishing, admin | `apps/web`, route `/papership`, Vercel project `papership` | KL-P1 reframes the Workspace; KL-P7 consolidates the public domain |
-| Desktop Bridge | Local and private connectivity | `apps/desktop/src-tauri` loads `apps/web/dist`. Keychain commands. HTTPS shell-open only | KL-P8. KL-P0 does not build the bridge |
-| Mobile Companion | Asynchronous supervision and approval | `apps/mobile` config spike, same web dist, no native crate | KL-P9. KL-P0 does not build the app |
+| Web / Cloud | Human operation, inspection, publishing, admin | `apps/web`, route `/papership`, Vercel project `papership` | Human origin is `https://papership.com.au/papership`. Legacy `*.vercel.app` aliases are the same deployment, not a second product. `www.enginelabs.com.au` stays a separate site |
+| Desktop Bridge | Local and private connectivity | `apps/desktop/src-tauri` loads `apps/web/dist`. Keychain commands. A picked file is hashed on the machine. The API stores the title, digest, and size | KL-P8. The cloud store does not receive the file or its path |
+| Mobile Companion | Asynchronous supervision and approval | `apps/mobile` config spike, same web dist, no native crate | The phone uses Today → Decisions on the same Workspace. Store submission stays owner-gated |
 
 `apps/desktop/src` (Today / Work / Runs / Connections / Settings on `packages/ui`) is an earlier shell. Tauri does not load it.
 
