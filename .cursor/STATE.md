@@ -2,19 +2,52 @@
 
 ## Current Objective
 
-- Live Papership web UI is `docs/ui-blueprint/blueprint-2` exactly (D-21 / D-22) at **`/papership`** (D-32). At `max-width: 767px` the live chrome is the R4 compressed layout from `OrgOS Mobile.dc.html`. Prism-head mark is app/tab icon only, not in-app.
+- Papership command room: paid founder/solo operator seat (all domains entitled), Hey Papership chat, Workflows + Founder/`engine_labs.loop`, Hermes Host always-on agent box. Context Music / Quark / portability out of scope.
 
 ## Current Status
 
-- Initial development closed. Phases 0–7 complete. Final checklist written. Project blueprints now live under `docs/blueprints/`.
+- Increment continues on `cursor/engine-labs-job-loop-b87f` (PR #7) tip `9eaae27`: command-room UI deep links + Today cards for paid seat and Workflows. CDP-verified `#settings/plan` and `#work/workflows`.
 
 ## Project Phase
 
-- Closure. Active plan: `docs/plans/final_implementation_checklist.md`. No Phase 8.
+- Post-closure increment toward the intake registry. Not a new numbered phase. Active plan remains `docs/plans/final_implementation_checklist.md`.
 
 ## Active Plan
 
-- `docs/plans/final_implementation_checklist.md` (status: open — owner walk)
+- `docs/plans/final_implementation_checklist.md` plus this Engine Labs job-loop increment.
+
+## Files in Active Use
+
+- `services/api/app/managed_projects.py`
+- `services/api/app/store.py`
+- `services/api/app/main.py`
+- `services/api/app/rate_card.py`
+- `services/api/tests/test_engine_labs_job.py`
+- `services/api/tests/test_command_room.py`
+- `apps/web/src/api/papership.js`
+- `apps/web/src/blueprint2/App.jsx`
+- `apps/web/src/blueprint2/screens.jsx`
+- `packages/ui/src/HeyEngineButton.tsx`
+- `docs/handover/outstanding-tasks.md`
+
+## Current Working State
+
+- Branch `cursor/engine-labs-job-loop-b87f`. Registry still 43 rows; only B08.01, P01.01, P04.01 move to `configured`. Jobs queue with a work item at `request`. Hermes write and live GitHub open stay false.
+
+## Next Actions
+
+1. Verify API tests for Engine Labs jobs and catalogue.
+2. Open PR; do not merge without owner review.
+3. Do not treat write/external Hermes tools as accepted.
+4. Charges stay off (OT-08).
+5. Repeat open rows from `docs/handover/outstanding-tasks.md`.
+
+## Last Updated
+
+- 2026-09-16T14:16Z — Added `docs/ui-blueprint/blueprint-3` from owner Papership UI Mockups drop. Live chrome stays blueprint-2.
+- 2026-09-16T13:20Z — Fixed product-ci PIL failure on icons test; tip `edc0713`; run 35101017265 green.
+- 2026-09-16T12:45Z — Engine Labs managed project + loop job wiring increment (P-009). Not fake-shipping 43 products.
+- 2026-09-16T12:50Z — PR #7 open; 37 API tests passed; live curl smoke ok (catalogue 43, job queued).
 
 ## Active Workstream
 
@@ -114,7 +147,7 @@
 
 ## Current Working State
 
-- Branch `main` @ `551bf31` (pushed). No leftover local or remote feature refs. Closed PRs 1–5 still exist as GitHub history.
+- Branch `cursor/engine-labs-job-loop-b87f`. First managed project `proj-engine-labs`. Catalogue 43. Loop jobs queue at `request`.
 - GitHub App `papership-dev` is local. VPS is Hermes only.
 - Local API sources `~/.config/papership/connectors.env`. OT-25 Gmail and OT-26 Slack are both `configured` with `has_token` on the local store. Send stays approval-then-receipt. Vercel still cannot hold these tokens.
 

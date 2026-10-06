@@ -10,7 +10,7 @@ export const DB = {
   ],
   activity: [
     { id: "a1", user: "Cam D.",      action: "Accepted D-14 — user-owned data, anonymous usage only", time: "2m ago",  type: "sys", dot: "#5b21b6" },
-    { id: "a2", user: "Hey Engine",  action: "Ready for governed sessions after T2-1 interception",  time: "8m ago",  type: "ai",  dot: "#8250df" },
+    { id: "a2", user: "Hey Papership",  action: "Ready for governed sessions after T2-1 interception",  time: "8m ago",  type: "ai",  dot: "#8250df" },
     { id: "a3", user: "GitHub App",  action: "Install ping reachable on Papership-only scope",           time: "14m ago", type: "dev", dot: "#2563eb" },
     { id: "a4", user: "System",      action: "Usage emit on — identifier/enum payloads only",        time: "1h ago",  type: "sys", dot: "#6e7781" },
     { id: "a5", user: "Cam D.",      action: "Pinned Hermes v0.21.1 for commercial self-host",      time: "2h ago",  type: "dev", dot: "#1a7f37" },
@@ -20,7 +20,7 @@ export const DB = {
     { id: "p1", name: "T2-1 Interception spike", dept: "Security",    status: "planning", progress: 8,  owner: "Cam Douglas", due: "Sep 18", priority: "high" },
     { id: "p2", name: "T2-2 Hermes adapter",     dept: "Runtime",     status: "planning", progress: 5,  owner: "Cam Douglas", due: "Sep 22", priority: "high" },
     { id: "p3", name: "T2-3 GitHub binding",     dept: "Source",      status: "on_track", progress: 40, owner: "Cam Douglas", due: "Sep 20", priority: "high" },
-    { id: "p4", name: "T2-6 Hey Engine",         dept: "Assistant",   status: "planning", progress: 12, owner: "Cam Douglas", due: "Sep 26", priority: "medium" },
+    { id: "p4", name: "T2-6 Hey Papership",         dept: "Assistant",   status: "planning", progress: 12, owner: "Cam Douglas", due: "Sep 26", priority: "medium" },
     { id: "p5", name: "Phase 1 substrate",       dept: "Foundation",  status: "on_track", progress: 95, owner: "Cam Douglas", due: "Sep 11", priority: "medium" },
     { id: "p6", name: "R1 demo loop",            dept: "Delivery",    status: "planning", progress: 0,  owner: "Cam Douglas", due: "Oct 2",  priority: "low" },
   ],
@@ -29,7 +29,7 @@ export const DB = {
     { id: "t2", issueKey: "ORG-2", title: "Security re-review after spike",        project: "T2-1 Interception spike", assignee: "Cam Douglas", priority: "high",   status: "todo",        due: "Sep 19", labels: ["Security"] },
     { id: "t3", issueKey: "ORG-3", title: "Pin Hermes image + adapter ops",        project: "T2-2 Hermes adapter",     assignee: "Cam Douglas", priority: "high",   status: "todo",        due: "Sep 22", labels: ["Runtime"] },
     { id: "t4", issueKey: "ORG-4", title: "Open first loop PR via GitHub App",     project: "T2-3 GitHub binding",     assignee: "Cam Douglas", priority: "high",   status: "in_progress", due: "Sep 20", labels: ["GitHub"] },
-    { id: "t5", issueKey: "ORG-5", title: "Wire Hey Engine to API sessions",       project: "T2-6 Hey Engine",         assignee: "Hey Engine",  priority: "medium", status: "todo",        due: "Sep 26", labels: ["Assistant"] },
+    { id: "t5", issueKey: "ORG-5", title: "Wire Hey Papership to API sessions",       project: "T2-6 Hey Papership",         assignee: "Hey Papership",  priority: "medium", status: "todo",        due: "Sep 26", labels: ["Assistant"] },
     { id: "t6", issueKey: "ORG-6", title: "Ledger transitions for loop stages",    project: "R1 demo loop",            assignee: "Cam Douglas", priority: "medium", status: "todo",        due: "Sep 28", labels: ["Ledger"] },
     { id: "t7", issueKey: "ORG-7", title: "Record D-11 Hermes / OpenRouter terms", project: "Phase 1 substrate",       assignee: "Cam Douglas", priority: "low",    status: "done",        due: "Sep 11", labels: ["Decision"] },
     { id: "t8", issueKey: "ORG-8", title: "Prism brand tokens + transparent icon", project: "Phase 1 substrate",       assignee: "Cam Douglas", priority: "medium", status: "review",      due: "Sep 11", labels: ["Brand"] },
@@ -37,11 +37,11 @@ export const DB = {
   ],
   people: [
     { id: "u1", name: "Cam Douglas", role: "Founder",           dept: "Engine Labs", status: "active", email: "founder@enginelabs.com.au" },
-    { id: "u2", name: "Hey Engine",  role: "Company assistant", dept: "Assistant",   status: "active", email: "hey@papership.local" },
+    { id: "u2", name: "Hey Papership",  role: "Company assistant", dept: "Assistant",   status: "active", email: "hey@papership.local" },
     { id: "u3", name: "Loop runner", role: "Worker principal",  dept: "Runtime",     status: "away",   email: "loop@papership.local" },
   ],
   agents: [
-    { id: "ag1", name: "Hey Engine",    role: "Company assistant — API-mediated Hermes", status: "idle",   model: "via Hermes", calls: 0 },
+    { id: "ag1", name: "Hey Papership",    role: "Company assistant — API-mediated Hermes", status: "idle",   model: "via Hermes", calls: 0 },
     { id: "ag2", name: "Loop runner",   role: "Governed change loop",                     status: "paused", model: "via Hermes", calls: 0 },
     { id: "ag3", name: "Reviewer",      role: "PR review evidence",                       status: "paused", model: "via Hermes", calls: 0 },
     { id: "ag4", name: "Researcher",    role: "Blueprint and plan research",              status: "paused", model: "via Hermes", calls: 0 },
@@ -64,9 +64,9 @@ export const DB = {
   ],
   chats: {
     ag1: [
-      { role: "assistant", name: "Hey Engine", content: "Good morning. Phase 2 is active. I can plan work against the ledger once T2-1 passes. I will not call Hermes tools that write until Security re-review.", time: "09:00" },
+      { role: "assistant", name: "Hey Papership", content: "Good morning. Phase 2 is active. I can plan work against the ledger once T2-1 passes. I will not call Hermes tools that write until Security re-review.", time: "09:00" },
       { role: "user",      name: "You",        content: "What is the first loop task?", time: "09:02" },
-      { role: "assistant", name: "Hey Engine", content: "T2-1: interception spike SP-1…SP-7. Then Security re-review. Only after that can side-effecting toolsets turn on. GitHub PR plan/open is already wired on the API with dry-run default.", time: "09:02" },
+      { role: "assistant", name: "Hey Papership", content: "T2-1: interception spike SP-1…SP-7. Then Security re-review. Only after that can side-effecting toolsets turn on. GitHub PR plan/open is already wired on the API with dry-run default.", time: "09:02" },
     ],
     ag2: [
       { role: "assistant", name: "Loop runner", content: "Paused. Worker refuses to start if a side-effecting toolset is enabled without the interception artefact (AUTH-25).", time: "08:30" },
@@ -85,11 +85,11 @@ export const INBOX_THREADS = [
     agentId: "ag1",
     projectId: "p4",
     ticketId: "#ORG-HE",
-    subject: "Hey Engine — session wiring",
+    subject: "Hey Papership — session wiring",
     status: "open",
     priority: "high",
     channel: "web",
-    project: "T2-6 Hey Engine",
+    project: "T2-6 Hey Papership",
     assignee: "Cam Douglas",
     requester: "Founder",
     unread: 2,
@@ -162,7 +162,7 @@ export const INBOX_WORKSPACES = [
   { id: "p1", label: "Interception" },
   { id: "p2", label: "Hermes" },
   { id: "p3", label: "GitHub" },
-  { id: "p4", label: "Hey Engine" },
+  { id: "p4", label: "Hey Papership" },
   { id: "p5", label: "Foundation" },
 ];
 
@@ -187,7 +187,7 @@ export const GLOBAL_COMMAND = {
   objectives: [
     { id: "kr1", title: "Intercept Hermes side effects", progress: 8, period: "Phase 2", dept: "Security", detail: "SP-1…SP-7 then Security re-review before any write toolset." },
     { id: "kr2", title: "Bound repo loop", progress: 40, period: "Phase 2", dept: "Source", detail: "App installed on this repo; first live PR is opt-in." },
-    { id: "kr3", title: "Hey Engine via API", progress: 12, period: "Phase 2", dept: "Assistant", detail: "No browser-to-Hermes. User-equivalent actions only." },
+    { id: "kr3", title: "Hey Papership via API", progress: 12, period: "Phase 2", dept: "Assistant", detail: "No browser-to-Hermes. User-equivalent actions only." },
   ],
   milestones: [
     { id: "ms1", title: "T2-1 spike complete", date: "Sep 18", risk: "medium", detail: "Artefact + hash required before worker allows toolsets." },
@@ -253,7 +253,7 @@ export const WORKFLOW_PRESETS = [
     status: "inactive",
     summary: "Request → PR",
     nodes: [
-      { id: "n1", x: 30, y: 100, type: "trigger", label: "Founder request", sub: "Hey Engine or Work", color: "#2563eb" },
+      { id: "n1", x: 30, y: 100, type: "trigger", label: "Founder request", sub: "Hey Papership or Work", color: "#2563eb" },
       { id: "n2", x: 210, y: 40, type: "filter", label: "Grant check", sub: "AUTH-12 intersection", color: "#9a6700" },
       { id: "n3", x: 210, y: 170, type: "action", label: "Ledger plan", sub: "Stage timestamps", color: "#6e7781" },
       { id: "n4", x: 390, y: 40, type: "ai", label: "Hermes (gated)", sub: "After T2-1", color: "#8250df" },
@@ -309,7 +309,7 @@ export const ROADMAP_QUARTERS = [
     label: "Phase 2",
     items: [
       { id: "rm1", title: "Interception + Hermes pin", icon: "◇", status: "planned", avatars: ["Cam D."] },
-      { id: "rm2", title: "GitHub loop + Hey Engine", icon: "⌥", status: "active", avatars: ["Cam D."] },
+      { id: "rm2", title: "GitHub loop + Hey Papership", icon: "⌥", status: "active", avatars: ["Cam D."] },
     ],
   },
   {
@@ -339,7 +339,7 @@ export const ACTIVE_CYCLE = {
   burndownHint: "T2-1 is the critical path. GitHub client is ahead of the spike.",
   members: [
     { name: "Cam D.", pct: 20, of: 80 },
-    { name: "Hey Engine", pct: 0, of: 20 },
+    { name: "Hey Papership", pct: 0, of: 20 },
     { name: "Loop runner", pct: 0, of: 20 },
   ],
 };

@@ -58,7 +58,7 @@ const DOC_PAGES = {
     breadcrumb: "Key concepts",
     title: "Key concepts",
     intro:
-      "Papership is Engine Labs' company operating system: Today, Work, Inbox, People, Files, integrations, and Hey Engine share one workspace. The company marketing site is separate.",
+      "Papership is Engine Labs' company operating system: Today, Work, Inbox, People, Files, integrations, and Hey Papership share one workspace. The company marketing site is separate.",
     callout: {
       text: "Want to ship something today? Start with Install & sign-in, then open Work → Workflows.",
       hrefPage: "install",
@@ -495,7 +495,7 @@ export default function SettingsScreen({ T, themeKey, setTheme, isMobile }) {
 
               <button
                 type="button"
-                title="Hey Engine"
+                title="Hey Papership"
                 style={{
                   position: "fixed",
                   right: isMobile ? 16 : 28,
@@ -517,7 +517,7 @@ export default function SettingsScreen({ T, themeKey, setTheme, isMobile }) {
                 }}
               >
                 <Zap size={16} />
-                Hey Engine
+                Hey Papership
               </button>
             </div>
           )}

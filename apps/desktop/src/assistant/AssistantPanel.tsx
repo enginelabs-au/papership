@@ -41,7 +41,7 @@ export function AssistantPanel({
         const created = await apiFetch<{ id: string }>("/assistant/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: "Hey Engine", mode: "Ask" }),
+          body: JSON.stringify({ title: "Hey Papership", mode: "Ask" }),
         });
         if (cancelled) return;
         setSessionId(created.id);
@@ -112,7 +112,7 @@ export function AssistantPanel({
           alignItems: "center",
         }}
       >
-        <strong style={{ color: T.t1, fontSize: 14 }}>Hey Engine</strong>
+        <strong style={{ color: T.t1, fontSize: 14 }}>Hey Papership</strong>
         <Btn T={T} variant="ghost" small onClick={onClose}>
           Close
         </Btn>
@@ -152,7 +152,7 @@ export function AssistantPanel({
       </div>
       <div style={{ padding: 12, borderTop: `1px solid ${T.border}`, display: "flex", gap: 8 }}>
         <input
-          aria-label="Ask Hey Engine"
+          aria-label="Ask Hey Papership"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {

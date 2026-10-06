@@ -58,14 +58,28 @@ PROJECT_LEAD_GRANTS = [
     }
 ]
 
+# Paid solo-operator / technical-operator seat: command-room work without org admin.
+# Can queue Engine Labs loop jobs (needs ledger.write + run.start). No billing/erasure/release admin.
 OPERATOR_GRANTS = [
     "ledger.read",
+    "ledger.write",
     "run.start",
+    "run.cancel",
+    "registry.read",
+    "usage.read",
     "records.read",
     "search.read",
+    "aggregates.read",
+    "attachments.read",
+    "attachments.write",
     "notifications.read",
     "memory.read",
+    "memory.write",
+    "repo.branch",
+    "repo.change",
+    "repo.check",
     "comms.read",
+    "comms.draft",
 ]
 
 GUEST_GRANTS = [
@@ -185,6 +199,7 @@ class Store:
         self._init_schema()
         self._migrate_phase5()
         self._migrate_oauth()
+        self._migrate_engine_labs_job_loop()
         from app.phase7 import migrate_phase7
 
         migrate_phase7(self)
@@ -484,6 +499,127 @@ class Store:
             """
         )
 
+    def _migrate_engine_labs_job_loop(self) -> None:
+        """First managed project + Engine Labs loop job wiring (P-009)."""
+        from app.managed_projects import (
+            ENGINE_LABS_PROJECT_ID,
+            ENGINE_LABS_PROJECT_NAME,
+            ENGINE_LABS_PROJECT_SLUG,
+        )
+
+        self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS managed_projects (
+              id TEXT PRIMARY KEY,
+              tenant_id TEXT NOT NULL,
+              slug TEXT NOT NULL,
+              name TEXT NOT NULL,
+              kind TEXT NOT NULL,
+              status TEXT NOT NULL,
+              bound_repo TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              updated_at TEXT NOT NULL
+            )
+            """
+        )
+        job_cols = {row["name"] for row in self.conn.execute("PRAGMA table_info(jobs)").fetchall()}
+        for name, decl in (
+            ("project_id", "TEXT"),
+            ("work_item_id", "TEXT"),
+        ):
+            if name not in job_cols:
+                self.conn.execute(f"ALTER TABLE jobs ADD COLUMN {name} {decl}")
+        wi_cols = {row["name"] for row in self.conn.execute("PRAGMA table_info(work_items)").fetchall()}
+        for name, decl in (
+            ("project_id", "TEXT"),
+            ("job_id", "TEXT"),
+        ):
+            if name not in wi_cols:
+                self.conn.execute(f"ALTER TABLE work_items ADD COLUMN {name} {decl}")
+
+        now = _now()
+        if not self.conn.execute(
+            "SELECT 1 FROM managed_projects WHERE id=?", (ENGINE_LABS_PROJECT_ID,)
+        ).fetchone():
+            self.conn.execute(
+                """INSERT INTO managed_projects
+                   (id, tenant_id, slug, name, kind, status, bound_repo, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    ENGINE_LABS_PROJECT_ID,
+                    "tenant-founder",
+                    ENGINE_LABS_PROJECT_SLUG,
+                    ENGINE_LABS_PROJECT_NAME,
+                    "self",
+                    "active",
+                    "enginelabs-au/papership",
+                    now,
+                    now,
+                ),
+            )
+
+        self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS loop_stage_artifacts (
+              id TEXT PRIMARY KEY,
+              tenant_id TEXT NOT NULL,
+              work_item_id TEXT NOT NULL,
+              job_id TEXT NOT NULL,
+              stage TEXT NOT NULL,
+              artifact_type TEXT NOT NULL,
+              title TEXT NOT NULL,
+              body_markdown TEXT NOT NULL,
+              ledger_path TEXT NOT NULL,
+              meta_json TEXT NOT NULL,
+              memory_item_id TEXT,
+              created_at TEXT NOT NULL
+            )
+            """
+        )
+
+        self._apply_engine_labs_registry_status()
+
+    def _apply_engine_labs_registry_status(self) -> None:
+        """Configured (not working) for B08/P01/P04; fill seed labels. Safe before or after seed."""
+        from app.managed_projects import DOMAIN_LABELS, LOOP_CONFIGURED_CAPS
+
+        now = _now()
+        for cap_id, meta in LOOP_CONFIGURED_CAPS.items():
+            row = self.conn.execute(
+                "SELECT payload FROM registry WHERE capability_id=?", (cap_id,)
+            ).fetchone()
+            if not row:
+                continue
+            payload = json.loads(row["payload"])
+            if payload.get("implementation_status") == "working":
+                continue
+            payload["user_outcome"] = meta["user_outcome"]
+            payload["implementation_status"] = "configured"
+            payload["acceptance_evidence"] = meta["acceptance_evidence"]
+            payload["status_evidence"] = meta["status_evidence"]
+            payload["status_changed_at"] = now
+            payload["registry_version"] = "0.1.6-engine-labs-loop"
+            payload["release_phase"] = meta["release_phase"]
+            self.conn.execute(
+                "UPDATE registry SET payload=? WHERE capability_id=?",
+                (json.dumps(payload), cap_id),
+            )
+
+        for domain_id, label in DOMAIN_LABELS.items():
+            cap_id = f"{domain_id}.01"
+            row = self.conn.execute(
+                "SELECT payload FROM registry WHERE capability_id=?", (cap_id,)
+            ).fetchone()
+            if not row:
+                continue
+            payload = json.loads(row["payload"])
+            if payload.get("user_outcome", "").startswith("Seed row"):
+                payload["user_outcome"] = label
+                self.conn.execute(
+                    "UPDATE registry SET payload=? WHERE capability_id=?",
+                    (json.dumps(payload), cap_id),
+                )
+
     def _migrate_phase5(self) -> None:
         existing = {
             row["name"]
@@ -562,6 +698,7 @@ class Store:
             self._seed_registry()
             self._seed_phase4(tenant_id="tenant-founder")
             self._seed_phase5(tenant_id="tenant-founder")
+            self._seed_paid_operator_seat(tenant_id="tenant-founder")
             self.flush()
             return
         now = _now()
@@ -605,11 +742,89 @@ class Store:
         self._seed_registry()
         self._seed_phase4(tenant_id="tenant-founder")
         self._seed_phase5(tenant_id="tenant-founder")
+        self._seed_paid_operator_seat(tenant_id="tenant-founder")
         self.append_audit("principal-founder", "seed", "organisation", "org-founder")
         self.flush()
 
+    def _seed_paid_operator_seat(self, *, tenant_id: str) -> None:
+        """One paid founder/solo operator seat: all domain entitlements + command-room features.
+
+        Entitlements are not grants — they mark which domains/capabilities the seat is set up
+        for. Domains stay planned/configured shells; live write stays refused.
+        """
+        from app.managed_projects import ALL_DOMAIN_IDS
+
+        features = [
+            "seat.paid_operator",
+            "product.hey_papership",
+            "product.workflows",
+            "product.hermes_host",
+            "product.engine_labs.loop",
+            *[f"domain.{domain_id}" for domain_id in ALL_DOMAIN_IDS],
+        ]
+        for feature in features:
+            existing = self.conn.execute(
+                "SELECT 1 FROM entitlements WHERE principal_id=? AND feature=?",
+                ("principal-founder", feature),
+            ).fetchone()
+            if existing:
+                continue
+            self.conn.execute(
+                "INSERT INTO entitlements (id, tenant_id, principal_id, feature) VALUES (?, ?, ?, ?)",
+                (_id("ent"), tenant_id, "principal-founder", feature),
+            )
+
     def list_seat_templates(self) -> list[dict[str, Any]]:
-        return [{"id": name, "grants": list(grants)} for name, grants in SEAT_TEMPLATES.items()]
+        return [
+            {
+                "id": name,
+                "grants": list(grants),
+                "sku": "paid_operator" if name in {"founder", "operator"} else name,
+                "role": (
+                    "Founder / solo paid operator"
+                    if name == "founder"
+                    else "Technical operator"
+                    if name == "operator"
+                    else name.replace("_", " ").title()
+                ),
+            }
+            for name, grants in SEAT_TEMPLATES.items()
+        ]
+
+    def paid_operator_seat(self, principal_id: str) -> dict[str, Any]:
+        """Describe the seeded paid operator seat for the command room."""
+        principal = self.principal(principal_id)
+        seat_row = self.conn.execute(
+            "SELECT * FROM seats WHERE principal_id=?", (principal_id,)
+        ).fetchone()
+        template = seat_row["template"] if seat_row else None
+        ents = self.entitlements(principal_id)
+        domain_features = sorted(
+            e["feature"].removeprefix("domain.")
+            for e in ents
+            if str(e.get("feature", "")).startswith("domain.")
+        )
+        return {
+            "principal_id": principal_id,
+            "tenant_id": principal["tenant_id"],
+            "seat_id": seat_row["id"] if seat_row else None,
+            "template": template,
+            "sku": "paid_operator",
+            "label": "Founder / solo paid operator",
+            "plan_hint": "pro",
+            "charges_enabled": False,
+            "domain_count": len(domain_features),
+            "domains": domain_features,
+            "products": sorted(
+                e["feature"].removeprefix("product.")
+                for e in ents
+                if str(e.get("feature", "")).startswith("product.")
+            ),
+            "grants": sorted(self.grant_classes(principal_id)),
+            "context_music": False,
+            "quark": False,
+            "portability": False,
+        }
 
     def create_invite(
         self,
@@ -657,6 +872,7 @@ class Store:
 
     def _seed_registry(self) -> None:
         if self.conn.execute("SELECT COUNT(*) AS c FROM registry").fetchone()["c"] >= 43:
+            self._apply_engine_labs_registry_status()
             return
         now = _now()
         for cap in CAPABILITY_IDS:
@@ -687,6 +903,7 @@ class Store:
                 "INSERT OR REPLACE INTO registry (capability_id, domain_id, payload) VALUES (?, ?, ?)",
                 (cap, domain, json.dumps(row)),
             )
+        self._apply_engine_labs_registry_status()
 
     def principal(self, principal_id: str) -> dict[str, Any]:
         row = self.conn.execute("SELECT * FROM principals WHERE id=?", (principal_id,)).fetchone()
@@ -943,7 +1160,209 @@ class Store:
             raise StoreError("work item not found", 404)
         item = self.row_to_dict(row)
         item["loop"] = self.loop_history(work_item_id)
+        item["artifacts"] = self.loop_artifacts(work_item_id)
+        item["current_artifact"] = self.current_loop_artifact(work_item_id, item.get("stage"))
         return item  # type: ignore[return-value]
+
+    def loop_artifacts(self, work_item_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """SELECT id, work_item_id, job_id, stage, artifact_type, title, body_markdown,
+                      ledger_path, meta_json, memory_item_id, created_at
+               FROM loop_stage_artifacts WHERE work_item_id=? ORDER BY created_at""",
+            (work_item_id,),
+        ).fetchall()
+        out: list[dict[str, Any]] = []
+        for row in rows:
+            item = self.row_to_dict(row)
+            raw = item.pop("meta_json", "{}") or "{}"
+            try:
+                item["meta"] = json.loads(raw) if isinstance(raw, str) else raw
+            except json.JSONDecodeError:
+                item["meta"] = {}
+            out.append(item)
+        return out
+
+    def current_loop_artifact(
+        self, work_item_id: str, stage: str | None
+    ) -> dict[str, Any] | None:
+        if not stage:
+            return None
+        row = self.conn.execute(
+            """SELECT id, work_item_id, job_id, stage, artifact_type, title, body_markdown,
+                      ledger_path, meta_json, memory_item_id, created_at
+               FROM loop_stage_artifacts
+               WHERE work_item_id=? AND stage=?
+               ORDER BY created_at DESC LIMIT 1""",
+            (work_item_id, stage),
+        ).fetchone()
+        if not row:
+            return None
+        item = self.row_to_dict(row)
+        raw = item.pop("meta_json", "{}") or "{}"
+        try:
+            item["meta"] = json.loads(raw) if isinstance(raw, str) else raw
+        except json.JSONDecodeError:
+            item["meta"] = {}
+        return item
+
+    def run_engine_labs_stage_work(
+        self,
+        principal_id: str,
+        work_item_id: str,
+        stage: str,
+        *,
+        hermes_status: str = "not_configured",
+    ) -> dict[str, Any]:
+        """Execute synchronous stage work; persist artifact + governed memory row."""
+        from app.config import load_settings
+        from app.loop import LOOP_STAGES
+        from app.loop_hermes_bridge import LoopHermesUnavailableError, dispatch_loop_stage
+        from app.loop_stage_work import build_stage_artifact
+        from app.managed_projects import ENGINE_LABS_JOB_PURPOSE
+
+        if stage not in LOOP_STAGES:
+            raise StoreError("unknown loop stage", 400)
+        row = self.conn.execute("SELECT * FROM work_items WHERE id=?", (work_item_id,)).fetchone()
+        if not row:
+            raise StoreError("work item not found", 404)
+        job_id = row["job_id"]
+        if not job_id:
+            raise StoreError("work item is not bound to a loop job", 400)
+        job = self.conn.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+        if not job or job["purpose"] != ENGINE_LABS_JOB_PURPOSE:
+            raise StoreError("not an engine_labs.loop job", 400)
+
+        bound_repo = "enginelabs-au/papership"
+        if row["project_id"]:
+            proj = self.conn.execute(
+                "SELECT bound_repo FROM managed_projects WHERE id=?",
+                (row["project_id"],),
+            ).fetchone()
+            if proj and proj["bound_repo"]:
+                bound_repo = proj["bound_repo"]
+
+        settings = load_settings()
+        base_url = (settings.hermes_api_base_url or "").strip()
+        try:
+            hermes_dispatch = dispatch_loop_stage(
+                base_url=base_url,
+                stage=stage,
+                work_item_id=work_item_id,
+                job_id=job_id,
+                work_title=row["title"] or "Engine Labs loop",
+                bound_repo=bound_repo,
+            )
+        except LoopHermesUnavailableError as exc:
+            raise StoreError(exc.detail, 503) from exc
+
+        built = build_stage_artifact(
+            stage=stage,
+            work_item_id=work_item_id,
+            job_id=job_id,
+            work_title=row["title"] or "Engine Labs loop",
+            bound_repo=bound_repo,
+            hermes_status=hermes_status,
+            hermes_dispatch=hermes_dispatch,
+        )
+        now = _now()
+        aid = _id("lart")
+        mem_id = _id("mem")
+        meta_json = json.dumps(built["meta"])
+
+        self.conn.execute(
+            """INSERT INTO loop_stage_artifacts
+               (id, tenant_id, work_item_id, job_id, stage, artifact_type, title,
+                body_markdown, ledger_path, meta_json, memory_item_id, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                aid,
+                row["tenant_id"],
+                work_item_id,
+                job_id,
+                stage,
+                built["artifact_type"],
+                built["title"],
+                built["body_markdown"],
+                built["ledger_path"],
+                meta_json,
+                mem_id,
+                now,
+            ),
+        )
+        prov = {
+            "source": "engine_labs.loop",
+            "work_item_id": work_item_id,
+            "job_id": job_id,
+            "stage": stage,
+            "artifact_id": aid,
+            "ledger_path": built["ledger_path"],
+            "created_at": now,
+        }
+        self.conn.execute(
+            """INSERT INTO memory_items
+               (id, tenant_id, kind, class, provenance, created_at, title, owner_principal_id,
+                version, restriction_scope, archived_at, expires_at, content_class, parent_id,
+                content, deleted_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                mem_id,
+                row["tenant_id"],
+                "projects",
+                "source",
+                json.dumps(prov),
+                now,
+                built["title"],
+                principal_id,
+                1,
+                "",
+                None,
+                None,
+                "source",
+                None,
+                built["body_markdown"],
+                None,
+            ),
+        )
+        self.conn.execute(
+            """INSERT INTO loop_stage_events (id, work_item_id, tenant_id, stage, evidence, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (_id("stg"), work_item_id, row["tenant_id"], stage, f"loop.stage.artifact:{aid}", now),
+        )
+        if job["status"] == "queued":
+            self.conn.execute(
+                "UPDATE jobs SET status='running', updated_at=? WHERE id=?",
+                (now, job_id),
+            )
+        self._add_event(
+            job_id,
+            row["tenant_id"],
+            "loop.stage.artifact",
+            {
+                "work_item_id": work_item_id,
+                "stage": stage,
+                "artifact_id": aid,
+                "artifact_type": built["artifact_type"],
+                "ledger_path": built["ledger_path"],
+                "memory_item_id": mem_id,
+                "hermes_status": hermes_status,
+                "hermes_run_id": hermes_dispatch.get("run_id"),
+            },
+        )
+        self.append_audit(principal_id, "work_item.loop_artifact", "work_item", work_item_id)
+        self.flush()
+        return {
+            "id": aid,
+            "work_item_id": work_item_id,
+            "job_id": job_id,
+            "stage": stage,
+            "artifact_type": built["artifact_type"],
+            "title": built["title"],
+            "body_markdown": built["body_markdown"],
+            "ledger_path": built["ledger_path"],
+            "memory_item_id": mem_id,
+            "meta": built["meta"],
+            "created_at": now,
+        }
 
     def advance_stage(
         self,
@@ -976,6 +1395,23 @@ class Store:
         )
         self.append_audit(principal_id, "work_item.stage", "work_item", work_item_id)
         self.flush()
+        from app.managed_projects import ENGINE_LABS_JOB_PURPOSE
+
+        job_id = current["job_id"]
+        if job_id:
+            job = self.conn.execute("SELECT purpose FROM jobs WHERE id=?", (job_id,)).fetchone()
+            if job and job["purpose"] == ENGINE_LABS_JOB_PURPOSE:
+                from app.config import load_settings
+                from app.hermes_health import probe_hermes
+
+                settings = load_settings()
+                hermes = probe_hermes(settings.hermes_api_base_url)
+                self.run_engine_labs_stage_work(
+                    principal_id,
+                    work_item_id,
+                    stage,
+                    hermes_status=hermes,
+                )
         return self.get_work_item(principal_id, work_item_id)
 
     def loop_history(self, work_item_id: str) -> list[dict[str, Any]]:
@@ -994,7 +1430,7 @@ class Store:
         self.conn.execute(
             """INSERT INTO conversations (id, tenant_id, principal_id, title, mode, created_at, updated_at)
                VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (cid, p["tenant_id"], principal_id, title or "Hey Engine", mode or "Ask", now, now),
+            (cid, p["tenant_id"], principal_id, title or "Hey Papership", mode or "Ask", now, now),
         )
         self.flush()
         return self.row_to_dict(self.conn.execute("SELECT * FROM conversations WHERE id=?", (cid,)).fetchone())  # type: ignore[return-value]
@@ -1085,6 +1521,172 @@ class Store:
                 raise StoreError(f"denied: {table}", 403)
         rows = self.conn.execute(f"SELECT * FROM {table} WHERE tenant_id=?", (p["tenant_id"],)).fetchall()
         return [self.row_to_dict(r) for r in rows]  # type: ignore[misc]
+
+    def list_managed_projects(self, principal_id: str) -> list[dict[str, Any]]:
+        if not self.has_grant(principal_id, "ledger.read") and not self.has_grant(principal_id, "org.admin"):
+            raise StoreError("denied: projects", 403)
+        p = self.principal(principal_id)
+        rows = self.conn.execute(
+            "SELECT * FROM managed_projects WHERE tenant_id=? ORDER BY created_at",
+            (p["tenant_id"],),
+        ).fetchall()
+        return [self.row_to_dict(r) for r in rows]  # type: ignore[misc]
+
+    def get_managed_project(self, principal_id: str, project_id: str) -> dict[str, Any]:
+        if not self.has_grant(principal_id, "ledger.read") and not self.has_grant(principal_id, "org.admin"):
+            raise StoreError("denied: projects", 403)
+        p = self.principal(principal_id)
+        row = self.conn.execute(
+            "SELECT * FROM managed_projects WHERE id=? AND tenant_id=?",
+            (project_id, p["tenant_id"]),
+        ).fetchone()
+        if not row:
+            raise StoreError("project not found", 404)
+        project = self.row_to_dict(row)
+        from app.loop import LOOP_STAGES
+        from app.managed_projects import ENGINE_LABS_JOB_PURPOSE
+
+        jobs = self.conn.execute(
+            """SELECT * FROM jobs WHERE tenant_id=? AND project_id=?
+               ORDER BY created_at DESC LIMIT 20""",
+            (p["tenant_id"], project_id),
+        ).fetchall()
+        enriched_jobs: list[dict[str, Any]] = []
+        for j in jobs:
+            job_row = self.row_to_dict(j)
+            wid = job_row.get("work_item_id")
+            if wid:
+                wi = self.conn.execute(
+                    "SELECT stage FROM work_items WHERE id=?",
+                    (wid,),
+                ).fetchone()
+                if wi:
+                    job_row["stage"] = wi["stage"]
+            enriched_jobs.append(job_row)
+        project["jobs"] = enriched_jobs
+        project["loop_stages"] = list(LOOP_STAGES)
+        project["job_purpose"] = ENGINE_LABS_JOB_PURPOSE
+        project["live_github_open"] = False
+        project["hermes_write"] = False
+        return project  # type: ignore[return-value]
+
+    def start_engine_labs_job(
+        self,
+        principal_id: str,
+        project_id: str,
+        title: str,
+        *,
+        purpose: str | None = None,
+    ) -> dict[str, Any]:
+        """Queue an Engine Labs loop job bound to the managed project; runs request-stage work."""
+        from app.managed_projects import ENGINE_LABS_JOB_PURPOSE, ENGINE_LABS_PROJECT_ID
+
+        if not self.has_grant(principal_id, "run.start") and not self.has_grant(principal_id, "org.admin"):
+            raise StoreError("denied: run.start", 403)
+        if not self.has_grant(principal_id, "ledger.write") and not self.has_grant(principal_id, "org.admin"):
+            raise StoreError("denied: ledger", 403)
+
+        p = self.principal(principal_id)
+        project = self.conn.execute(
+            "SELECT * FROM managed_projects WHERE id=? AND tenant_id=?",
+            (project_id, p["tenant_id"]),
+        ).fetchone()
+        if not project:
+            raise StoreError("project not found", 404)
+        if project_id != ENGINE_LABS_PROJECT_ID:
+            raise StoreError("only the Engine Labs managed project accepts loop jobs in this increment", 400)
+
+        job_purpose = purpose or ENGINE_LABS_JOB_PURPOSE
+        if job_purpose != ENGINE_LABS_JOB_PURPOSE:
+            raise StoreError(f"unsupported purpose for Engine Labs job: {job_purpose}", 400)
+
+        now = _now()
+        wid = _id("wi")
+        jid = _id("job")
+        rid = _id("run")
+        stage = "request"
+        work_title = title or "Engine Labs loop"
+
+        self.conn.execute(
+            """INSERT INTO work_items
+               (id, tenant_id, title, plan_id, stage, stage_changed_at, created_at, updated_at, project_id, job_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (wid, p["tenant_id"], work_title, None, stage, now, now, now, project_id, jid),
+        )
+        self.conn.execute(
+            """INSERT INTO loop_stage_events (id, work_item_id, tenant_id, stage, evidence, created_at)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (_id("stg"), wid, p["tenant_id"], stage, "engine_labs.job.start", now),
+        )
+        self.conn.execute(
+            """INSERT INTO jobs
+               (id, tenant_id, status, purpose, created_at, updated_at, project_id, work_item_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (jid, p["tenant_id"], "queued", job_purpose, now, now, project_id, wid),
+        )
+        self.conn.execute(
+            """INSERT INTO runs (
+                 id, job_id, tenant_id, sponsor, acting_identity, purpose, scope,
+                 policy_version, model_configuration, budget, deadline, accountable_owner, created_at
+               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                rid,
+                jid,
+                p["tenant_id"],
+                principal_id,
+                principal_id,
+                job_purpose,
+                "tenant",
+                "1",
+                "none",
+                "band:unpriced",
+                "2026-12-31T00:00:00Z",
+                principal_id,
+                now,
+            ),
+        )
+        self._add_event(
+            jid,
+            p["tenant_id"],
+            "job.persisted",
+            {
+                "job_id": jid,
+                "run_id": rid,
+                "project_id": project_id,
+                "work_item_id": wid,
+                "stage": stage,
+                "live_github_open": False,
+                "hermes_write": False,
+            },
+        )
+        from app.config import load_settings
+        from app.hermes_health import probe_hermes
+
+        settings = load_settings()
+        hermes = probe_hermes(settings.hermes_api_base_url)
+        artifact = self.run_engine_labs_stage_work(
+            principal_id,
+            wid,
+            stage,
+            hermes_status=hermes,
+        )
+        self.append_audit(principal_id, "work_item.create", "work_item", wid)
+        self.append_audit(principal_id, "job.create", "job", jid)
+        self.flush()
+        job_row = self.conn.execute("SELECT status FROM jobs WHERE id=?", (jid,)).fetchone()
+        job_status = job_row["status"] if job_row else "running"
+        return {
+            "id": jid,
+            "run_id": rid,
+            "status": job_status,
+            "purpose": job_purpose,
+            "project_id": project_id,
+            "work_item_id": wid,
+            "stage": stage,
+            "live_github_open": False,
+            "hermes_write": False,
+            "current_artifact": artifact,
+        }
 
     def persist_job(self, principal_id: str, purpose: str) -> dict[str, Any]:
         if not self.has_grant(principal_id, "run.start") and not self.has_grant(principal_id, "org.admin"):

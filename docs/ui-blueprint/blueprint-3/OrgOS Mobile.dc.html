@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#efece5}
+a{color:#2563eb;text-decoration:none}a:hover{color:#1d4ed8}
+:root{--canvas:#faf8f4;--surface:#fff;--raised:#f1eee6;--t1:#1a1224;--t2:#63738a;--t3:#617083;--line:rgba(26,18,36,.11);--line2:rgba(26,18,36,.06);--navfield:#6d28d9;--navink2:#c4b5fd;--blue:#2563eb;--green:#059669;--red:#e11d48;--amber:#d97706;--blue-soft:rgba(37,99,235,.10);--green-soft:rgba(5,150,105,.10);--red-soft:rgba(225,29,72,.08);--amber-soft:rgba(217,119,6,.10)}
+@keyframes ogblink{0%,100%{opacity:1}50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div style="padding:40px 44px;display:flex;flex-direction:column;gap:22px;color:var(--t1)">
+  <div>
+    <div style="font-size:15px;font-weight:700">OrgOS · mobile 390 × 844</div>
+    <div style="font-size:12.5px;color:var(--t3);margin-top:3px">Release 4. Same chrome, compressed — not a separate app. Bottom tabs replace the notched primary tabs; everything else keeps its name, order and meaning.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start">
+
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div style="font:600 11px 'JetBrains Mono',monospace;color:var(--t3)">01 · Today — offline</div>
+      <div style="width:390px;height:844px;border-radius:34px;background:#0b0614;padding:9px;box-shadow:0 30px 70px rgba(26,18,36,.22)">
+        <div style="width:100%;height:100%;border-radius:26px;overflow:hidden;background:var(--canvas);display:flex;flex-direction:column;position:relative">
+          <div style="height:44px;flex:none;background:var(--navfield);display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 5px;color:#fff;font:600 12px 'JetBrains Mono',monospace">
+            <span>9:41</span><span style="display:flex;gap:6px;align-items:center;opacity:.9">▮▮▮ ⌁ 84%</span>
+          </div>
+          <div style="height:52px;flex:none;background:var(--navfield);display:flex;align-items:center;gap:10px;padding:0 12px">
+            <button style="width:30px;height:30px;border:1px solid rgba(196,181,253,.34);background:rgba(255,255,255,.06);border-radius:7px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1.6"></rect><path d="M6.2 3v10"></path></svg>
+            </button>
+            <img src="assets/orgos-icon.png" alt="" width="26" height="26" style="border-radius:7px">
+            <div style="flex:1;line-height:1.1">
+              <div style="font-size:14px;font-weight:700;color:#fff">OrgOS</div>
+              <div style="font-size:10px;color:var(--navink2)">Engine Labs</div>
+            </div>
+            <button style="width:30px;height:30px;border:1px solid rgba(196,181,253,.26);background:rgba(255,255,255,.05);border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7.2" cy="7.2" r="4.4"></circle><path d="M10.5 10.5 14 14" stroke-linecap="round"></path></svg>
+            </button>
+            <button style="position:relative;width:30px;height:30px;border:1px solid rgba(196,181,253,.26);background:rgba(255,255,255,.05);border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 6.6a4 4 0 0 1 8 0c0 3 .9 4 .9 4H3.1s.9-1 .9-4" stroke-linejoin="round"></path><path d="M6.6 13a1.6 1.6 0 0 0 2.8 0" stroke-linecap="round"></path></svg>
+              <span style="position:absolute;top:-4px;right:-4px;min-width:15px;height:15px;border-radius:8px;background:var(--red);color:#fff;font:600 9.5px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--navfield)">3</span>
+            </button>
+            <span style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#a78bfa);color:#fff;font:600 11px Inter,sans-serif;display:flex;align-items:center;justify-content:center">CD</span>
+          </div>
+
+          <div style="flex:1;overflow:hidden;background:linear-gradient(180deg,#f7f4ee,#f3efe6,#faf8f4);padding:12px 12px 0;display:flex;flex-direction:column;gap:11px">
+            <div style="display:flex;gap:9px;padding:9px 10px;border-radius:10px;background:var(--red-soft);border:1px solid rgba(225,29,72,.28)">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--red);margin-top:4px;flex:none;animation:ogblink 1.6s infinite"></span>
+              <div>
+                <div style="font-size:12px;font-weight:600">Offline · Reconnecting…</div>
+                <div style="font-size:11.5px;color:var(--t3);margin-top:2px;text-wrap:pretty">Showing last known state from 14:38. Work already started continues in the cloud.</div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:17px;font-weight:700;letter-spacing:-.3px">Today</div>
+              <div style="font-size:11.5px;color:var(--t3)">What needs you now · 14:41 AEST</div>
+            </div>
+
+            <div style="display:flex;gap:3px;padding:3px;border-radius:9px;background:var(--raised);border:1px solid var(--line2)">
+              <span style="flex:1;height:26px;border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:center;font:600 11.5px Inter,sans-serif">Overview</span>
+              <span style="flex:1;height:26px;display:flex;align-items:center;justify-content:center;gap:5px;font:500 11.5px Inter,sans-serif;color:var(--t3)">Decisions<span style="min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--line2);font:600 9.5px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">2</span></span>
+              <span style="flex:1;height:26px;display:flex;align-items:center;justify-content:center;gap:5px;font:500 11.5px Inter,sans-serif;color:var(--t3)">Running<span style="min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--line2);font:600 9.5px 'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:center">3</span></span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 10px">
+                  <div style="display:flex;align-items:center;gap:6px"><span style="width:7px;height:7px;border-radius:50%;background:{{ k.dot }}"></span><span style="font-size:11.5px;font-weight:600">{{ k.label }}</span></div>
+                  <div style="font-size:13px;font-weight:600;color:{{ k.dot }};margin-top:4px">{{ k.state }}</div>
+                  <div style="font:400 10px 'JetBrains Mono',monospace;color:var(--t3);margin-top:2px">{{ k.checked }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 11px;border-bottom:1px solid var(--line2)">
+                <span style="font-size:12px;font-weight:600">Required decisions</span>
+                <span style="height:19px;display:inline-flex;align-items:center;padding:0 8px;border-radius:10px;background:var(--amber-soft);color:var(--amber);font:600 10px Inter,sans-serif">2 waiting</span>
+              </div>
+              <div style="padding:10px 11px">
+                <div style="font-size:12px;font-weight:600">Open a dry-run pull request</div>
+                <div style="font:400 10.5px 'JetBrains Mono',monospace;color:var(--t3);margin-top:3px;line-height:1.5">Target · OrgOS · change/cco-245<br>Version · rev 8f3c1ad</div>
+                <div style="display:flex;gap:7px;margin-top:9px">
+                  <button style="flex:1;height:44px;border:0;border-radius:8px;background:var(--blue);color:#fff;font:600 13px Inter,sans-serif">Approve</button>
+                  <button style="flex:1;height:44px;border:1px solid var(--line);background:var(--surface);color:var(--t1);border-radius:8px;font:600 13px Inter,sans-serif">Reject</button>
+                </div>
+                <div style="margin-top:8px;font-size:11px;color:var(--t3)">Approvals are queued while offline and sent the moment you reconnect.</div>
+              </div>
+            </div>
+
+            <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden">
+              <div style="padding:9px 11px;border-bottom:1px solid var(--line2);font-size:12px;font-weight:600">Running work</div>
+              <sc-for list="{{ runs }}" as="r" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-bottom:1px solid var(--line2)">
+                  <span style="width:7px;height:7px;border-radius:50%;background:var(--blue);flex:none;animation:ogblink 1.5s infinite"></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.purpose }}</div>
+                    <div style="font:400 10px 'JetBrains Mono',monospace;color:var(--t3)">{{ r.id }} · {{ r.elapsed }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="height:30px;flex:none;border-top:1px solid var(--line);background:var(--surface);display:flex;align-items:center;gap:8px;padding:0 12px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--red);animation:ogblink 1.8s infinite"></span>
+            <span style="flex:1;font:400 10.5px 'JetBrains Mono',monospace;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Offline · last event 3m ago</span>
+            <span style="font-size:11px;color:var(--t3)">▴</span>
+          </div>
+
+          <div style="height:72px;flex:none;border-top:1px solid var(--line);background:var(--surface);display:flex;align-items:flex-start;padding:7px 8px 0">
+            <sc-for list="{{ bottomTabs }}" as="t" hint-placeholder-count="4">
+              <div style="flex:1;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:10px;background:{{ t.bg }}">
+                <svg viewBox="0 0 16 16" width="19" height="19" fill="none" stroke="{{ t.ink }}" stroke-width="1.5"><path d="{{ t.d }}" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <span style="font-size:10.5px;font-weight:600;color:{{ t.ink }}">{{ t.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div style="font:600 11px 'JetBrains Mono',monospace;color:var(--t3)">02 · Hey Engine sheet</div>
+      <div style="width:390px;height:844px;border-radius:34px;background:#0b0614;padding:9px;box-shadow:0 30px 70px rgba(26,18,36,.22)">
+        <div style="width:100%;height:100%;border-radius:26px;overflow:hidden;background:var(--canvas);display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;background:var(--navfield);display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 5px;color:#fff;font:600 12px 'JetBrains Mono',monospace">
+            <span>9:41</span><span style="opacity:.9">▮▮▮ ⌁ 84%</span>
+          </div>
+          <div style="height:52px;flex:none;background:linear-gradient(135deg,#2563eb,#22d3ee,#4ade80,#fbbf24,#f472b6,#a78bfa);padding:3px">
+            <div style="height:100%;border-radius:7px;background:#2c1050;display:flex;align-items:center;gap:9px;padding:0 12px;color:#fff">
+              <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.4 9.6 6 13.6 8 9.6 10 8 13.6 6.4 10 2.4 8 6.4 6z" stroke-linejoin="round"></path></svg>
+              <span style="flex:1;font:600 13.5px Inter,sans-serif">Hey Engine</span>
+              <span style="font:400 11px 'JetBrains Mono',monospace;opacity:.8">CCO-245</span>
+              <span style="font-size:15px;opacity:.8">✕</span>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow:hidden;padding:13px 12px;display:flex;flex-direction:column;gap:11px;background:var(--canvas)">
+            <div style="align-self:flex-end;max-width:84%;background:var(--blue-soft);border:1px solid rgba(37,99,235,.22);border-radius:10px;padding:9px 11px;font-size:12.5px">Take CCO-245 through an isolated change and run the checks.</div>
+            <div style="display:flex;gap:9px">
+              <img src="assets/orgos-icon.png" alt="" width="22" height="22" style="border-radius:6px;flex:none;margin-top:2px">
+              <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+                <div style="font-size:12.5px;text-wrap:pretty">Isolated change written and checks passed — 14 tests. I need your approval to open a dry-run pull request.</div>
+                <div style="border:1px solid var(--line);border-radius:9px;background:var(--surface);overflow:hidden">
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line2)">
+                    <span style="width:7px;height:7px;border-radius:50%;background:var(--blue);animation:ogblink 1.4s infinite"></span>
+                    <span style="flex:1;font:600 11.5px Inter,sans-serif">run_7f21c · running</span>
+                    <span style="font-size:11px;color:var(--blue)">Open</span>
+                  </div>
+                  <div style="padding:8px 10px;font-size:11.5px;color:var(--t2)">Read 3 files · wrote 142 lines · 14 tests passed</div>
+                </div>
+                <div style="border:1px solid var(--amber);border-radius:9px;background:var(--amber-soft);padding:10px">
+                  <div style="font:600 12px Inter,sans-serif">Approval needed</div>
+                  <div style="font:400 10.5px 'JetBrains Mono',monospace;color:var(--t2);margin-top:5px;line-height:1.6">Action · open a dry-run pull request<br>Target · OrgOS · change/cco-245<br>Version · rev 8f3c1ad</div>
+                  <div style="display:flex;gap:7px;margin-top:9px">
+                    <button style="flex:1;height:44px;border:0;border-radius:8px;background:var(--blue);color:#fff;font:600 13px Inter,sans-serif">Approve</button>
+                    <button style="flex:1;height:44px;border:1px solid var(--line);background:var(--surface);color:var(--t1);border-radius:8px;font:600 13px Inter,sans-serif">Reject</button>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--raised);font-size:11.5px;color:var(--t2)">Closing this sheet won’t stop the work.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="flex:none;border-top:1px solid var(--line);background:var(--surface);padding:10px 12px 14px;display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;gap:5px;overflow:hidden">
+              <sc-for list="{{ modes }}" as="m" hint-placeholder-count="5">
+                <span style="height:26px;padding:0 11px;border:1px solid {{ m.bd }};background:{{ m.bg }};color:{{ m.ink }};border-radius:13px;font:500 11.5px Inter,sans-serif;display:flex;align-items:center;flex:none">{{ m.label }}</span>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:11px;background:var(--raised);border:1px solid var(--line2);font:500 11px Inter,sans-serif;color:var(--t2)">Item · CCO-245</span>
+              <span style="font:400 10.5px 'JetBrains Mono',monospace;color:var(--t3)">allowance 158 · ≈3</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="flex:1;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--canvas);display:flex;align-items:center;padding:0 12px;font-size:13px;color:var(--t3)">Ask, or describe the outcome…</div>
+              <button style="width:52px;height:44px;border:0;border-radius:10px;background:var(--red);color:#fff;font:600 12.5px Inter,sans-serif">Stop</button>
+            </div>
+            <div style="height:4px;width:130px;border-radius:2px;background:var(--t1);opacity:.25;margin:2px auto 0"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:300px;display:flex;flex-direction:column;gap:11px;padding-top:26px">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:13px 14px">
+        <div style="font-size:12.5px;font-weight:600;margin-bottom:7px">Mobile rules</div>
+        <sc-for list="{{ rules }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--line2)">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--blue);margin-top:6px;flex:none"></span>
+            <span style="font-size:12px;color:var(--t2);text-wrap:pretty">{{ r }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:13px 14px">
+        <div style="font-size:12.5px;font-weight:600;margin-bottom:6px">Biometric sign-in</div>
+        <div style="font-size:12px;color:var(--t2);text-wrap:pretty">Auth is the same 400-wide card, centred, with Face ID or fingerprint offered above the password field. No third-party SSO wall, no sign-up.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      kpis: [
+        { label:'API', state:'Unknown', dot:'var(--t3)', checked:'14:38' },
+        { label:'Hermes', state:'Degraded', dot:'var(--amber)', checked:'14:38' },
+        { label:'Database', state:'Unknown', dot:'var(--t3)', checked:'14:38' },
+        { label:'Repository', state:'Unknown', dot:'var(--t3)', checked:'14:38' }
+      ],
+      runs: [
+        { purpose:'Isolated change for CCO-245', id:'run_7f21c', elapsed:'12m 04s' },
+        { purpose:'Draft handover note', id:'run_7ef44', elapsed:'02m 51s' }
+      ],
+      bottomTabs: [
+        { label:'Today', ink:'var(--blue)', bg:'var(--blue-soft)', d:'M2.4 6.8 8 2.4l5.6 4.4V13a.6.6 0 0 1-.6.6H3a.6.6 0 0 1-.6-.6z' },
+        { label:'Work', ink:'var(--t3)', bg:'transparent', d:'M2.2 5.4h11.6v8H2.2zM5.8 5.4V3.6h4.4v1.8' },
+        { label:'Inbox', ink:'var(--t3)', bg:'transparent', d:'M2.2 9.2h3l1 1.9h3.6l1-1.9h3M2.2 9.2l1.9-6h7.8l1.9 6v4.2H2.2z' },
+        { label:'Hey Engine', ink:'var(--t3)', bg:'transparent', d:'M8 2.4 9.6 6 13.6 8 9.6 10 8 13.6 6.4 10 2.4 8 6.4 6z' }
+      ],
+      modes: ['Ask','Analyse','Plan','Draft','Execute','Review'].map((m,i) => ({
+        label:m, bd: i===0 ? 'var(--blue)' : 'var(--line)',
+        bg: i===0 ? 'var(--blue-soft)' : 'transparent', ink: i===0 ? 'var(--blue)' : 'var(--t2)' })),
+      rules: [
+        'Bottom tabs carry Today, Work, Inbox and Hey Engine. The other tabs live behind the rail toggle, not a hamburger of their own.',
+        'The company rail becomes a sheet from the left. Sections keep their order: signals, priorities, plans, blockers, decisions.',
+        'Approve, Reject, Cancel and Stop are 44px minimum. Nothing destructive sits within a thumb-slip of a safe control.',
+        'Offline is explicit in three places: banner, status strip and the queued-approval line.',
+        'Cloud execution continues when the app is backgrounded or killed. The app never says “stopped” when it means “closed”.',
+        'Scope pill and allowance line stay visible in the sheet footer — they are never collapsed to save space.'
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -28,7 +28,7 @@ export const SIGNAL_LABELS = {
 };
 
 const EVENT_TEMPLATES = [
-  { kind: "auth", verbs: ["signed in", "signed out"], actors: ["Cam D.", "Hey Engine", "Loop runner"] },
+  { kind: "auth", verbs: ["signed in", "signed out"], actors: ["Cam D.", "Hey Papership", "Loop runner"] },
   { kind: "org", verbs: ["updated grant class", "recorded a decision", "edited workspace policy"], actors: ["Founder", "Project Lead"] },
   { kind: "file", verbs: ["uploaded", "downloaded", "shared"], actors: ["phase_2_plan.md", "blueprint.md", "papership-icon.png"] },
   { kind: "data", verbs: ["ran sync job", "refreshed warehouse"], actors: ["usage-emit", "ledger"] },
@@ -185,7 +185,7 @@ export default function PlatformStatusBar({ T }) {
         "uploaded phase_2_plan.md",
         "Founder: recorded a decision",
         "usage-emit completed",
-        "Hey Engine signed out",
+        "Hey Papership signed out",
         "shared blueprint.md",
         "Project Lead: updated grant class",
         "refreshed ledger · usage-emit",

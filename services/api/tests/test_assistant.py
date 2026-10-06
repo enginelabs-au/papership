@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 def test_assistant_persists_without_inventing_reply(
     client: TestClient, founder_headers: dict[str, str]
 ) -> None:
-    created = client.post("/assistant/sessions", json={"title": "Hey Engine", "mode": "Ask"}, headers=founder_headers)
+    created = client.post("/assistant/sessions", json={"title": "Hey Papership", "mode": "Ask"}, headers=founder_headers)
     assert created.status_code == 200
     sid = created.json()["id"]
     turn = client.post(

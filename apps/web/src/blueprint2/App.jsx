@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API_BASE, applyPapershipOverlay, clearStoredSession, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
+import { API_BASE, applyPapershipOverlay, clearStoredSession, coalesceEngineLabsLoop, ensureLocalSession, loadPapershipOverlay, postPapershipJson, recordOqG2, requestErasure, startEngineLabsJob, advanceEngineLabsLoopStage, fetchEngineLabsLoopState, ENGINE_LABS_PROJECT_ID, syncOfflineQueue, wipeOfflineQueue } from "../api/papership";
 import { PRODUCT } from "../brand";
 import { useIsMobile } from "../hooks/use-mobile";
 import "./blueprint2.css";
@@ -71,7 +71,7 @@ const BOTTOM_TABS = ["today", "work", "inbox"];
 const RAIL_TABS = ["people", "data", "files", "integrations", "settings"];
 const NARROW_PX = 768;
 const PAGES = {
-  today: { t: "Today", d: "What needs you now — Tuesday 15 September, 14:41 AEST", subs: ["Overview", "Decisions", "Running", "Registry"], counts: { Decisions: "2", Running: "3" } },
+  today: { t: "Today", d: "Command room — what needs you now (blueprint-3 tiles on blueprint-2 chrome)", subs: ["Overview", "Decisions", "Running", "Registry"], counts: { Decisions: "2", Running: "3" } },
   work: { t: "Work", d: "Plans, assignments and the development loop — the native work ledger", subs: ["Projects", "Issues", "Board", "Roadmap", "Workflows", "Wiki"] },
   inbox: { t: "Inbox", d: "Ticketed conversations across connected channels", subs: ["All", "Mentions", "Starred", "Archived"], counts: { All: "4" } },
   people: { t: "People", d: "Seats, teams and invitations", subs: ["People", "Teams", "Pending invites"] },
@@ -81,7 +81,40 @@ const PAGES = {
   settings: { t: "Settings", d: "Organisation defaults, grants, retention and appearance", subs: [] },
 };
 const DFLT = { today: "Overview", work: "Issues", inbox: "All", people: "People", data: "AI traces", integrations: "Connected" };
+const SETTINGS_PANES = ["General", "AI & Agents", "Notifications", "Security", "Permissions", "Plan", "Team", "Appearance", "Data & retention", "Personalisation", "Docs"];
 const navBtn = { width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(196,181,253,.34)", background: "rgba(255,255,255,.06)", borderRadius: 8, color: "var(--navink)", cursor: "pointer" };
+
+function toSlug(label) {
+  return String(label || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function hashFromNav(tab, subMap, setPane) {
+  if (!tab || !PAGES[tab]) return "#today/overview";
+  if (tab === "settings") return `#settings/${toSlug(setPane || "Plan")}`;
+  if (tab === "files") return "#files";
+  const cur = subMap[tab] || DFLT[tab];
+  return cur ? `#${tab}/${toSlug(cur)}` : `#${tab}`;
+}
+
+function parseNavHash(raw) {
+  const body = String(raw || "").replace(/^#/, "").trim();
+  if (!body) return null;
+  const [tabRaw, detailRaw = ""] = body.split("/");
+  const tab = tabRaw.toLowerCase();
+  if (!PAGES[tab]) return null;
+  const detail = detailRaw.toLowerCase();
+  if (tab === "settings") {
+    const pane = SETTINGS_PANES.find((p) => toSlug(p) === detail) || "Plan";
+    return { tab, setPane: pane, sub: null };
+  }
+  if (tab === "files") return { tab, setPane: null, sub: null };
+  const page = PAGES[tab];
+  const sub = page.subs.find((s) => toSlug(s) === detail) || DFLT[tab] || page.subs[0] || null;
+  return { tab, setPane: null, sub };
+}
 
 function readAuth() {
   try {
@@ -176,6 +209,7 @@ export default function Blueprint2App() {
   const [wizardPick, setWizardPick] = useState("gmail");
   const [wizardError, setWizardError] = useState("");
   const [oauthNote, setOauthNote] = useState("");
+  const [loopActionBusy, setLoopActionBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -186,6 +220,31 @@ export default function Blueprint2App() {
       cancelled = true;
     };
   }, [authed]);
+
+  const applyNavHash = useCallback((raw) => {
+    const parsed = parseNavHash(raw);
+    if (!parsed) return;
+    setTab(parsed.tab);
+    setRoute(null);
+    if (parsed.setPane) setSetPane(parsed.setPane);
+    if (parsed.sub) setSub((s) => ({ ...s, [parsed.tab]: parsed.sub }));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !authed) return;
+    applyNavHash(window.location.hash);
+    const onHash = () => applyNavHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [authed, applyNavHash]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !authed) return;
+    const next = hashFromNav(tab, sub, setPane);
+    if (window.location.hash !== next) {
+      window.history.replaceState({}, "", `${window.location.pathname || "/papership"}${next}`);
+    }
+  }, [authed, tab, sub, setPane]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -204,7 +263,8 @@ export default function Blueprint2App() {
       setOauthNote(`${provider} authorisation failed${reason ? ` (${reason})` : ""}. Retry Set up from Integrations.`);
     }
     loadPapershipOverlay().then(setOverlay);
-    window.history.replaceState({}, "", window.location.pathname || "/papership");
+    const path = window.location.pathname || "/papership";
+    window.history.replaceState({}, "", `${path}#integrations/connected`);
   }, []);
 
   const openWizard = useCallback((provider) => {
@@ -263,6 +323,38 @@ export default function Blueprint2App() {
     closeMobileChrome();
   }, [closeMobileChrome]);
   const setSubTab = useCallback((t, k) => () => { setSub((s) => ({ ...s, [t]: k })); setRoute(null); }, []);
+  const goSeat = useCallback(() => {
+    setTab("settings");
+    setSetPane("Plan");
+    setRoute(null);
+    setPalette(false);
+    setHey(false);
+    closeMobileChrome();
+  }, [closeMobileChrome]);
+  const goWorkflows = useCallback(() => {
+    setTab("work");
+    setSub((s) => ({ ...s, work: "Workflows" }));
+    setRoute(null);
+    setPalette(false);
+    setHey(false);
+    closeMobileChrome();
+  }, [closeMobileChrome]);
+  const goDomains = useCallback(() => {
+    setTab("today");
+    setSub((s) => ({ ...s, today: "Registry" }));
+    setRoute(null);
+    setPalette(false);
+    setHey(false);
+    closeMobileChrome();
+  }, [closeMobileChrome]);
+  const goDecisions = useCallback(() => {
+    setTab("today");
+    setSub((s) => ({ ...s, today: "Decisions" }));
+    setRoute(null);
+    setPalette(false);
+    setHey(false);
+    closeMobileChrome();
+  }, [closeMobileChrome]);
   const openSlide = useCallback((s) => () => setSlide(s), []);
   const routeTo = useCallback((r) => () => { setRoute(r); setPalette(false); }, []);
 
@@ -276,6 +368,10 @@ export default function Blueprint2App() {
       narrow: isMobile,
       openHey: () => setHey(true),
       goWork: go("work"),
+      goSeat,
+      goWorkflows,
+      goDomains,
+      goDecisions,
       modes: ["Ask", "Analyse", "Plan", "Draft", "Execute", "Review", "Automate"].map((m) => {
         const on = m === "Ask"; const off = m === "Automate";
         return { label: off ? "Automate · coming later" : m, cursor: off ? "not-allowed" : "pointer", bg: on ? "var(--blue-soft)" : "transparent", bd: on ? "var(--blue)" : "var(--line)", ink: off ? "var(--t3)" : on ? "var(--blue)" : "var(--t2)" };
@@ -313,7 +409,7 @@ export default function Blueprint2App() {
       { id: "run_7ed30", purpose: "Verify web research allow-list", item: "CCO-231", mode: "Review", status: "Failed", dot: DOTS.bad, started: "09:52", elapsed: "00m 48s", band: "Low (actual)", open: routeTo({ kind: "run" }) },
     ];
     const RB = ["Strategy, goals, KPIs, initiatives, board", "Organisation, entities, teams, reporting lines", "People, HR, leave, payroll references", "CRM, accounts, opportunities, consent", "Enquiries, proposals, contracts, signatures", "Plans, milestones, dependencies, acceptance", "Priorities, assignments, blockers, approvals", "Development loop — isolated change, review, release proposal", "Operations, SOPs, work orders, SLAs", "Support tickets, adoption, retention", "Knowledge, decisions, evidence, document intake", "Comms — email, chat, calendar, transcripts", "Finance, invoices, budgets (source system)", "Treasury, payments (designated authority + reauth)", "Procurement, vendors, subscriptions", "Marketing, campaigns, publishing", "Legal, risk, compliance, privacy requests", "IT, devices, access, cloud", "Inventory, facilities", "Field, dispatch, offline capture", "Quality, BOM, inspections", "Research, experiments, IP", "Guests, partners, scoped review", "Sector packs — care, grants, education"];
-    const RP = ["Agent record — sponsor, skills, budget, status", "Identity, membership, seats", "Hey Engine, modes, persisted sessions", "Runs, steps, receipts, pause / cancel / recover", "Durable jobs — close never cancels", "Capability registry and connector catalogue", "Sync, lineage, freshness", "Canonical metrics and deterministic reports", "Governed memory", "Grants — row, field and action control", "Retention, export, erasure", "Secrets off desktop, isolated workers", "Audit and provenance", "Outcome metrics — completion, correctness, recovery", "Usage events (no published prices)", "Desktop shell and locale en-AU", "Adaptive views — pin, undo, reset, fallback", "Health, queues, backups", "Connector SDK and domain packs"];
+    const RP = ["Agent record — sponsor, skills, budget, status", "Identity, membership, seats", "Hey Papership, modes, persisted sessions", "Runs, steps, receipts, pause / cancel / recover", "Durable jobs — close never cancels", "Capability registry and connector catalogue", "Sync, lineage, freshness", "Canonical metrics and deterministic reports", "Governed memory", "Grants — row, field and action control", "Retention, export, erasure", "Secrets off desktop, isolated workers", "Audit and provenance", "Outcome metrics — completion, correctness, recovery", "Usage events (no published prices)", "Desktop shell and locale en-AU", "Adaptive views — pin, undo, reset, fallback", "Health, queues, backups", "Connector SDK and domain packs"];
     const chip = (s) => (s === "working" ? { bg: "var(--green-soft)", ink: "var(--green)", dot: "var(--green)", action: "Open" } : s === "configured" ? { bg: "var(--blue-soft)", ink: "var(--blue)", dot: "var(--blue)", action: "Review" } : s === "unavailable" ? { bg: "var(--red-soft)", ink: "var(--red)", dot: "var(--red)", action: "Recover" } : { bg: "var(--line2)", ink: "var(--t3)", dot: "var(--t3)", action: "Plan" });
     const row = (pfx, i, label, w, c, u) => {
       const s = w.includes(i) ? "working" : c.includes(i) ? "configured" : u.includes(i) ? "unavailable" : "planned";
@@ -358,15 +454,61 @@ export default function Blueprint2App() {
       { name: "Release 3 — Memory & adaptation", meta: "PLAN-024 · specified", w: "76%", pct: 4, bar: "var(--blue-soft)", ink: "var(--blue)" },
       { name: "Release 4 — Mobile clients", meta: "PLAN-026 · planned", w: "64%", pct: 0, bar: "var(--line2)", ink: "var(--t2)" },
     ];
-    out.nodeLibrary = [{ label: "Trigger", bg: "var(--blue-soft)" }, { label: "Read source", bg: "var(--green-soft)" }, { label: "Draft change", bg: "var(--blue-soft)" }, { label: "Run checks", bg: "var(--amber-soft)" }, { label: "Request approval", bg: "var(--red-soft)" }, { label: "Record decision", bg: "var(--raised)" }];
-    out.nodes = [
-      { label: "Trigger · issue moves to in progress", meta: "Work · CCO-*", x: "20px", y: "22px", dot: DOTS.run, bd: "var(--line)" },
-      { label: "Isolated change", meta: "Grant: repository · change", x: "250px", y: "22px", dot: DOTS.run, bd: "var(--blue)" },
-      { label: "Run checks", meta: "Grant: repository · check", x: "250px", y: "150px", dot: DOTS.warn, bd: "var(--line)" },
-      { label: "Request approval", meta: "Sponsor: Cam Douglas", x: "480px", y: "150px", dot: DOTS.bad, bd: "var(--line)" },
-      { label: "Release proposal only", meta: "Release grant off", x: "480px", y: "278px", dot: DOTS.idle, bd: "var(--line)" },
-    ];
-    out.wires = [{ x: "188px", y: "44px", w: "62px", h: "2px" }, { x: "334px", y: "78px", w: "2px", h: "72px" }, { x: "418px", y: "172px", w: "62px", h: "2px" }, { x: "564px", y: "206px", w: "2px", h: "72px" }];
+    out.nodeLibrary = [{ label: "request", bg: "var(--blue-soft)" }, { label: "research", bg: "var(--green-soft)" }, { label: "specification", bg: "var(--blue-soft)" }, { label: "plan", bg: "var(--amber-soft)" }, { label: "assignment", bg: "var(--raised)" }, { label: "isolated_change", bg: "var(--blue-soft)" }, { label: "tests", bg: "var(--amber-soft)" }, { label: "review", bg: "var(--red-soft)" }, { label: "release_proposal", bg: "var(--raised)" }, { label: "monitoring", bg: "var(--green-soft)" }, { label: "retained_knowledge", bg: "var(--raised)" }];
+    const stageMeta = {
+      request: "Founder request · queued",
+      research: "Gather context",
+      specification: "Write the brief",
+      plan: "Break into work",
+      assignment: "Sponsor + agent",
+      isolated_change: "Branch only · never main",
+      tests: "Evidence required",
+      review: "Human approval",
+      release_proposal: "Proposal only",
+      monitoring: "Watch the release",
+      retained_knowledge: "Keep what worked",
+    };
+    const loopState = overlay.engineLabsLoop;
+    const currentLoopStage = loopState?.currentStage || loopState?.job?.stage || null;
+    const stageOrder = loopState?.loopStages?.length
+      ? loopState.loopStages
+      : out.nodeLibrary.map((n) => n.label);
+    const currentIdx = currentLoopStage ? stageOrder.indexOf(currentLoopStage) : -1;
+    out.workflowStages = stageOrder.map((label, i) => {
+      const n = out.nodeLibrary.find((row) => row.label === label) || { label, bg: "var(--raised)" };
+      const done = currentIdx >= 0 && i < currentIdx;
+      const current = currentLoopStage && label === currentLoopStage;
+      return {
+        label,
+        meta: stageMeta[label] || "Loop stage",
+        bg: done ? "var(--green-soft)" : current ? "var(--blue-soft)" : n.bg,
+        dot: done ? DOTS.ok : current ? DOTS.run : DOTS.idle,
+        bd: current ? "var(--blue)" : done ? "var(--green)" : "var(--line)",
+        done,
+        current,
+      };
+    });
+    out.nodes = out.workflowStages.slice(0, 5).map((n, i) => ({
+      label: n.label,
+      meta: n.meta,
+      x: `${20 + (i % 3) * 230}px`,
+      y: `${22 + Math.floor(i / 3) * 128}px`,
+      dot: n.dot,
+      bd: n.bd,
+    }));
+    out.wires = [];
+    out.lastEngineLabsJob = overlay.lastEngineLabsJob || loopState?.job || null;
+    out.engineLabsLoop = loopState || null;
+    out.hermesHost = overlay.hermesHost || {
+      status: "not_configured",
+      message:
+        "Hermes Host is not configured. Set HERMES_API_BASE_URL (HostHatch tunnel :8642) before Start/Advance.",
+      write_tools: false,
+      mock: true,
+      api_server: false,
+      pin: null,
+    };
+    out.operatorSeat = overlay.operatorSeat || null;
     const th = (subject, preview, channel, key, when, unread, active) => ({ subject, preview, channel, key, when, dot: unread ? DOTS.run : DOTS.idle, bg: active ? "var(--blue-soft)" : "transparent", mark: active ? "var(--blue)" : "transparent" });
     out.threads = [
       th("Interception behaviour before policy resolution", "Cam: confirmed — interception must run first…", "in-app", "TCK-0182", "09:12", true, true),
@@ -381,7 +523,7 @@ export default function Blueprint2App() {
     ];
     out.ticketDetails = [{ k: "Status", v: "Open" }, { k: "Channel", v: "In-app" }, { k: "Assignee", v: "Cam Douglas" }, { k: "Opened", v: "09:12 today" }, { k: "Priority", v: "High" }];
     out.people = [
-      { name: "Cam Douglas", initials: "CD", av: "linear-gradient(135deg,#2563eb,#a78bfa)", seat: "Founder", email: "founder@enginelabs.com.au", status: "Active", dot: DOTS.ok, open: openSlide({ title: "Cam Douglas", meta: "Founder seat · org-wide scope", body: "Founder seats see the whole organisation." }) },
+      { name: "Cam Douglas", initials: "CD", av: "linear-gradient(135deg,#2563eb,#a78bfa)", seat: "Paid operator", email: "founder@enginelabs.com.au", status: "Active", dot: DOTS.ok, open: openSlide({ title: "Cam Douglas", meta: "Paid operator seat · all domains entitled", body: "Founder/solo paid operator seat. Every business and platform domain is entitled. Charges stay off." }) },
       { name: "Project Lead seat", initials: "PL", av: "var(--t3)", seat: "Project Lead", email: "not yet issued", status: "Planned", dot: DOTS.idle, open: openSlide({ title: "Project Lead seat", meta: "Release 2", body: "Sees delegated projects only." }) },
       { name: "Operator seat", initials: "OP", av: "var(--t3)", seat: "Operator", email: "not yet issued", status: "Planned", dot: DOTS.idle, open: openSlide({ title: "Operator seat", meta: "Release 2", body: "Own assignments and runs." }) },
       { name: "Guest seat", initials: "GU", av: "var(--t3)", seat: "Guest", email: "not yet issued", status: "Planned", dot: DOTS.idle, open: openSlide({ title: "Guest seat", meta: "Scoped review", body: "Sees only the assigned scope." }) },
@@ -418,7 +560,7 @@ export default function Blueprint2App() {
       conn("VC", "Vercel", "Deployment target", "unavailable", "Deployment status only. No release authority.", "Last verified 3h ago", "Token expired. Reconnect in your browser."),
       conn("GM", "Gmail", "Comms channel", "planned", "Planned. A connected channel reads the conversations you link.", "Not configured", ""),
     ];
-    const SET = ["General", "AI & Agents", "Notifications", "Security", "Permissions", "Plan", "Team", "Appearance", "Data & retention", "Personalisation", "Docs"];
+    const SET = SETTINGS_PANES;
     out.settingsNav = SET.map((label) => {
       const on = label === setPane || (setPane === "permissions" && label === "Permissions");
       return { label, tag: label === "Personalisation" ? "R3" : label === "Team" ? "R2" : "", go: () => setSetPane(label), bg: on ? "var(--surface)" : "transparent", ink: on ? "var(--t1)" : "var(--t2)", fw: on ? "600" : "500" };
@@ -426,7 +568,95 @@ export default function Blueprint2App() {
     out.set_permissions = setPane === "Permissions";
     out.set_appearance = setPane === "Appearance";
     out.set_plan = setPane === "Plan";
+    out.set_ai_agents = setPane === "AI & Agents";
     out.planTiers = [];
+    const seat = overlay.operatorSeat;
+    out.operatorSeat = seat;
+    out.seatSummary = seat
+      ? {
+          label: seat.label || "Founder / solo paid operator",
+          sku: seat.sku || "paid_operator",
+          domainCount: seat.domain_count ?? (seat.domains || []).length,
+          domains: seat.domains || [],
+          products: seat.products || [],
+          planHint: seat.plan_hint || "pro",
+          charges: seat.charges_enabled ? "On" : "Off · trial card only",
+          contextMusic: seat.context_music === true,
+        }
+      : {
+          label: "Founder / solo paid operator",
+          sku: "paid_operator",
+          domainCount: 43,
+          domains: [],
+          products: ["hey_papership", "workflows", "hermes_host", "engine_labs.loop"],
+          planHint: "pro",
+          charges: "Off · trial card only",
+          contextMusic: false,
+        };
+    out.commandGreet = {
+      title: "Good afternoon, Cam.",
+      meta: "Command room from blueprint-3 — seat, Founder loop, and domain catalogue stay on the existing Today · Work · Workflows routes.",
+    };
+    const loopJobPreview = overlay.lastEngineLabsJob || overlay.engineLabsLoop?.job;
+    const loopStagePreview = loopJobPreview?.stage || overlay.engineLabsLoop?.currentStage;
+    const loopStageLabel = loopStagePreview ? String(loopStagePreview).replace(/_/g, " ") : "not started";
+    out.commandTiles = [
+      {
+        label: "Needs you",
+        value: String(out.decisions.length),
+        meta: out.decisions.length ? "decisions on Today" : "all clear",
+        dot: out.decisions.length ? DOTS.warn : DOTS.ok,
+        ink: out.decisions.length ? "var(--amber)" : "var(--green)",
+        go: goDecisions,
+      },
+      {
+        label: "Founder loop",
+        value: loopStageLabel,
+        meta: "Work · Workflows",
+        dot: loopJobPreview ? DOTS.run : DOTS.idle,
+        ink: "var(--brand)",
+        go: goWorkflows,
+      },
+      {
+        label: "Domains",
+        value: String(out.seatSummary.domainCount),
+        meta: "Today · Registry",
+        dot: DOTS.ok,
+        ink: "var(--t1)",
+        go: goDomains,
+      },
+      {
+        label: "Running",
+        value: String(out.runs.filter((r) => r.status === "Running").length),
+        meta: "runs in flight",
+        dot: DOTS.run,
+        ink: "var(--brand)",
+        go: go("today"),
+      },
+    ];
+    out.commandRoom = [
+      {
+        id: "seat",
+        title: "Paid operator seat",
+        meta: `${out.seatSummary.domainCount} domains entitled · plan ${out.seatSummary.planHint}`,
+        body: "Founder/solo seat with every business and platform domain. Context Music stays out of scope.",
+        go: goSeat,
+      },
+      {
+        id: "workflows",
+        title: "Workflows · Founder loop",
+        meta: "engine_labs.loop · stage request",
+        body: "Open Work → Workflows and start the Founder / Engine Labs loop. Jobs stay queued; no live GitHub open.",
+        go: goWorkflows,
+      },
+      {
+        id: "domains",
+        title: "Domain catalogue",
+        meta: "Today · Registry · 43 groups",
+        body: "B01–B24 and P01–P19 statuses for the Engine Labs company OS.",
+        go: goDomains,
+      },
+    ];
     const grantRow = (key, label, desc) => ({ label, desc, toggle: () => setGrants((g) => ({ ...g, [key]: !g[key] })), track: grants[key] ? "var(--blue)" : "var(--line2)", bd: grants[key] ? "var(--blue)" : "var(--line)", knob: grants[key] ? "20px" : "2px" });
     out.repoGrants = [grantRow("branch", "Branch", "Create and update branches in the bound repository."), grantRow("change", "Change", "Write an isolated change on a branch. Never on main."), grantRow("check", "Check", "Run checks and read their results."), grantRow("release", "Release", "Publish a release. Off by default.")];
     out.themeCards = [
@@ -436,22 +666,34 @@ export default function Blueprint2App() {
     ];
     const PANES = {
       General: { desc: "Organisation defaults for Engine Labs.", rows: [{ k: "Organisation name", v: "Papership · Engine Labs" }, { k: "Timezone", v: "Australia/Sydney" }, { k: "Locale", v: "en-AU" }] },
-      "AI & Agents": { desc: "Ceilings apply to every agent run.", rows: [{ k: "Budget band", v: "Medium" }, { k: "Allowed modes", v: "6 of 7" }] },
+      "AI & Agents": {
+        desc: "Hey Papership chat plus Hermes Host as the always-on agent box for technical operators. Write tools stay blocked.",
+        rows: [
+          { k: "Assistant", v: "Hey Papership" },
+          { k: "Budget band", v: "Medium" },
+          { k: "Allowed modes", v: "6 of 7" },
+          { k: "Hermes Host", v: overlay.hermesHost?.status || "not_configured" },
+          { k: "Context Music", v: "Out of scope" },
+        ],
+      },
       Notifications: { desc: "What reaches you, and how loudly.", rows: [{ k: "Critical incidents", v: "On" }, { k: "Approvals", v: "On · immediate" }] },
       Security: { desc: "Sessions and strong factors.", rows: [{ k: "Active sessions", v: "2" }, { k: "Two-factor", v: "Authenticator app" }] },
-      Team: { desc: "Members and invitations. A second seat needs the measurement notice.", rows: [{ k: "Members", v: "1" }] },
+      Team: { desc: "Members and invitations. A second seat needs the measurement notice.", rows: [{ k: "Members", v: "1" }, { k: "Paid operator seat", v: `Founder · Cam Douglas · ${out.seatSummary.domainCount} domains entitled` }] },
       "Data & retention": { desc: "Your content is yours. Papership does not own it. The measurement notice is the store flag that unlocks a second human or guest — it is not a new legal decision.", rows: [{ k: "Conversations", v: "365 days" }, { k: "Usage disclosure", v: "First-party identifier and enum events only" }, { k: "Measurement notice (OQ-G2)", v: overlay.measurement?.oq_g2_recorded ? "Recorded" : "Not recorded on this store" }, { k: "API store", v: overlay.apiBase || "http://127.0.0.1:8000" }, { k: "Erasure request", v: overlay.erasure?.status === "recorded" ? "Intent recorded · destroy not executed" : "None recorded" }] },
       Personalisation: { desc: "Release 3.", rows: [{ k: "Adaptive views", v: "Off" }] },
       Docs: { desc: "Product documentation opens in a reader.", rows: [{ k: "Getting started", v: "Open ↗" }, { k: "Licensing state", v: "Identifiers only · LICENSE, NOTICE · charges off" }] },
       Plan: {
-        desc: "Trial rate card (D-35). Charges stay off. Remaining usage stays not captured until events exist.",
+        desc: "Trial rate card (D-35). Pro is the paid operator seat for one founder/solo operator. Charges stay off. Remaining usage stays not captured until events exist.",
         rows: [
           { k: "Remaining allowance", v: "not captured" },
           { k: "Action cost", v: "not captured" },
-          { k: "Charges", v: "Off · trial card only" },
+          { k: "Charges", v: out.seatSummary.charges },
+          { k: "Paid operator seat", v: `${out.seatSummary.label} · ${out.seatSummary.domainCount} domains` },
+          { k: "SKU", v: out.seatSummary.sku },
           { k: "Overage", v: "US$10 credit packs at the plan rate after the included pool" },
           { k: "Usage tiers", v: "Usage 1–5 raise the overage ceiling (1× → 16×), like OpenAI / Google" },
           { k: "Payment proposals", v: "Native records only · no payout" },
+          { k: "Context Music", v: "Out of scope" },
         ],
       },
     };
@@ -529,7 +771,17 @@ export default function Blueprint2App() {
       { text: "Approval decided — specification v4 approved", meta: "CCO-245 · 09:41", dot: DOTS.ok, fw: "500", bg: "transparent", go: () => {} },
     ];
     out.paletteGroups = [
-      { label: "Jump to", items: [{ label: "Today · Overview", meta: "tab", dot: DOTS.run, go: go("today") }, { label: "Work · Issues", meta: "tab", dot: DOTS.idle, go: () => { setTab("work"); setSub((s) => ({ ...s, work: "Issues" })); setPalette(false); } }, { label: "Settings · Permissions", meta: "tab", dot: DOTS.idle, go: () => { setTab("settings"); setSetPane("Permissions"); setPalette(false); } }] },
+      {
+        label: "Jump to",
+        items: [
+          { label: "Today · Overview", meta: "tab", dot: DOTS.run, go: go("today") },
+          { label: "Settings · Plan (paid seat)", meta: "#settings/plan", dot: DOTS.ok, go: () => { goSeat(); } },
+          { label: "Work · Workflows (Founder loop)", meta: "#work/workflows", dot: DOTS.run, go: () => { goWorkflows(); } },
+          { label: "Today · Registry (domains)", meta: "#today/registry", dot: DOTS.idle, go: () => { goDomains(); } },
+          { label: "Work · Issues", meta: "tab", dot: DOTS.idle, go: () => { setTab("work"); setSub((s) => ({ ...s, work: "Issues" })); setPalette(false); } },
+          { label: "Settings · Permissions", meta: "tab", dot: DOTS.idle, go: () => { setTab("settings"); setSetPane("Permissions"); setPalette(false); } },
+        ],
+      },
       { label: "Actions", items: [{ label: "Approve — open a dry-run pull request", meta: "approval", dot: DOTS.warn, go: () => { setModal("approve"); setPalette(false); } }, { label: "Start a run scoped to CCO-245", meta: "run", dot: DOTS.run, go: () => { setHey(true); setPalette(false); } }] },
     ];
     out.recordOqG2 = overlay.measurement?.oq_g2_recorded
@@ -555,9 +807,65 @@ export default function Blueprint2App() {
         setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not record the erasure request." }));
       }
     };
+    out.loopActionBusy = loopActionBusy;
+    out.startEngineLabsJob = async () => {
+      const projectId = overlay.engineLabsLoop?.projectId || overlay.managedProjects?.[0]?.id || ENGINE_LABS_PROJECT_ID;
+      setLoopActionBusy(true);
+      try {
+        const result = await startEngineLabsJob(projectId, "Engine Labs loop");
+        const loop = coalesceEngineLabsLoop(await fetchEngineLabsLoopState(projectId));
+        const fresh = await loadPapershipOverlay();
+        setOverlay({
+          ...fresh,
+          actionError: "",
+          engineLabsLoop: coalesceEngineLabsLoop(loop ?? fresh.engineLabsLoop),
+          lastEngineLabsJob: loop?.job || result,
+        });
+        return result;
+      } catch (error) {
+        setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not start the Engine Labs job." }));
+        throw error;
+      } finally {
+        setLoopActionBusy(false);
+      }
+    };
+    out.advanceEngineLabsLoop = async () => {
+      const loop = overlay.engineLabsLoop;
+      const workItemId = loop?.workItem?.id || loop?.job?.work_item_id;
+      const nextStage = loop?.nextStage;
+      if (!workItemId || !nextStage) {
+        setOverlay((prev) => ({
+          ...prev,
+          actionError: "Start the Founder loop first, or you are already at the final stage.",
+        }));
+        return null;
+      }
+      const projectId = loop?.projectId || ENGINE_LABS_PROJECT_ID;
+      setLoopActionBusy(true);
+      try {
+        await advanceEngineLabsLoopStage(workItemId, nextStage, `founder.advance.${nextStage}`);
+        const refreshed = coalesceEngineLabsLoop(await fetchEngineLabsLoopState(projectId));
+        const fresh = await loadPapershipOverlay();
+        setOverlay({
+          ...fresh,
+          actionError: "",
+          engineLabsLoop: coalesceEngineLabsLoop(refreshed ?? fresh.engineLabsLoop),
+          lastEngineLabsJob: refreshed?.job ?? fresh.engineLabsLoop?.job,
+        });
+        return refreshed;
+      } catch (error) {
+        setOverlay((prev) => ({
+          ...prev,
+          actionError: error.message || "Could not advance the loop stage.",
+        }));
+        throw error;
+      } finally {
+        setLoopActionBusy(false);
+      }
+    };
     void page; void cur;
     return applyPapershipOverlay(out, overlay, { openWizard, setModal });
-  }, [theme, tab, sub, setPane, grants, go, openSlide, routeTo, overlay, isMobile, openWizard]);
+  }, [theme, tab, sub, setPane, grants, go, goSeat, goWorkflows, goDomains, goDecisions, openSlide, routeTo, overlay, isMobile, openWizard, loopActionBusy]);
 
   const page = PAGES[tab] || PAGES.today;
   const cur = sub[tab] || DFLT[tab];
@@ -570,6 +878,18 @@ export default function Blueprint2App() {
   if (tab === "files") pageActions = [{ label: "Upload", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => setModal("upload") }];
   if (tab === "integrations") pageActions = [{ label: "Add connection", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => openWizard() }];
   if (tab === "people") pageActions = [{ label: "Invite person", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => setModal("invite") }];
+  if (!rk && tab === "work" && cur === "Workflows") {
+    const loopJob = v.lastEngineLabsJob;
+    const stage = v.engineLabsLoop?.currentStage || loopJob?.stage;
+    if (loopJob?.id && stage) {
+      pageChip = `Loop · ${String(stage).replace(/_/g, " ")}`;
+      const art = v.engineLabsLoop?.currentArtifact;
+      const artHint = art?.artifact_type ? ` · ${art.artifact_type}` : "";
+      pageDesc = `Job ${loopJob.id} · ${loopJob.status || "queued"}${artHint}${v.engineLabsLoop?.mock ? " · browser mock (API unreachable)" : ""}`;
+    } else {
+      pageDesc = "Founder / Engine Labs loop — press Start; the page title chip shows the live stage.";
+    }
+  }
   if (rk === "work-item") { pageTitle = "CCO-245 · Interception hardening for T2-1"; pageDesc = "Work item · Platform · Cam Douglas · due 24 Sep"; pageChip = "In progress"; pageActions = [{ label: "Back to Work", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("work") }]; }
   if (rk === "run") { pageTitle = "run_7f21c · Isolated change for CCO-245"; pageDesc = "Run · sponsor Cam Douglas · acting as Papership agent (user-equivalent)"; pageChip = "Running"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
   if (rk === "account") { pageTitle = "Account"; pageDesc = "Your profile and sign-in — not an organisation setting"; pageActions = [{ label: "Back", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("today") }]; }
@@ -579,7 +899,7 @@ export default function Blueprint2App() {
     pageActions = [];
   }
 
-  const subnav = (isMobile && tab === "today" ? page.subs.filter((s) => s !== "Registry") : page.subs).map((s) => {
+  const subnav = page.subs.map((s) => {
     const on = s === cur;
     let count = (page.counts || {})[s] || "";
     if (tab === "inbox" && s === "All") count = String((v.threads || []).length);
@@ -691,10 +1011,11 @@ export default function Blueprint2App() {
                     <div style={{ padding: "8px 9px 9px", borderBottom: "1px solid var(--line2)", marginBottom: 4 }}>
                       <div style={{ fontSize: 12.5, fontWeight: 600 }}>Cam Douglas</div>
                       <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono',monospace" }}>founder@enginelabs.com.au</div>
-                      <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", height: 20, padding: "0 8px", borderRadius: 10, background: "var(--blue-soft)", color: "var(--blue)", font: "600 10.5px Inter,sans-serif" }}>Founder seat</div>
+                      <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", height: 20, padding: "0 8px", borderRadius: 10, background: "var(--blue-soft)", color: "var(--blue)", font: "600 10.5px Inter,sans-serif", cursor: "pointer" }} onClick={() => { goSeat(); setAvatarOpen(false); }}>Paid operator seat</div>
                     </div>
                     <div onClick={() => { setRoute({ kind: "account" }); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Profile</div>
-                    <div onClick={() => { setTab("settings"); setRoute(null); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Settings</div>
+                    <div onClick={() => { goSeat(); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Settings · Plan</div>
+                    <div onClick={() => { goWorkflows(); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Work · Workflows</div>
                     <div onClick={() => { setRoute({ kind: "memory" }); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Memory</div>
                     <div onClick={() => { cycleTheme(); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Theme: {theme === "light" ? "Light" : theme === "dark" ? "Dark" : "Dimmed"}</div>
                     <div onClick={signOut} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer", color: "var(--red)" }}>Sign out</div>
@@ -703,7 +1024,7 @@ export default function Blueprint2App() {
               </div>
               <button type="button" className="bp2-hey-launch" onClick={() => setHey((o) => !o)} style={{ height: 32, padding: 3, border: 0, borderRadius: 8, background: "linear-gradient(135deg,#2563eb,#22d3ee,#4ade80,#fbbf24,#f472b6,#a78bfa)", cursor: "pointer", display: "flex", alignItems: "center" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 7, height: 26, padding: "0 11px", borderRadius: 6, background: hey ? "transparent" : (theme !== "light" ? "#16081f" : "#2c1050"), color: "#fff", font: "600 12px Inter,sans-serif" }}>
-                  <Ico d={PATHS.star} size={13} /> Hey Engine
+                  <Ico d={PATHS.star} size={13} /> Hey Papership
                 </span>
               </button>
             </div>
@@ -722,7 +1043,7 @@ export default function Blueprint2App() {
               );
             })}
             <div style={{ flex: 1 }} />
-            <div className="bp2-founder-chip" style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 4px 8px", fontSize: 10.5, color: "var(--navink2)", fontFamily: "'JetBrains Mono',monospace" }}>Founder · Cam Douglas</div>
+            <button type="button" className="bp2-founder-chip" onClick={goSeat} style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 4px 8px", fontSize: 10.5, color: "var(--navink2)", fontFamily: "'JetBrains Mono',monospace", border: 0, background: "transparent", cursor: "pointer" }}>Paid operator · Cam Douglas</button>
           </div>
 
           <div className="bp2-body" style={{ flex: 1, display: "flex", minHeight: 0, background: "var(--canvas)", position: "relative" }}>
@@ -848,7 +1169,7 @@ export default function Blueprint2App() {
                 <div className="bp2-hey-mobile-bar">
                   <div>
                     <Ico d={PATHS.star} size={15} />
-                    <span style={{ flex: 1, font: "600 13.5px Inter,sans-serif" }}>Hey Engine</span>
+                    <span style={{ flex: 1, font: "600 13.5px Inter,sans-serif" }}>Hey Papership</span>
                     <span style={{ font: "400 11px 'JetBrains Mono',monospace", opacity: 0.8 }}>CCO-245</span>
                     <button type="button" title="Close sheet" onClick={() => setHey(false)} style={{ width: 28, height: 28, border: 0, background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16 }}>✕</button>
                   </div>
@@ -920,7 +1241,7 @@ export default function Blueprint2App() {
                     </div>
                     <button type="button" className="bp2-hit" onClick={() => setStreaming((s) => !s)} style={{ height: 34, padding: "0 14px", border: 0, borderRadius: 8, background: streaming ? "var(--red)" : "var(--blue)", color: "#fff", font: "600 12.5px Inter,sans-serif", cursor: "pointer", flex: "none" }}>{streaming ? "Stop" : "Send"}</button>
                   </div>
-                  <div style={{ fontSize: 10.5, color: "var(--t3)" }}>Enter sends · Shift+Enter for a new line. Hey Engine acts with your access — never more.</div>
+                  <div style={{ fontSize: 10.5, color: "var(--t3)" }}>Enter sends · Shift+Enter for a new line. Hey Papership acts with your access — never more.</div>
                 </div>
               </div>
             ) : null}
@@ -961,7 +1282,7 @@ export default function Blueprint2App() {
             ))}
             <button type="button" data-on={hey ? "1" : "0"} onClick={() => { setHey(true); setRailOpen(false); setPalette(false); setDrawer(false); }}>
               <Ico d={PATHS.star} size={19} />
-              Hey Engine
+              Hey Papership
             </button>
           </nav>
         </div>

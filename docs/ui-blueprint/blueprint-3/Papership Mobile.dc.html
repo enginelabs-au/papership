@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;background:var(--desk)}
+a{color:var(--brand);text-decoration:none}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:1px;border-radius:5px}
+button,input,a{transition:background-color .12s ease,border-color .12s ease,color .12s ease}
+input::placeholder{color:var(--t3);opacity:1}
+:root,[data-theme="light"]{
+--desk:#dcd5c4;--canvas:#f4f1e9;--surface:#fff;--raised:#ebe5d7;--sink:#e3dccb;--chrome:#e9e3d4;
+--t1:#1d1522;--t2:#564d63;--t3:#5d5468;
+--line:rgba(29,21,34,.11);--line2:rgba(29,21,34,.055);--hover:rgba(29,21,34,.04);
+--brand:#6d28d9;--brand-soft:rgba(109,40,217,.10);--brand-ink:#fff;
+--green:#047857;--red:#c8123f;--amber:#a8560a;--cyan:#0e7490;
+--green-soft:rgba(4,120,87,.10);--red-soft:rgba(200,18,63,.08);--amber-soft:rgba(168,86,10,.10);
+--shadow:0 1px 1px rgba(29,21,34,.04),0 2px 6px rgba(29,21,34,.05);
+--shadow-lg:0 22px 54px rgba(29,21,34,.22);--scrim:rgba(244,241,233,.66);
+}
+[data-theme="dark"]{
+--desk:#08050d;--canvas:#0d0814;--surface:#171020;--raised:#1d1529;--sink:#110b1a;--chrome:#140e1d;
+--t1:#f2eef8;--t2:#b3aac4;--t3:#a79fb8;
+--line:rgba(242,238,248,.12);--line2:rgba(242,238,248,.06);--hover:rgba(242,238,248,.045);
+--brand:#a78bfa;--brand-soft:rgba(167,139,250,.16);--brand-ink:#1a1224;
+--green:#4ade80;--red:#fb7185;--amber:#fbbf24;--cyan:#22d3ee;
+--green-soft:rgba(74,222,128,.13);--red-soft:rgba(251,113,133,.12);--amber-soft:rgba(251,191,36,.13);
+--shadow:0 1px 1px rgba(0,0,0,.3),0 2px 6px rgba(0,0,0,.34);
+--shadow-lg:0 24px 60px rgba(0,0,0,.6);--scrim:rgba(6,3,11,.66);
+}
+[data-theme="dimmed"]{
+--desk:#151926;--canvas:#1f2434;--surface:#262c40;--raised:#2b324a;--sink:#1a1e2c;--chrome:#232838;
+--t1:#eef0fa;--t2:#a9b3d1;--t3:#b6c0dc;
+--line:rgba(238,240,250,.12);--line2:rgba(238,240,250,.065);--hover:rgba(238,240,250,.05);
+--brand:#a78bfa;--brand-soft:rgba(167,139,250,.17);--brand-ink:#1a1224;
+--green:#4ade80;--red:#fb7185;--amber:#fbbf24;--cyan:#22d3ee;
+--green-soft:rgba(74,222,128,.14);--red-soft:rgba(251,113,133,.13);--amber-soft:rgba(251,191,36,.14);
+--shadow:0 1px 1px rgba(0,0,0,.22),0 2px 6px rgba(0,0,0,.28);
+--shadow-lg:0 24px 60px rgba(0,0,0,.5);--scrim:rgba(14,17,28,.66);
+}
+::-webkit-scrollbar{width:0;height:0}
+.q{scrollbar-width:none;-ms-overflow-style:none}
+@keyframes mPulse{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes mRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes mSpin{to{transform:rotate(360deg)}}
+@keyframes mHalo{0%,100%{box-shadow:0 0 0 0 rgba(109,40,217,.28)}50%{box-shadow:0 0 0 9px rgba(109,40,217,0)}}
+@keyframes mBar{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+
+<div data-theme="{{ theme }}" style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 14px 30px;background:var(--desk)">
+
+  <div style="width:100%;max-width:560px;display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:700;color:var(--t1)">Papership — mobile</div>
+      <div style="font-size:11px;color:var(--t3)">390 × 844 · {{ roleTitle }} seat · every page live</div>
+    </div>
+    <a href="Papership.dc.html" style="display:flex;align-items:center;gap:6px;height:27px;padding:0 11px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--t1);font:600 11px Inter,sans-serif">
+      <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1.6" y="3" width="12.8" height="8.6" rx="1.4"></rect><path d="M5.4 13.6h5.2"></path></svg>Desktop view
+    </a>
+    <button onClick="{{ cycleTheme }}" style="height:27px;padding:0 11px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--t2);font:600 11px Inter,sans-serif;cursor:pointer">{{ themeLabel }}</button>
+  </div>
+
+  <div style="width:390px;max-width:100%;height:844px;border-radius:36px;background:#0b0710;padding:10px;box-shadow:0 30px 68px rgba(0,0,0,.34);flex:none">
+    <div style="width:100%;height:100%;border-radius:27px;overflow:hidden;background:var(--canvas);color:var(--t1);font-size:13px;line-height:1.45;display:flex;flex-direction:column;position:relative">
+
+      <div style="flex:none;height:40px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 4px;font:600 11px 'JetBrains Mono',monospace;color:var(--t2);background:var(--chrome)">
+        <span>14:41</span><span style="opacity:.82">▮▮▮ ⌁ 84%</span>
+      </div>
+
+      <div style="flex:none;height:42px;display:flex;align-items:center;gap:7px;padding:0 9px;background:var(--chrome);border-bottom:1px solid var(--line)">
+        <sc-if value="{{ canBack }}">
+          <button onClick="{{ goBack }}" title="Back" style="width:27px;height:27px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--surface);color:var(--t2);border-radius:8px;cursor:pointer">
+            <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9.8 3.6 5.4 8l4.4 4.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+        </sc-if>
+        <button onClick="{{ openNav }}" title="All pages" style="width:27px;height:27px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--surface);color:var(--t2);border-radius:8px;cursor:pointer">
+          <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.6 4.4h10.8M2.6 8h10.8M2.6 11.6h10.8" stroke-linecap="round"></path></svg>
+        </button>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ title }}</div>
+          <div style="font:400 9px 'JetBrains Mono',monospace;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ crumb }}</div>
+        </div>
+        <button onClick="{{ openRail }}" title="Context" style="width:27px;height:27px;flex:none;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--surface);color:var(--t2);border-radius:8px;cursor:pointer">
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="12" height="10" rx="1.4"></rect><path d="M6.2 3v10"></path></svg>
+        </button>
+        <button onClick="{{ openRoles }}" title="{{ roleName }}" style="width:25px;height:25px;flex:none;border-radius:50%;border:0;background:{{ roleAv }};color:#fff;font:600 8.5px Inter,sans-serif;cursor:pointer">{{ roleInitials }}</button>
+      </div>
+
+      <sc-if value="{{ subTabs }}">
+        <div class="q" style="flex:none;display:flex;gap:4px;padding:7px 9px 0;overflow-x:auto">
+          <sc-for list="{{ subTabs }}" as="s" hint-placeholder-count="4">
+            <button onClick="{{ s.go }}" style="height:25px;padding:0 11px;border:1px solid {{ s.bd }};background:{{ s.bg }};color:{{ s.ink }};border-radius:13px;font:{{ s.fw }} 11px Inter,sans-serif;cursor:pointer;white-space:nowrap;flex:none">{{ s.label }}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div style="flex:1;min-height:0;overflow-y:auto;padding:10px 9px 92px">
+        <sc-if value="{{ greeting }}">
+  <div style="margin-bottom:12px">
+    <div style="font-size:17px;font-weight:700;letter-spacing:-.3px">{{ greeting }}</div>
+    <div style="font-size:11.5px;color:var(--t3);margin-top:2px;text-wrap:pretty">{{ standing }}</div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasTiles }}">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px">
+    <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
+      <button onClick="{{ t.go }}" style="text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:10px 11px;cursor:pointer;min-height:66px">
+        <span style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:{{ t.dot }};{{ t.pulse }}"></span><span style="font-size:10px;font-weight:600;color:var(--t2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ t.label }}</span></span>
+        <span style="display:block;font-size:17px;font-weight:600;letter-spacing:-.3px;margin-top:4px;color:{{ t.ink }}">{{ t.value }}</span>
+        <span style="display:block;font:400 9px 'JetBrains Mono',monospace;color:var(--t3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ t.meta }}</span>
+      </button>
+    </sc-for>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasLoop }}">
+  <p style="margin:0 0 11px;font-size:11.5px;color:var(--t2);text-wrap:pretty">{{ loopSentence }}</p>
+</sc-if>
+
+<sc-if value="{{ hasGroups }}">
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+    <div style="margin-bottom:9px">
+      <button onClick="{{ g.toggle }}" style="display:flex;align-items:center;gap:8px;width:100%;min-height:32px;padding:4px 2px;border:0;background:transparent;color:inherit;cursor:pointer;text-align:left">
+        <svg viewBox="0 0 16 16" width="9" height="9" fill="none" stroke="var(--t3)" stroke-width="2.2" style="flex:none;transform:rotate({{ g.rot }});transition:transform .15s"><path d="m5.5 3 5 5-5 5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span style="width:6px;height:6px;border-radius:50%;background:{{ g.dot }};flex:none"></span>
+        <span style="font-size:11.5px;font-weight:600;flex:none">{{ g.label }}</span>
+        <span style="font:400 9px 'JetBrains Mono',monospace;color:var(--t3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ g.meta }}</span>
+      </button>
+      <sc-if value="{{ g.open }}">
+        <div style="border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:var(--surface)">
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+            <div style="border-bottom:1px solid var(--line2)">
+              <div onClick="{{ r.toggle }}" style="display:flex;align-items:center;gap:8px;padding:9px 10px;cursor:pointer;min-height:44px">
+                <svg viewBox="0 0 16 16" width="8" height="8" fill="none" stroke="var(--t3)" stroke-width="2.4" style="flex:none;transform:rotate({{ r.rot }});transition:transform .15s"><path d="m5.5 3 5 5-5 5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <span style="width:6px;height:6px;border-radius:50%;background:{{ r.dot }};flex:none;{{ r.pulse }}"></span>
+                <span style="flex:1;min-width:0">
+                  <sc-if value="{{ r.key }}"><span style="display:block;font:500 9px 'JetBrains Mono',monospace;color:var(--t3)">{{ r.key }}</span></sc-if>
+                  <span style="display:block;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.label }}</span>
+                </span>
+                <sc-if value="{{ r.tag }}"><span style="display:inline-flex;align-items:center;height:17px;padding:0 6px;border-radius:9px;background:{{ r.tagBg }};color:{{ r.tagInk }};font:600 9px Inter,sans-serif;flex:none">{{ r.tag }}</span></sc-if>
+                <span style="font:400 9px 'JetBrains Mono',monospace;color:var(--t3);flex:none">{{ r.meta }}</span>
+              </div>
+              <sc-if value="{{ r.open }}">
+                <div style="padding:0 10px 10px 26px">
+                  <sc-if value="{{ r.blurb }}"><p style="margin:0 0 8px;font-size:11.5px;color:var(--t2);text-wrap:pretty">{{ r.blurb }}</p></sc-if>
+                  <div style="display:flex;flex-wrap:wrap;gap:5px">
+                    <sc-for list="{{ r.facts }}" as="f" hint-placeholder-count="3">
+                      <span style="display:inline-flex;align-items:center;gap:4px;height:19px;padding:0 7px;border-radius:6px;background:var(--raised);font:400 9px 'JetBrains Mono',monospace;color:var(--t2)"><span style="color:var(--t3)">{{ f.k }}</span>{{ f.v }}</span>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">
+                    <sc-for list="{{ r.acts }}" as="a" hint-placeholder-count="3">
+                      <button onClick="{{ a.go }}" style="min-height:38px;padding:0 13px;border:1px solid {{ a.bd }};background:{{ a.bg }};color:{{ a.ink }};border-radius:9px;font:600 11.5px Inter,sans-serif;cursor:pointer">{{ a.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{ g.empty }}"><div style="padding:18px 11px;text-align:center;font-size:11px;color:var(--t3);text-wrap:pretty">{{ g.empty }}</div></sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </sc-for>
+</sc-if>
+
+<sc-if value="{{ hasPanels }}">
+  <div style="display:flex;flex-direction:column;gap:7px">
+    <sc-for list="{{ panels }}" as="p" hint-placeholder-count="3">
+      <div style="border:1px solid var(--line);border-radius:11px;background:var(--surface);overflow:hidden">
+        <button onClick="{{ p.toggle }}" style="display:flex;align-items:center;gap:9px;width:100%;text-align:left;min-height:44px;padding:10px 11px;border:0;background:transparent;color:inherit;cursor:pointer">
+          <svg viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="var(--t3)" stroke-width="2.2" style="flex:none;transform:rotate({{ p.rot }});transition:transform .15s"><path d="m5.5 3 5 5-5 5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <span style="flex:1;min-width:0;font-size:12px;font-weight:600;text-wrap:pretty">{{ p.title }}</span>
+          <span style="font:400 9px 'JetBrains Mono',monospace;color:var(--t3);flex:none">{{ p.meta }}</span>
+        </button>
+        <sc-if value="{{ p.open }}">
+          <div style="padding:0 11px 11px">
+            <sc-if value="{{ p.lead }}"><p style="margin:0 0 8px;font-size:11.5px;color:var(--t2);text-wrap:pretty">{{ p.lead }}</p></sc-if>
+            <sc-for list="{{ p.rows }}" as="r" hint-placeholder-count="4">
+              <div onClick="{{ r.go }}" style="display:flex;align-items:center;gap:9px;min-height:38px;padding:7px 0;border-bottom:1px solid var(--line2);cursor:{{ r.cursor }}">
+                <sc-if value="{{ r.dot }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ r.dot }};flex:none"></span></sc-if>
+                <span style="flex:1;min-width:0"><span style="display:block;font-size:11.5px">{{ r.k }}</span><sc-if value="{{ r.sub }}"><span style="display:block;font-size:10.5px;color:var(--t3);margin-top:1px;text-wrap:pretty">{{ r.sub }}</span></sc-if></span>
+                <span style="font:{{ r.vFont }};color:{{ r.vInk }};text-align:right;flex:none;max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.v }}</span>
+                <sc-if value="{{ r.sw }}"><span style="width:34px;height:20px;border-radius:10px;background:{{ r.swBg }};border:1px solid {{ r.swBd }};position:relative;flex:none;display:block"><span style="position:absolute;top:1.5px;left:{{ r.swX }};width:15px;height:15px;border-radius:50%;background:#fff;transition:left .15s ease;display:block"></span></span></sc-if>
+              </div>
+            </sc-for>
+            <sc-if value="{{ p.note }}"><p style="margin:9px 0 0;font-size:10.5px;color:var(--t3);text-wrap:pretty">{{ p.note }}</p></sc-if>
+            <sc-if value="{{ p.buttons }}"><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"><sc-for list="{{ p.buttons }}" as="b" hint-placeholder-count="2"><button onClick="{{ b.go }}" style="min-height:38px;padding:0 13px;border:1px solid {{ b.bd }};background:{{ b.bg }};color:{{ b.ink }};border-radius:9px;font:600 11.5px Inter,sans-serif;cursor:pointer">{{ b.label }}</button></sc-for></div></sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasRegistry }}">
+  <div class="q" style="display:flex;gap:5px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px">
+    <sc-for list="{{ regFilters }}" as="f" hint-placeholder-count="5">
+      <button onClick="{{ f.go }}" style="display:flex;align-items:center;gap:5px;height:27px;padding:0 11px;border:1px solid {{ f.bd }};background:{{ f.bg }};color:{{ f.ink }};border-radius:14px;font:600 10.5px Inter,sans-serif;cursor:pointer;flex:none">
+        <sc-if value="{{ f.dot }}"><span style="width:5px;height:5px;border-radius:50%;background:{{ f.dot }}"></span></sc-if>{{ f.label }}<span style="font:500 9px 'JetBrains Mono',monospace;opacity:.6">{{ f.n }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <sc-for list="{{ regBlocks }}" as="b" hint-placeholder-count="2">
+    <div style="margin-bottom:11px">
+      <div style="font:500 9px 'JetBrains Mono',monospace;color:var(--t3);margin-bottom:5px">{{ b.title }}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        <sc-for list="{{ b.cells }}" as="c" hint-placeholder-count="10">
+          <button onClick="{{ c.go }}" style="min-height:44px;border-radius:9px;background:{{ c.bg }};border:1px solid {{ c.bd }};padding:6px 9px;display:flex;flex-direction:column;justify-content:center;gap:2px;cursor:pointer;overflow:hidden;text-align:left">
+            <span style="font:500 9px 'JetBrains Mono',monospace;color:{{ c.codeInk }}">{{ c.code }}</span>
+            <span style="font-size:10.5px;color:{{ c.ink }};line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.short }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+</sc-if>
+
+<sc-if value="{{ hasMatrix }}">
+  <div style="border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface)">
+    <sc-for list="{{ matrix }}" as="m" hint-placeholder-count="7">
+      <div onClick="{{ m.go }}" style="display:flex;align-items:center;gap:10px;min-height:52px;padding:9px 11px;border-bottom:1px solid var(--line2);cursor:pointer">
+        <span style="width:28px;height:28px;border-radius:50%;background:{{ m.av }};color:#fff;font:600 9.5px Inter,sans-serif;display:flex;align-items:center;justify-content:center;flex:none">{{ m.initials }}</span>
+        <span style="flex:1;min-width:0">
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:{{ m.dot }};flex:none"></span><span style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.title }}</span></span>
+          <span style="display:block;font:400 9.5px 'JetBrains Mono',monospace;color:var(--t3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ m.name }} · {{ m.domains }}</span>
+        </span>
+        <span style="font:500 9.5px 'JetBrains Mono',monospace;color:var(--t3);flex:none">{{ m.pageN }}p</span>
+      </div>
+    </sc-for>
+    <div style="padding:10px 11px;background:var(--raised);font-size:10.5px;color:var(--t3);text-wrap:pretty">A delegator may grant only a subset of their own authority. Assignment never confers unrelated access.</div>
+  </div>
+</sc-if>
+      </div>
+
+      <sc-if value="{{ sheetNav }}">
+        <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:120;background:var(--scrim);backdrop-filter:blur(3px)"></div>
+        <div onClick="{{ stop }}" style="position:absolute;left:0;right:0;bottom:0;top:64px;z-index:130;background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:mRise .17s ease both">
+          <div style="flex:none;display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line2)">
+            <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">All pages</div><div style="font:400 10px 'JetBrains Mono',monospace;color:var(--t3)">{{ roleTitle }} · {{ roleDomains }}</div></div>
+            <button onClick="{{ closeSheet }}" style="width:24px;height:24px;border:0;background:transparent;color:var(--t3);border-radius:6px;cursor:pointer;font-size:12px">✕</button>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:7px 9px 22px">
+            <sc-for list="{{ navPages }}" as="p" hint-placeholder-count="8">
+              <button onClick="{{ p.go }}" style="display:flex;align-items:center;gap:11px;width:100%;text-align:left;min-height:46px;padding:8px 10px;border:0;border-radius:10px;background:{{ p.bg }};color:inherit;cursor:pointer;margin-bottom:2px">
+                <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="{{ p.ink }}" stroke-width="1.5" style="flex:none"><path d="{{ p.d }}" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <span style="flex:1;min-width:0"><span style="display:block;font-size:12.5px;font-weight:600;color:{{ p.ink }}">{{ p.label }}</span><span style="display:block;font-size:10.5px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.meta }}</span></span>
+                <sc-if value="{{ p.badge }}"><span style="width:6px;height:6px;border-radius:50%;background:{{ p.badge }};flex:none"></span></sc-if>
+              </button>
+            </sc-for>
+            <div style="padding:12px 10px 4px;font:600 9.5px Inter,sans-serif;letter-spacing:.11em;text-transform:uppercase;color:var(--t3)">Out of scope for this seat</div>
+            <sc-for list="{{ navHidden }}" as="h" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:10px;min-height:32px;padding:5px 10px;opacity:.5">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--red);flex:none"></span>
+                <span style="flex:1;font-size:11.5px;color:var(--t3)">{{ h }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetRail }}">
+        <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:120;background:var(--scrim);backdrop-filter:blur(3px)"></div>
+        <div onClick="{{ stop }}" style="position:absolute;left:0;right:0;bottom:0;top:76px;z-index:130;background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:mRise .17s ease both">
+          <div style="flex:none;display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line2)">
+            <span style="flex:1;font-size:13px;font-weight:600">{{ railTitle }}</span>
+            <button onClick="{{ closeSheet }}" style="width:24px;height:24px;border:0;background:transparent;color:var(--t3);border-radius:6px;cursor:pointer;font-size:12px">✕</button>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:6px 8px 22px">
+            <sc-for list="{{ rail }}" as="g" hint-placeholder-count="3">
+              <div style="margin-bottom:2px">
+                <button onClick="{{ g.toggle }}" style="display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:0 8px;border:0;background:transparent;color:inherit;border-radius:8px;cursor:pointer;text-align:left">
+                  <svg viewBox="0 0 16 16" width="9" height="9" fill="none" stroke="var(--t3)" stroke-width="2.2" style="flex:none;transform:rotate({{ g.rot }});transition:transform .15s"><path d="m5.5 3 5 5-5 5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span style="flex:1;font:600 9.5px Inter,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)">{{ g.label }}</span>
+                  <span style="font:500 9.5px 'JetBrains Mono',monospace;color:var(--t3)">{{ g.n }}</span>
+                </button>
+                <sc-if value="{{ g.open }}">
+                  <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+                    <div onClick="{{ r.click }}" style="display:flex;align-items:center;gap:8px;min-height:38px;padding:6px 8px 6px 20px;border-radius:8px;cursor:pointer;background:{{ r.bg }}">
+                      <span style="width:6px;height:6px;border-radius:50%;background:{{ r.dot }};flex:none"></span>
+                      <span style="flex:1;min-width:0;font-size:11.5px;color:{{ r.ink }};text-wrap:pretty">{{ r.label }}</span>
+                      <span style="font:400 9.5px 'JetBrains Mono',monospace;color:var(--t3);flex:none">{{ r.meta }}</span>
+                    </div>
+                  </sc-for>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetRoles }}">
+        <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:120;background:var(--scrim);backdrop-filter:blur(3px)"></div>
+        <div onClick="{{ stop }}" style="position:absolute;left:0;right:0;bottom:0;top:100px;z-index:130;background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:mRise .17s ease both">
+          <div style="flex:none;padding:12px 14px;border-bottom:1px solid var(--line2)">
+            <div style="display:flex;align-items:center;gap:9px">
+              <div style="flex:1"><div style="font-size:13px;font-weight:600">Sign in as another role</div><div style="font-size:10.5px;color:var(--t3);margin-top:1px;text-wrap:pretty">Each seat sees only the domains it owns.</div></div>
+              <button onClick="{{ closeSheet }}" style="width:24px;height:24px;border:0;background:transparent;color:var(--t3);border-radius:6px;cursor:pointer;font-size:12px">✕</button>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:7px 9px 22px">
+            <sc-for list="{{ roleList }}" as="r" hint-placeholder-count="7">
+              <button onClick="{{ r.go }}" style="display:flex;align-items:center;gap:10px;width:100%;text-align:left;min-height:48px;padding:8px 9px;border:0;border-radius:10px;background:{{ r.bg }};color:inherit;cursor:pointer;margin-bottom:2px">
+                <span style="width:28px;height:28px;border-radius:50%;background:{{ r.av }};color:#fff;font:600 9.5px Inter,sans-serif;display:flex;align-items:center;justify-content:center;flex:none">{{ r.initials }}</span>
+                <span style="flex:1;min-width:0"><span style="display:block;font-size:12.5px;font-weight:600">{{ r.title }}</span><span style="display:block;font:400 10px 'JetBrains Mono',monospace;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.name }} · {{ r.domains }}</span></span>
+                <span style="font:500 9.5px 'JetBrains Mono',monospace;color:var(--t3);flex:none">{{ r.pageN }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ sheetInsp }}">
+        <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:120;background:var(--scrim);backdrop-filter:blur(3px)"></div>
+        <div onClick="{{ stop }}" style="position:absolute;left:0;right:0;bottom:0;top:52px;z-index:130;background:var(--surface);border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;animation:mRise .17s ease both">
+          <div style="flex:none;padding:12px 14px 9px;border-bottom:1px solid var(--line2)">
+            <div style="display:flex;align-items:flex-start;gap:9px">
+              <span style="width:7px;height:7px;border-radius:50%;background:{{ inspDot }};margin-top:5px;flex:none"></span>
+              <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:600;text-wrap:pretty">{{ inspTitle }}</div><div style="font:400 10px 'JetBrains Mono',monospace;color:var(--t3);margin-top:2px">{{ inspMeta }}</div></div>
+              <button onClick="{{ closeSheet }}" style="width:24px;height:24px;flex:none;border:0;background:transparent;color:var(--t3);border-radius:6px;cursor:pointer;font-size:12px">✕</button>
+            </div>
+            <div class="q" style="display:flex;gap:3px;margin-top:9px;overflow-x:auto">
+              <sc-for list="{{ inspTabs }}" as="t" hint-placeholder-count="3">
+                <button onClick="{{ t.go }}" style="height:24px;padding:0 10px;border:0;border-radius:12px;background:{{ t.bg }};color:{{ t.ink }};font:{{ t.fw }} 11px Inter,sans-serif;cursor:pointer;flex:none">{{ t.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:11px 14px 24px">
+            <sc-if value="{{ inspBody }}"><p style="margin:0 0 11px;font-size:12px;color:var(--t2);text-wrap:pretty">{{ inspBody }}</p></sc-if>
+            <sc-if value="{{ inspActions }}">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+                <sc-for list="{{ inspActions }}" as="a" hint-placeholder-count="2">
+                  <button onClick="{{ a.go }}" style="height:38px;padding:0 14px;border:1px solid {{ a.bd }};background:{{ a.bg }};color:{{ a.ink }};border-radius:9px;font:600 12px Inter,sans-serif;cursor:pointer">{{ a.label }}</button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ inspGroups }}" as="g" hint-placeholder-count="3">
+                <div style="border:1px solid var(--line2);border-radius:10px;overflow:hidden">
+                  <button onClick="{{ g.toggle }}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;min-height:38px;padding:8px 11px;border:0;background:var(--raised);color:inherit;cursor:pointer">
+                    <svg viewBox="0 0 16 16" width="9" height="9" fill="none" stroke="var(--t3)" stroke-width="2.2" style="flex:none;transform:rotate({{ g.rot }});transition:transform .15s"><path d="m5.5 3 5 5-5 5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    <span style="flex:1;font:600 9.5px Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--t3)">{{ g.label }}</span>
+                    <span style="font:400 9px 'JetBrains Mono',monospace;color:var(--t3)">{{ g.meta }}</span>
+                  </button>
+                  <sc-if value="{{ g.open }}">
+                    <div style="padding:6px 11px 9px">
+                      <sc-if value="{{ g.lead }}"><p style="margin:2px 0 7px;font-size:10.5px;color:var(--t3);text-wrap:pretty">{{ g.lead }}</p></sc-if>
+                      <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+                        <div onClick="{{ r.go }}" style="display:flex;align-items:center;gap:8px;min-height:32px;padding:6px 0;border-bottom:1px solid var(--line2);cursor:{{ r.cursor }}">
+                          <sc-if value="{{ r.dot }}"><span style="width:5px;height:5px;border-radius:50%;background:{{ r.dot }};flex:none"></span></sc-if>
+                          <span style="flex:1;min-width:0"><span style="display:block;font-size:11px;color:var(--t3)">{{ r.k }}</span><sc-if value="{{ r.sub }}"><span style="display:block;font-size:10px;color:var(--t3);opacity:.85;margin-top:1px;text-wrap:pretty">{{ r.sub }}</span></sc-if></span>
+                          <span style="font:{{ r.vFont }};color:{{ r.vInk }};text-align:right;flex:none;max-width:54%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.v }}</span>
+                          <sc-if value="{{ r.sw }}"><span style="width:34px;height:20px;border-radius:10px;background:{{ r.swBg }};border:1px solid {{ r.swBd }};position:relative;flex:none;display:block"><span style="position:absolute;top:1.5px;left:{{ r.swX }};width:15px;height:15px;border-radius:50%;background:#fff;transition:left .15s ease;display:block"></span></span></sc-if>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ g.buttons }}">
+                        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">
+                          <sc-for list="{{ g.buttons }}" as="b" hint-placeholder-count="2">
+                            <button onClick="{{ b.go }}" style="height:34px;padding:0 12px;border:1px solid {{ b.bd }};background:{{ b.bg }};color:{{ b.ink }};border-radius:8px;font:600 11.5px Inter,sans-serif;cursor:pointer">{{ b.label }}</button>
+                          </sc-for>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ askOpen }}">
+        <div onClick="{{ closeAsk }}" style="position:absolute;inset:0;z-index:140;background:var(--scrim);backdrop-filter:blur(3px);animation:mRise .14s ease both"></div>
+        <div onClick="{{ stop }}" style="position:absolute;left:9px;right:9px;bottom:84px;z-index:150;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;animation:mRise .17s ease both">
+          <sc-if value="{{ listening }}">
+            <div style="display:flex;flex-direction:column;align-items:center;padding:19px 16px 15px">
+              <div style="display:flex;align-items:center;gap:4px;height:30px">
+                <sc-for list="{{ bars }}" as="b" hint-placeholder-count="12">
+                  <span style="width:3px;height:{{ b.h }};border-radius:2px;background:var(--brand);opacity:.85;display:block;animation:mBar 1s ease-in-out infinite;animation-delay:{{ b.delay }}"></span>
+                </sc-for>
+              </div>
+              <div style="margin-top:9px;font-size:14.5px;font-weight:500;min-height:20px;text-align:center">{{ heard }}</div>
+              <div style="margin-top:3px;font-size:10.5px;color:var(--t3)">Say “Hey Papership” any time</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ notListening }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:9px;height:46px;padding:0 8px 0 13px;border-bottom:1px solid var(--line2)">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="var(--t3)" stroke-width="1.6" style="flex:none"><circle cx="7.2" cy="7.2" r="4.3"></circle><path d="M10.5 10.5 14 14" stroke-linecap="round"></path></svg>
+              <input id="m-ask" value="{{ query }}" onChange="{{ onQuery }}" placeholder="{{ askPlaceholder }}" style="flex:1;min-width:0;height:100%;border:0;background:transparent;color:var(--t1);font:400 13.5px Inter,sans-serif;outline:none">
+              <button onClick="{{ startVoice }}" style="width:29px;height:29px;flex:none;display:flex;align-items:center;justify-content:center;border:0;background:var(--brand-soft);color:var(--brand);border-radius:9px;cursor:pointer">
+                <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="2.2" width="4" height="7.2" rx="2"></rect><path d="M3.8 7.8a4.2 4.2 0 0 0 8.4 0M8 12v1.9" stroke-linecap="round"></path></svg>
+              </button>
+            </div>
+            <div style="max-height:320px;overflow-y:auto">
+              <sc-if value="{{ hasAnswer }}">
+                <div style="display:flex;gap:9px;padding:11px 13px;border-bottom:1px solid var(--line2)">
+                  <span style="width:20px;height:20px;border-radius:6px;background:var(--brand);color:var(--brand-ink);font:700 8px Inter,sans-serif;display:flex;align-items:center;justify-content:center;flex:none">PS</span>
+                  <p style="margin:0;font-size:12px;text-wrap:pretty">{{ answerText }}</p>
+                </div>
+              </sc-if>
+              <sc-for list="{{ resultGroups }}" as="g" hint-placeholder-count="3">
+                <div style="padding:7px 12px 2px;font:600 9px Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)">{{ g.label }}</div>
+                <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="3">
+                  <button onClick="{{ i.go }}" style="display:flex;align-items:center;gap:9px;width:100%;text-align:left;min-height:40px;padding:6px 12px;border:0;background:transparent;color:inherit;cursor:pointer">
+                    <span style="width:6px;height:6px;border-radius:50%;background:{{ i.dot }};flex:none"></span>
+                    <span style="flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ i.label }}</span>
+                    <span style="font:400 9.5px 'JetBrains Mono',monospace;color:var(--t3);flex:none">{{ i.meta }}</span>
+                  </button>
+                </sc-for>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <div style="position:absolute;left:0;right:0;bottom:0;z-index:100;background:var(--chrome);border-top:1px solid var(--line);display:flex;align-items:flex-start;height:74px;padding:5px 3px 0">
+        <sc-for list="{{ bottomTabs }}" as="t" hint-placeholder-count="5">
+          <button onClick="{{ t.go }}" style="flex:1;min-width:0;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:transparent;cursor:pointer;padding:0">
+            <sc-if value="{{ t.orb }}">
+              <span style="width:42px;height:42px;border-radius:50%;background:conic-gradient(from 0deg,#6d28d9,#8b5cf6,#22d3ee,#4ade80,#6d28d9);display:flex;align-items:center;justify-content:center;animation:{{ orbAnim }};box-shadow:var(--shadow);margin-top:-13px">
+                <span style="width:36px;height:36px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center">
+                  <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="var(--brand)" stroke-width="1.6"><circle cx="7.2" cy="7.2" r="4.3"></circle><path d="M10.5 10.5 14 14" stroke-linecap="round"></path></svg>
+                </span>
+              </span>
+            </sc-if>
+            <sc-if value="{{ t.icon }}">
+              <span style="position:relative;display:flex;align-items:center;justify-content:center">
+                <svg viewBox="0 0 16 16" width="18" height="18" fill="none" stroke="{{ t.ink }}" stroke-width="1.5"><path d="{{ t.d }}" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <sc-if value="{{ t.badge }}"><span style="position:absolute;top:-2px;right:-4px;width:5px;height:5px;border-radius:50%;background:{{ t.badge }}"></span></sc-if>
+              </span>
+              <span style="font-size:9px;font-weight:600;color:{{ t.ink }}">{{ t.label }}</span>
+            </sc-if>
+          </button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ toastOn }}">
+        <div style="position:absolute;left:12px;right:12px;bottom:84px;z-index:160;display:flex;align-items:center;gap:10px;padding:9px 10px 9px 12px;border-radius:11px;background:var(--t1);color:var(--canvas);box-shadow:var(--shadow-lg);animation:mRise .16s ease both">
+          <span style="flex:1;font-size:11.5px;font-weight:500;text-wrap:pretty">{{ toastText }}</span>
+          <button onClick="{{ clearToast }}" style="height:22px;padding:0 9px;border:1px solid rgba(255,255,255,.24);background:transparent;color:inherit;border-radius:11px;font:600 10px Inter,sans-serif;cursor:pointer;flex:none">OK</button>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;,&quot;dimmed&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Device&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;founder&quot;,&quot;lead&quot;,&quot;dev&quot;,&quot;hr&quot;,&quot;finance&quot;,&quot;sales&quot;,&quot;ops&quot;],&quot;default&quot;:&quot;founder&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Device&quot;}}">
+const D = { ok:'var(--green)', warn:'var(--amber)', bad:'var(--red)', idle:'var(--t3)', run:'var(--brand)', info:'var(--cyan)' };
+const M = "'JetBrains Mono',monospace";
+const IN = "Inter,sans-serif";
+const ICON = {
+  today:'M2.4 6.8 8 2.4l5.6 4.4V13a.6.6 0 0 1-.6.6H3a.6.6 0 0 1-.6-.6z',
+  agents:'M5 6.5h6v5H5zM6.5 6.5V4.2M9.5 6.5V4.2M8 2.4v1.8M3 8.5H1.8M14.2 8.5H13M6.4 13.4v1.2M9.6 13.4v1.2',
+  work:'M2.2 5.4h11.6v8H2.2zM5.8 5.4V3.6h4.4v1.8',
+  runs:'M6.2 4.4 11.4 8l-5.2 3.6zM2.6 2.8v10.4',
+  pipeline:'M2 3.4h12l-4.4 5v5.2L6.4 11V8.4z',
+  people:'M6.2 7.6a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4M1.9 13.4c0-2.3 1.9-3.5 4.3-3.5s4.3 1.2 4.3 3.5M11 4.1a2 2 0 0 1 0 4M12.6 13.4c0-1.5-.4-2.5-1.3-3.1',
+  money:'M8 2.4v11.2M10.8 5.2A2.6 2.6 0 0 0 8.2 3.6H7.6a2.2 2.2 0 0 0 0 4.4h1a2.2 2.2 0 0 1 0 4.4h-.6a2.6 2.6 0 0 1-2.6-1.6',
+  ops:'M2.6 13.2V8.4M6.2 13.2V3.6M9.8 13.2V9.8M13.4 13.2V6.2',
+  inbox:'M2.2 9.2h3l1 1.9h3.6l1-1.9h3M2.2 9.2l1.9-6h7.8l1.9 6v4.2H2.2z',
+  knowledge:'M3 3.4h4.2a1.8 1.8 0 0 1 1.8 1.8v7.4M13 3.4H8.8A1.8 1.8 0 0 0 7 5.2v7.4',
+  systems:'M6 2.4v3M10 2.4v3M4.6 5.4h6.8v3.7a3.4 3.4 0 0 1-6.8 0zM8 12.2v1.6',
+  settings:'M8 10.2a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4M13.1 8.9l1.2.9-1.3 2.2-1.4-.5a5 5 0 0 1-1.6 1L9.7 14H7.1l-.3-1.5a5 5 0 0 1-1.6-1l-1.4.5-1.3-2.2 1.2-.9a5 5 0 0 1 0-1.8l-1.2-.9 1.3-2.2 1.4.5a5 5 0 0 1 1.6-1L7.1 2h2.6l.3 1.5a5 5 0 0 1 1.6 1l1.4-.5 1.3 2.2-1.2.9a5 5 0 0 1 0 1.8'
+};
+const PAGES = {
+  today:{ label:'Command', icon:'today', meta:'What needs you now', subs:null },
+  agents:{ label:'Agents', icon:'agents', meta:'P01–P05 · your digital workforce', subs:['Roster','Runs','Schedules','Receipts'] },
+  work:{ label:'Work', icon:'work', meta:'B06–B08 · plans, items, the loop', subs:['Items','Loop','Plans','Wiki'] },
+  runs:{ label:'Runs', icon:'runs', meta:'P04 · execution and recovery', subs:['Running','Waiting','Completed','Failed'] },
+  pipeline:{ label:'Revenue', icon:'pipeline', meta:'B04–B05, B10 · customers to contracts', subs:['Opportunities','Proposals','Support'] },
+  people:{ label:'People', icon:'people', meta:'B02–B03 · org, capacity, seats', subs:['Directory','Seats','Capacity','Onboarding'] },
+  money:{ label:'Money', icon:'money', meta:'B13–B15 · finance and treasury', subs:['Receivables','Payables','Budgets','Procurement'] },
+  ops:{ label:'Operations', icon:'ops', meta:'B09, B19–B21 · delivery and assets', subs:['Queues','SOPs','Inventory','Quality'] },
+  inbox:{ label:'Inbox', icon:'inbox', meta:'B12 · ticketed conversations', subs:['All','Mine'] },
+  knowledge:{ label:'Record', icon:'knowledge', meta:'B11, P09, P13 · decisions and memory', subs:['Decisions','Memory','Documents','Policies'] },
+  systems:{ label:'Systems', icon:'systems', meta:'P06, P10, P17 · connections and authority', subs:['Health','Connections','Registry','Grants'] },
+  settings:{ label:'Settings', icon:'settings', meta:'Your account, your seat, your org', subs:['Account','Seat','Directory','Ceilings','Notifications','Retention','Plan','Appearance'] }
+};
+const ROLES = {
+  founder:{ title:'Founder', name:'Cam Douglas', initials:'CD', code:'OWNER', av:'linear-gradient(135deg,#6d28d9,#a78bfa)', domains:'all 43 groups', pages:['today','agents','work','runs','pipeline','people','money','ops','inbox','knowledge','systems','settings'], agent:'Chief of Staff', greet:'Everything, everywhere. Two things need your authority.' },
+  lead:{ title:'Project Lead', name:'Priya Sharma', initials:'PS', code:'LEAD', av:'linear-gradient(135deg,#0e7490,#22d3ee)', domains:'B06–B08, B11', pages:['today','agents','work','runs','inbox','knowledge','settings'], agent:'Delivery Planner', greet:'Your two plans are on track. One item is stuck at tests.' },
+  dev:{ title:'Developer', name:'James Kowalski', initials:'JK', code:'DEV', av:'linear-gradient(135deg,#1d4ed8,#60a5fa)', domains:'B08, P04, P06', pages:['today','agents','work','runs','systems','knowledge','settings'], agent:'Pair Engineer', greet:'One change is waiting for your review. Checks are queueing.' },
+  hr:{ title:'People Lead', name:'Luna Park', initials:'LP', code:'PEOPLE', av:'linear-gradient(135deg,#047857,#4ade80)', domains:'B02–B03', pages:['today','agents','people','inbox','knowledge','settings'], agent:'People Coordinator', greet:'Two onboardings start Monday. One leave request needs a decision.' },
+  finance:{ title:'Finance Lead', name:'Marco Reyes', initials:'MR', code:'FIN', av:'linear-gradient(135deg,#a8560a,#fbbf24)', domains:'B13–B15', pages:['today','agents','money','knowledge','settings'], agent:'Ledger Analyst', greet:'One payment run needs a second signatory. Margin is holding.' },
+  sales:{ title:'Head of Sales', name:'Sarah Mitchell', initials:'SM', code:'SALES', av:'linear-gradient(135deg,#c8123f,#fb7185)', domains:'B04–B05, B10', pages:['today','agents','pipeline','inbox','knowledge','settings'], agent:'Pipeline Assistant', greet:'Three deals close this week. One proposal is waiting on legal.' },
+  ops:{ title:'Ops Manager', name:'Aria Chen', initials:'AC', code:'OPS', av:'linear-gradient(135deg,#6d28d9,#22d3ee)', domains:'B09, B19–B21', pages:['today','agents','ops','runs','inbox','knowledge','settings'], agent:'Dispatch Coordinator', greet:'Two work orders breach SLA in four hours. Stock is fine.' }
+};
+const AGENTS = {
+  chief:{ name:'Chief of Staff', dept:'Strategy · B01', model:'Standard', status:'Working', dot:D.run, sponsor:'Cam Douglas', roles:['founder'], purpose:'Watches every domain, escalates only what needs the founder’s authority.', modes:'Ask · Analyse · Plan · Review', runs:4, spend:'38 of 184', tools:'read-only across all domains' },
+  planner:{ name:'Delivery Planner', dept:'Projects · B06', model:'Standard', status:'Working', dot:D.run, sponsor:'Priya Sharma', roles:['founder','lead'], purpose:'Turns accepted specifications into plans, assignments and deadlines.', modes:'Plan · Draft', runs:2, spend:'22 of 120', tools:'work ledger, repository read' },
+  pair:{ name:'Pair Engineer', dept:'Software · B08', model:'Standard', status:'Waiting on you', dot:D.warn, sponsor:'James Kowalski', roles:['founder','lead','dev'], purpose:'Writes isolated changes on a branch and runs the checks. Never releases.', modes:'Draft · Execute · Review', runs:3, spend:'41 of 120', tools:'branch, change, check' },
+  people:{ name:'People Coordinator', dept:'People · B03', model:'Light', status:'Idle', dot:D.idle, sponsor:'Luna Park', roles:['founder','hr'], purpose:'Runs onboarding checklists, leave maths and training reminders.', modes:'Ask · Draft', runs:0, spend:'4 of 60', tools:'people records, calendar draft' },
+  ledger:{ name:'Ledger Analyst', dept:'Finance · B13', model:'Standard', status:'Working', dot:D.run, sponsor:'Marco Reyes', roles:['founder','finance'], purpose:'Reconciles invoices and drafts payment proposals. Never pays.', modes:'Analyse · Draft', runs:1, spend:'17 of 90', tools:'ledger read, proposal draft' },
+  pipe:{ name:'Pipeline Assistant', dept:'Sales · B05', model:'Standard', status:'Working', dot:D.run, sponsor:'Sarah Mitchell', roles:['founder','sales'], purpose:'Keeps opportunities current and drafts follow-ups for your approval.', modes:'Analyse · Draft', runs:2, spend:'26 of 90', tools:'CRM read, email draft' },
+  dispatch:{ name:'Dispatch Coordinator', dept:'Operations · B09', model:'Light', status:'Working', dot:D.run, sponsor:'Aria Chen', roles:['founder','ops'], purpose:'Sequences work orders against SLAs and flags breaches early.', modes:'Analyse · Execute', runs:2, spend:'11 of 60', tools:'work orders, routing' },
+  archivist:{ name:'Archivist', dept:'Knowledge · B11', model:'Light', status:'Idle', dot:D.idle, sponsor:'Cam Douglas', roles:['founder','lead','dev','hr','finance','sales','ops'], purpose:'Files decisions and retires superseded knowledge with provenance.', modes:'Ask · Review', runs:0, spend:'6 of 60', tools:'record write, memory governance' }
+};
+const ITEMS = {
+  'CCO-245':{ t:'Interception hardening for T2-1', st:6, s:'In progress', dot:D.run, plan:'PLAN-019', due:'24 Sep', pri:'High', br:'change/cco-245', rev:'8f3c1ad', agent:'pair', dom:'B08' },
+  'CCO-231':{ t:'Web research allow-list needs vendor domains', st:8, s:'Review', dot:D.warn, plan:'PLAN-019', due:'23 Sep', pri:'High', br:'—', rev:'—', agent:'pair', dom:'P06' },
+  'CCO-244':{ t:'Receipts render plain-language summaries', st:7, s:'In progress', dot:D.run, plan:'PLAN-014', due:'25 Sep', pri:'Medium', br:'change/cco-244', rev:'2b91f0c', agent:'pair', dom:'B08' },
+  'CCO-247':{ t:'Offline retry uses a backoff', st:7, s:'In progress', dot:D.run, plan:'PLAN-014', due:'30 Sep', pri:'Low', br:'change/cco-247', rev:'55ad210', agent:'pair', dom:'B08' },
+  'CCO-229':{ t:'Approval card shows the target version', st:6, s:'In progress', dot:D.run, plan:'PLAN-014', due:'22 Sep', pri:'High', br:'change/cco-229', rev:'c71e884', agent:'pair', dom:'B08' },
+  'CCO-250':{ t:'Registry list virtualises at 43 groups', st:4, s:'To do', dot:D.idle, plan:'PLAN-014', due:'04 Oct', pri:'Low', br:'—', rev:'—', agent:'planner', dom:'P19' },
+  'CCO-251':{ t:'Release grant reauthentication copy', st:3, s:'To do', dot:D.idle, plan:'PLAN-022', due:'02 Oct', pri:'Low', br:'—', rev:'—', agent:'planner', dom:'P10' },
+  'CCO-222':{ t:'Close never cancels cloud work', st:10, s:'Monitoring', dot:D.ok, plan:'PLAN-014', due:'—', pri:'High', br:'—', rev:'—', agent:'pair', dom:'B08' }
+};
+const RUNS = {
+  run_7f21c:{ p:'Isolated change for CCO-245 interception', item:'CCO-245', mode:'Execute', s:'Running', dot:D.run, el:'12m 04s', band:'Medium (estimate)', st:'14:29', pct:'54%', agent:'pair' },
+  run_7ef44:{ p:'Draft handover note for Release 1', item:'CCO-198', mode:'Draft', s:'Running', dot:D.run, el:'02m 51s', band:'Low (estimate)', st:'14:38', pct:'18%', agent:'planner' },
+  run_7f1a9:{ p:'Research vendor documentation for T2-1', item:'CCO-231', mode:'Analyse', s:'Held', dot:D.warn, el:'41m 18s', band:'Low (estimate)', st:'14:00', pct:'100%', agent:'pair' },
+  run_7f0b2:{ p:'Analyse interception coverage gaps', item:'CCO-245', mode:'Analyse', s:'Completed', dot:D.ok, el:'06m 31s', band:'Low (actual)', st:'13:41', pct:'100%', agent:'pair' },
+  run_7ed30:{ p:'Verify the web research allow-list', item:'CCO-231', mode:'Review', s:'Failed', dot:D.bad, el:'00m 48s', band:'Low (actual)', st:'09:52', pct:'12%', agent:'pair' },
+  run_7e9c1:{ p:'Reconcile September invoices', item:'INV-0312', mode:'Analyse', s:'Running', dot:D.run, el:'03m 12s', band:'Low (estimate)', st:'14:36', pct:'44%', agent:'ledger' },
+  run_7e880:{ p:'Draft follow-up for Acme Corp', item:'OPP-114', mode:'Draft', s:'Waiting on you', dot:D.warn, el:'08m 40s', band:'Low (estimate)', st:'14:20', pct:'90%', agent:'pipe' }
+};
+const CONNS = {
+  github:{ n:'GitHub · Papership', k:'Bound repository · B08', s:'Working', dot:D.ok, v:'verified 2m ago', says:'May branch, write an isolated change, and run checks. May not release — that grant is off.' },
+  web:{ n:'Web research', k:'Allow-list browsing · P06', s:'Within limits', dot:D.run, v:'verified 11m ago', says:'Fourteen domains approved for reading. Two more waiting on a decision.' },
+  vercel:{ n:'Vercel', k:'Deployment target · B08', s:'Unavailable', dot:D.bad, v:'last seen 3h ago', says:'Deployment status only. Token expired — reconnect in your browser.' },
+  gmail:{ n:'Gmail', k:'Comms channel · B12', s:'Not set up', dot:D.idle, v:'planned', says:'A connected channel reads the conversations you link — never a whole mailbox.' },
+  slack:{ n:'Slack', k:'Comms channel · B12', s:'Not set up', dot:D.idle, v:'planned', says:'Scope is chosen one channel at a time.' },
+  xero:{ n:'Xero', k:'Finance source · B13', s:'Not set up', dot:D.idle, v:'planned', says:'Finance stays authoritative in its own system. Papership reads and drafts only.' }
+};
+const LOOP = ['Request','Research','Specification','Plan','Assignment','Isolated change','Tests','Review','Release proposal','Monitoring','Retained knowledge'];
+const ASKS = {
+  founder:[
+    { id:'pr', dot:D.warn, age:'15m', agent:'pair', head:'Pair Engineer wants to open a dry-run pull request', body:'The isolated change for CCO-245 is written and the checks passed — 14 tests, none failed. Nothing reaches main, and the release grant stays off.', facts:[{k:'item ',v:'CCO-245'},{k:'at ',v:'8f3c1ad'},{k:'band ',v:'medium'}], sel:{ k:'run', id:'run_7f21c' } },
+    { id:'pay', dot:D.warn, age:'1h', agent:'ledger', head:'Ledger Analyst drafted a payment run needing a signatory', body:'Eleven supplier invoices reconciled cleanly. Treasury actions always need a designated authority and reauthentication.', facts:[{k:'batch ',v:'PAY-0091'},{k:'items ',v:'11'},{k:'domain ',v:'B14'}], sel:{ k:'agent', id:'ledger' } },
+    { id:'web', dot:D.warn, age:'3h', agent:'pair', head:'Read two vendor sites outside the allow-list', body:'A plan step needs documentation that only exists on the vendors’ own domains. Reading is all it asks for.', facts:[{k:'item ',v:'CCO-231'},{k:'policy ',v:'v12'}], sel:{ k:'conn', id:'web' } }
+  ],
+  lead:[{ id:'scope', dot:D.warn, age:'25m', agent:'planner', head:'Delivery Planner wants to move CCO-247 out of this cycle', body:'Checks are queueing behind the worker pool. Moving the lowest-priority item protects the Release 1 date.', facts:[{k:'item ',v:'CCO-247'},{k:'plan ',v:'PLAN-014'}], sel:{ k:'item', id:'CCO-247' } }],
+  dev:[{ id:'pr', dot:D.warn, age:'15m', agent:'pair', head:'Review the isolated change for CCO-245', body:'14 tests passed on 8f3c1ad. The agent stops here by design — a person reviews before anything is proposed.', facts:[{k:'diff ',v:'+142 −38'},{k:'checks ',v:'14 passed'}], sel:{ k:'run', id:'run_7f21c' } }],
+  hr:[{ id:'leave', dot:D.warn, age:'2h', agent:'people', head:'People Coordinator flagged overlapping leave', body:'Two engineers requested the same week and the roster drops below the on-call minimum. Two alternatives are drafted.', facts:[{k:'week ',v:'06 Oct'},{k:'domain ',v:'B03'}], sel:{ k:'agent', id:'people' } }],
+  finance:[{ id:'pay', dot:D.warn, age:'1h', agent:'ledger', head:'Payment run PAY-0091 needs a second signatory', body:'Eleven invoices reconciled against purchase orders. The agent can only propose.', facts:[{k:'batch ',v:'PAY-0091'},{k:'items ',v:'11'}], sel:{ k:'agent', id:'ledger' } }],
+  sales:[{ id:'prop', dot:D.warn, age:'40m', agent:'pipe', head:'Pipeline Assistant drafted a follow-up for Acme Corp', body:'The draft answers their security questionnaire using approved knowledge only. Nothing sends until you approve.', facts:[{k:'account ',v:'Acme Corp'},{k:'opp ',v:'OPP-114'}], sel:{ k:'agent', id:'pipe' } }],
+  ops:[{ id:'sla', dot:D.bad, age:'10m', agent:'dispatch', head:'Two work orders breach SLA in four hours', body:'Dispatch Coordinator proposes resequencing the afternoon route. It needs your call because it moves a committed appointment.', facts:[{k:'orders ',v:'WO-441, WO-447'},{k:'slack ',v:'4h'}], sel:{ k:'agent', id:'dispatch' } }]
+};
+
+class Component extends DCLogic {
+  state = { theme:null, role:'founder', stack:[{ k:'page', id:'today' }], sub:{}, exp:{}, rail:{}, sheet:null, insp:null, inspTab:'Detail',
+    asking:false, listening:false, query:'', heard:'', resolved:[], grants:{ branch:true, change:true, check:true, release:false },
+    prefs:{ approvals:true, digest:true, deploys:false }, toast:null };
+  componentWillUnmount(){ clearInterval(this._vt); clearTimeout(this._tt); }
+  theme(){ return this.state.theme || this.props.theme || 'light'; }
+  push(n){ return () => this.setState(s => ({ stack: s.stack.concat([n]), sheet:null, asking:false, query:'' })); }
+  goPage(id){ return () => this.setState({ stack:[{ k:'page', id }], sheet:null, asking:false, query:'', insp:null }); }
+  peek(i){ return (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ insp:i, sheet:'insp', asking:false, query:'' }); }; }
+  flip(bag, id){ return (e) => { if (e && e.stopPropagation) e.stopPropagation(); this.setState(s => ({ [bag]: Object.assign({}, s[bag], { [id]: !s[bag][id] }) })); }; }
+  on(bag, id, d){ const b = this.state[bag]; return id in b ? b[id] : !!d; }
+  setSub(g, v){ return () => this.setState(s => ({ sub: Object.assign({}, s.sub, { [g]:v }) })); }
+  subOf(g, d){ return this.state.sub[g] || d; }
+  toast(t){ clearTimeout(this._tt); this.setState({ toast:t }); this._tt = setTimeout(() => this.setState({ toast:null }), 3000); }
+  openAsk = () => { this.setState({ asking:true, sheet:null }); setTimeout(() => { const el = document.getElementById('m-ask'); if (el) el.focus(); }, 30); };
+  startVoice = () => { clearInterval(this._vt); const s2 = 'what needs me today'; let i = 0;
+    this.setState({ listening:true, asking:true, heard:'' });
+    this._vt = setInterval(() => { i += 1; if (i > s2.length) { clearInterval(this._vt); setTimeout(() => this.setState({ listening:false, query:'what needs me today', heard:'' }), 360); return; } this.setState({ heard: s2.slice(0, i) }); }, 55); };
+
+  renderVals(){
+    const st = this.state, theme = this.theme(), v = {};
+    const R = ROLES[st.role] || ROLES.founder;
+    const stack = st.stack, cur = stack[stack.length - 1];
+    v.theme = theme;
+    v.themeLabel = theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'Dimmed';
+    v.cycleTheme = () => this.setState({ theme: theme === 'light' ? 'dark' : theme === 'dark' ? 'dimmed' : 'light' });
+    v.stop = (e) => { if (e && e.stopPropagation) e.stopPropagation(); };
+    v.roleTitle = R.title; v.roleName = R.name; v.roleInitials = R.initials; v.roleAv = R.av; v.roleDomains = R.domains;
+    v.canBack = stack.length > 1;
+    v.goBack = () => this.setState(s => ({ stack: s.stack.slice(0, -1), sheet:null, insp:null }));
+    v.openNav = () => this.setState({ sheet:'nav', asking:false });
+    v.openRail = () => this.setState({ sheet:'rail', asking:false });
+    v.openRoles = () => this.setState({ sheet:'roles', asking:false });
+    v.closeSheet = () => this.setState({ sheet:null });
+    v.sheetNav = st.sheet === 'nav'; v.sheetRail = st.sheet === 'rail'; v.sheetRoles = st.sheet === 'roles'; v.sheetInsp = st.sheet === 'insp' && !!st.insp;
+    v.askOpen = st.asking; v.listening = st.listening; v.notListening = !st.listening;
+    v.orbAnim = st.asking ? 'mSpin 3s linear infinite' : 'mSpin 10s linear infinite, mHalo 3.4s ease-in-out infinite';
+    v.closeAsk = () => this.setState({ asking:false, listening:false, query:'' });
+    v.startVoice = this.startVoice;
+    v.heard = st.heard || 'Listening…';
+    v.bars = [0,1,2,3,4,5,6,7,8,9,10,11].map(i => ({ delay:(i * 0.085).toFixed(2) + 's', h:(11 + ((i * 7) % 5) * 6) + 'px' }));
+    v.query = st.query;
+    v.onQuery = (e) => this.setState({ query: e.target.value });
+    v.askPlaceholder = 'Ask ' + R.agent;
+    v.toastText = st.toast || ''; v.toastOn = !!st.toast; v.clearToast = () => this.setState({ toast:null });
+
+    v.roleList = Object.keys(ROLES).map(k => { const r = ROLES[k];
+      return { title:r.title, name:r.name, initials:r.initials, domains:r.domains, av:r.av, pageN:r.pages.length + 'p',
+        bg: k === st.role ? 'var(--brand-soft)' : 'transparent',
+        go: () => { this.setState({ role:k, sheet:null, stack:[{ k:'page', id:'today' }], insp:null, sub:{}, exp:{} }); this.toast('Signed in as ' + r.title + ' — ' + r.domains + '.'); } }; });
+
+    const myAgents = Object.keys(AGENTS).filter(k => AGENTS[k].roles.indexOf(st.role) >= 0);
+    const myRuns = Object.keys(RUNS).filter(k => myAgents.indexOf(RUNS[k].agent) >= 0);
+    const myItems = Object.keys(ITEMS).filter(k => st.role === 'founder' || myAgents.indexOf(ITEMS[k].agent) >= 0);
+    const asks = (ASKS[st.role] || []).filter(a => st.resolved.indexOf(a.id) < 0);
+    const resolve = (a, verb) => (e) => { if (e && e.stopPropagation) e.stopPropagation();
+      this.setState(s => ({ resolved: s.resolved.concat([a.id]), sheet:null }));
+      this.toast(verb + (verb === 'Approved' ? ' — ' + AGENTS[a.agent].name + ' is carrying on.' : ' — the agent will wait.')); };
+
+    const PID = cur.k === 'page' ? cur.id : null;
+    const page = PID ? PAGES[PID] : null;
+    v.title = page ? page.label : cur.k === 'agent' ? AGENTS[cur.id].name : cur.id;
+    v.crumb = stack.map(s2 => s2.k === 'page' ? (PAGES[s2.id] ? PAGES[s2.id].label : s2.id) : s2.id).join(' / ') + ' · ' + R.code;
+
+    v.navPages = R.pages.map(id => { const p = PAGES[id], on = PID === id;
+      return { label:p.label, meta:p.meta, d:ICON[p.icon], go:this.goPage(id), bg: on ? 'var(--brand-soft)' : 'transparent', ink: on ? 'var(--brand)' : 'var(--t1)',
+        badge: id === 'today' && asks.length ? D.warn : id === 'agents' ? D.run : '' }; });
+    v.navHidden = Object.keys(PAGES).filter(p => R.pages.indexOf(p) < 0).map(p => PAGES[p].label + ' — not in this seat’s domains');
+
+    const bt = (id, label) => ({ orb:false, icon:true, label, d:ICON[PAGES[id].icon], go:this.goPage(id),
+      ink: PID === id ? 'var(--brand)' : 'var(--t3)', badge: id === 'today' && asks.length ? D.warn : '' });
+    const p1 = R.pages[0], p2 = R.pages[1], p3 = R.pages[2] || R.pages[1], p4 = R.pages[R.pages.length - 1];
+    v.bottomTabs = [bt(p1, PAGES[p1].label), bt(p2, PAGES[p2].label),
+      { orb:true, icon:false, go: () => { if (st.asking) this.setState({ asking:false, listening:false, query:'' }); else this.openAsk(); } },
+      bt(p3, PAGES[p3].label), bt(p4, PAGES[p4].label)];
+
+    if (page && page.subs) {
+      const tab0 = this.subOf(PID, page.subs[0]);
+      v.subTabs = page.subs.map(s2 => ({ label:s2, go:this.setSub(PID, s2), bg: tab0 === s2 ? 'var(--brand-soft)' : 'var(--surface)',
+        bd: tab0 === s2 ? 'var(--brand)' : 'var(--line)', ink: tab0 === s2 ? 'var(--brand)' : 'var(--t2)', fw: tab0 === s2 ? '600' : '500' }));
+    } else v.subTabs = null;
+    const tab = page && page.subs ? this.subOf(PID, page.subs[0]) : '';
+
+    const row = (k, val, o) => Object.assign({ k, v:val, sub:'', dot:'', sw:'', cursor:'default', go:()=>{}, vInk:'var(--t2)', vFont:'400 11px ' + M }, o || {});
+    const link = (k, val, node, o) => row(k, val, Object.assign({ cursor:'pointer', go:this.peek(node) }, o || {}));
+    const swRow = (k, on, sub, fn) => row(k, '', { sub, sw:true, cursor:'pointer', go:fn, swBg: on ? 'var(--brand)' : 'var(--line2)', swBd: on ? 'var(--brand)' : 'var(--line)', swX: on ? '16px' : '2px' });
+    const act = (label, fn, kind) => ({ label, go:fn, bg: kind === 'primary' ? 'var(--brand)' : 'transparent',
+      bd: kind === 'primary' ? 'var(--brand)' : kind === 'danger' ? 'var(--red)' : 'var(--line)', ink: kind === 'primary' ? 'var(--brand-ink)' : kind === 'danger' ? 'var(--red)' : 'var(--t1)' });
+    const tagOf = (dot) => ({ bg: dot === D.ok ? 'var(--green-soft)' : dot === D.bad ? 'var(--red-soft)' : dot === D.warn ? 'var(--amber-soft)' : dot === D.run ? 'var(--brand-soft)' : 'var(--raised)',
+      ink: dot === D.ok ? 'var(--green)' : dot === D.bad ? 'var(--red)' : dot === D.warn ? 'var(--amber)' : dot === D.run ? 'var(--brand)' : 'var(--t2)' });
+
+    const RAILS = {
+      today:[{ id:'r1', label:'Needs you', rows: asks.length ? asks.map(a => ({ label:a.head, meta:a.age, dot:a.dot, sel:a.sel })) : [{ label:'Nothing waiting', meta:'', dot:D.ok, sel:null }], d:true },
+        { id:'r2', label:'My agents', rows: myAgents.map(k => ({ label:AGENTS[k].name, meta:AGENTS[k].runs ? AGENTS[k].runs + ' runs' : 'idle', dot:AGENTS[k].dot, sel:{ k:'agent', id:k } })), d:true },
+        { id:'r3', label:'Domains I own', rows:[{ label:R.domains, meta:'', dot:D.info, sel:{ k:'scope', id:st.role } }] }],
+      agents:[{ id:'r1', label:'Roster', rows: myAgents.map(k => ({ label:AGENTS[k].name, meta:AGENTS[k].status === 'Working' ? 'live' : 'you', dot:AGENTS[k].dot, sel:{ k:'agent', id:k } })), d:true },
+        { id:'r2', label:'Modes', rows:[{ label:'Ask · read only', meta:'safe', dot:D.ok, sel:null }, { label:'Draft · proposes', meta:'held', dot:D.warn, sel:null }, { label:'Execute · acts in scope', meta:'granted', dot:D.run, sel:null }, { label:'Automate', meta:'later', dot:D.idle, sel:null }], d:true }],
+      work:[{ id:'r1', label:'Plans', rows:[{ label:'Release 1 — Founder desktop', meta:'72%', dot:D.ok, sel:{ k:'plan', id:'PLAN-014' } }, { label:'T2-1 interception hardening', meta:'41%', dot:D.warn, sel:{ k:'plan', id:'PLAN-019' } }], d:true },
+        { id:'r2', label:'Blockers', rows:[{ label:'Hermes pool saturates on checks', meta:'st7', dot:D.bad, sel:{ k:'blocker', id:'hermes' } }, { label:'Release grant intentionally off', meta:'st9', dot:D.bad, sel:{ k:'blocker', id:'release' } }], d:true }],
+      runs:[{ id:'r1', label:'In flight', rows: myRuns.filter(k => RUNS[k].s === 'Running').map(k => ({ label:RUNS[k].p, meta:RUNS[k].el, dot:RUNS[k].dot, sel:{ k:'run', id:k } })), d:true },
+        { id:'r2', label:'Held on you', rows: myRuns.filter(k => RUNS[k].s !== 'Running' && RUNS[k].s !== 'Completed').map(k => ({ label:RUNS[k].p, meta:RUNS[k].el, dot:RUNS[k].dot, sel:{ k:'run', id:k } })), d:true }],
+      pipeline:[{ id:'r1', label:'By stage', rows:[{ label:'Enquiry', meta:'4', dot:D.idle, sel:null }, { label:'Proposal', meta:'3', dot:D.run, sel:null }, { label:'Contract', meta:'2', dot:D.warn, sel:null }], d:true },
+        { id:'r2', label:'Key accounts', rows:[{ label:'Acme Corp', meta:'OPP-114', dot:D.warn, sel:{ k:'opp', id:'OPP-114' } }, { label:'Northwind', meta:'OPP-118', dot:D.run, sel:{ k:'opp', id:'OPP-118' } }], d:true }],
+      people:[{ id:'r1', label:'Seats', rows: Object.keys(ROLES).map(k => ({ label:ROLES[k].title, meta:ROLES[k].code, dot: k === st.role ? D.run : D.idle, sel:{ k:'seat', id:k } })), d:true },
+        { id:'r2', label:'Onboarding', rows:[{ label:'2 starting Monday', meta:'B03', dot:D.warn, sel:{ k:'agent', id:'people' } }] }],
+      money:[{ id:'r1', label:'Receivables', rows:[{ label:'Current', meta:'6', dot:D.ok, sel:null }, { label:'Overdue 30+', meta:'2', dot:D.warn, sel:null }], d:true },
+        { id:'r2', label:'Payables', rows:[{ label:'PAY-0091 awaiting signatory', meta:'11', dot:D.warn, sel:{ k:'agent', id:'ledger' } }], d:true }],
+      ops:[{ id:'r1', label:'Queues', rows:[{ label:'Breaching in 4h', meta:'2', dot:D.bad, sel:{ k:'agent', id:'dispatch' } }, { label:'Today', meta:'9', dot:D.run, sel:null }], d:true },
+        { id:'r2', label:'Stock', rows:[{ label:'Below reorder', meta:'1', dot:D.warn, sel:null }, { label:'Healthy', meta:'18', dot:D.ok, sel:null }] }],
+      inbox:[{ id:'r1', label:'Channels', rows:[{ label:'In-app', meta:'4', dot:D.run, sel:null }, { label:'Gmail', meta:'planned', dot:D.idle, sel:{ k:'conn', id:'gmail' } }, { label:'Slack', meta:'planned', dot:D.idle, sel:{ k:'conn', id:'slack' } }], d:true }],
+      knowledge:[{ id:'r1', label:'Decisions', rows:[{ label:'Close ≠ cancel', meta:'DEC-0031', dot:D.ok, sel:{ k:'rec', id:'DEC-0031' } }, { label:'Interception before policy', meta:'DEC-0033', dot:D.ok, sel:{ k:'rec', id:'DEC-0033' } }], d:true },
+        { id:'r2', label:'Memory classes', rows:[{ label:'Source', meta:'12', dot:D.run, sel:null }, { label:'Approved', meta:'9', dot:D.ok, sel:null }, { label:'Inferred', meta:'4', dot:D.warn, sel:null }], d:true }],
+      systems:[{ id:'r1', label:'Health', rows:[{ label:'API', meta:'142ms', dot:D.ok, sel:{ k:'health', id:'api' } }, { label:'Workers · Hermes', meta:'9 q', dot:D.warn, sel:{ k:'health', id:'hermes' } }], d:true },
+        { id:'r2', label:'Connections', rows: Object.keys(CONNS).map(k => ({ label:CONNS[k].n, meta:CONNS[k].s === 'Working' ? 'ok' : CONNS[k].s === 'Unavailable' ? 'down' : 'planned', dot:CONNS[k].dot, sel:{ k:'conn', id:k } })), d:true },
+        { id:'r3', label:'Authority', rows:[{ label:'Repository grants', meta:(st.grants.release ? '4' : '3') + '/4', dot:D.ok, sel:{ k:'grants', id:'repo' } }] }],
+      settings:[{ id:'r1', label:'This account', rows:[{ label:R.name, meta:R.code, dot:D.ok, sel:{ k:'seat', id:st.role } }, { label:'Two-factor on', meta:'app', dot:D.ok, sel:null }], d:true },
+        { id:'r2', label:'All seats', rows: Object.keys(ROLES).map(k => ({ label:ROLES[k].title, meta:ROLES[k].initials, dot: k === st.role ? D.run : D.idle, sel:{ k:'seat', id:k } })), d:true }]
+    };
+    const railDef = RAILS[PID] || RAILS.today;
+    v.railTitle = (page ? page.label : 'Command') + ' · context';
+    v.rail = railDef.map(g => ({ label:g.label, n:String(g.rows.length),
+      open: this.on('rail', g.id + PID, g.d), rot: this.on('rail', g.id + PID, g.d) ? '90deg' : '0deg', toggle: this.flip('rail', g.id + PID),
+      rows: g.rows.map(r => ({ label:r.label, meta:r.meta, dot:r.dot,
+        click: r.sel ? this.peek(r.sel) : (() => this.toast(r.label + ' — filter applied.')),
+        bg:'transparent', ink:'var(--t1)' })) }));
+
+    v.hasTiles = false; v.hasGroups = false; v.hasPanels = false; v.hasRegistry = false; v.hasMatrix = false; v.hasLoop = false;
+    v.tiles = []; v.groups = []; v.panels = [];
+    const gDef = (id, label, meta, dot, rows, d, empty) => ({ label, meta, dot, rows, empty:empty || '',
+      open: this.on('exp', id, d), rot: this.on('exp', id, d) ? '90deg' : '0deg', toggle: this.flip('exp', id) });
+    const gRow = (id, o) => Object.assign({ key:'', label:'', blurb:'', meta:'', dot:D.idle, tag:'', tagBg:'var(--raised)', tagInk:'var(--t2)', pulse:'', facts:[], acts:[],
+      open: this.on('exp', id, false), rot: this.on('exp', id, false) ? '90deg' : '0deg', toggle: this.flip('exp', id) }, o);
+    const P = (id, title, meta, rows, o) => Object.assign({ id, title, meta, rows, lead:'', note:'', buttons:null,
+      open: this.on('exp', id, (o || {}).d), rot: this.on('exp', id, (o || {}).d) ? '90deg' : '0deg', toggle: this.flip('exp', id) }, o || {});
+    const itemRow = (k) => { const it = ITEMS[k];
+      return gRow('mi.' + k, { key:k, label:it.t, dot:it.dot, meta:it.due, tag: it.pri === 'High' ? 'high' : '', tagBg:'var(--brand-soft)', tagInk:'var(--brand)',
+        blurb:'Stage ' + it.st + ' of 11 — ' + LOOP[it.st - 1] + '. ' + AGENTS[it.agent].name + ' is the agent of record.',
+        facts:[{ k:'plan ', v:it.plan }, { k:'domain ', v:it.dom }, { k:'rev ', v:it.rev }],
+        acts:[act('Inspect', this.peek({ k:'item', id:k }), 'primary'), act('Ask ' + AGENTS[it.agent].name.split(' ')[0], () => this.setState({ asking:true, query:'Take ' + k + ' to the next stage' }))] }); };
+    const runRow = (k) => { const r = RUNS[k], t = tagOf(r.dot);
+      return gRow('mr.' + k, { key:k, label:r.p, dot:r.dot, meta:r.el, tag:r.s, tagBg:t.bg, tagInk:t.ink, pulse: r.s === 'Running' ? 'animation:mPulse 1.6s infinite' : '',
+        blurb: AGENTS[r.agent].name + ' · ' + r.mode + ' mode · sponsored by ' + AGENTS[r.agent].sponsor + '. Closing the app never stops it.',
+        facts:[{ k:'started ', v:r.st }, { k:'target ', v:r.item }, { k:'band ', v:r.band.split(' ')[0] }],
+        acts:[act('Inspect', this.peek({ k:'run', id:k }), 'primary'), act('Cancel', () => this.toast('Cancelling is not closing — work so far is kept.'), 'danger')] }); };
+    const agentRow = (k) => { const a = AGENTS[k], t = tagOf(a.dot);
+      return gRow('ma.' + k, { label:a.name, dot:a.dot, meta:a.dept.split(' · ')[1], tag:a.status, tagBg:t.bg, tagInk:t.ink, pulse: a.status === 'Working' ? 'animation:mPulse 1.6s infinite' : '',
+        blurb:a.purpose, facts:[{ k:'modes ', v:a.modes }, { k:'runs ', v:String(a.runs) }, { k:'spend ', v:a.spend }],
+        acts:[act('Inspect', this.peek({ k:'agent', id:k }), 'primary'), act('Brief it', () => this.setState({ asking:true, query:'Brief ' + a.name + ' on ' })), act('Pause', () => this.toast(a.name + ' paused.'), 'danger')] }); };
+
+    if (PID === 'today') {
+      v.hasTiles = true; v.hasGroups = true;
+      v.greeting = 'Good afternoon, ' + R.name.split(' ')[0] + '.'; v.standing = R.greet;
+      const liveRuns = myRuns.filter(k => RUNS[k].s === 'Running');
+      v.tiles = [
+        { label:'Needs you', value:String(asks.length), meta: asks.length ? 'oldest ' + asks[asks.length - 1].age : 'all clear', dot: asks.length ? D.warn : D.ok, ink: asks.length ? 'var(--amber)' : 'var(--green)', pulse:'', go: () => this.toast(asks.length + ' waiting below.') },
+        { label:'Agents working', value:String(myAgents.filter(k => AGENTS[k].status === 'Working').length) + '/' + myAgents.length, meta:'your workforce', dot:D.run, ink:'var(--brand)', pulse:'animation:mPulse 1.7s infinite', go: this.goPage('agents') },
+        { label:'Runs in flight', value:String(liveRuns.length), meta: liveRuns.map(k => RUNS[k].el.split(' ')[0]).join(' · ') || 'none', dot:D.run, ink:'var(--brand)', pulse:'', go: this.goPage(R.pages.indexOf('runs') >= 0 ? 'runs' : 'agents') },
+        { label:'Domains', value:String(R.pages.length - 1), meta:R.domains, dot:D.info, ink:'var(--t1)', pulse:'', go: this.peek({ k:'scope', id:st.role }) }
+      ];
+      v.groups = [
+        gDef('mt.n', 'Needs you', asks.length ? asks.length + ' waiting' : 'nothing waiting', asks.length ? D.warn : D.ok,
+          asks.map(a => gRow('mn.' + a.id, { label:a.head, dot:a.dot, meta:a.age, tag:'decide', tagBg:'var(--amber-soft)', tagInk:'var(--amber)', blurb:a.body, facts:a.facts,
+            acts:[act('Approve', resolve(a, 'Approved'), 'primary'), act('Reject', resolve(a, 'Rejected'), 'danger'), act('Inspect', this.peek(a.sel))] })), true, asks.length ? '' : 'Nothing is waiting on you.'),
+        gDef('mt.a', 'My agents', myAgents.length + ' on your seat', D.run, myAgents.map(agentRow), true),
+        gDef('mt.r', 'In flight', 'closing won’t stop them', D.run, liveRuns.map(runRow), false, liveRuns.length ? '' : 'Nothing running.')
+      ];
+    } else if (PID === 'agents') {
+      if (tab === 'Roster') { v.hasGroups = true;
+        v.groups = [gDef('ag.m', 'On your seat', R.domains, D.run, myAgents.map(agentRow), true),
+          gDef('ag.s', 'Shared with you', 'sponsored elsewhere', D.idle, Object.keys(AGENTS).filter(k => myAgents.indexOf(k) < 0).slice(0, 3).map(agentRow), false, 'No shared agents.')];
+      } else if (tab === 'Runs') { v.hasGroups = true;
+        v.groups = [gDef('ag.r1', 'Running', 'live now', D.run, myRuns.filter(k => RUNS[k].s === 'Running').map(runRow), true),
+          gDef('ag.r2', 'Waiting on you', 'stopped by design', D.warn, myRuns.filter(k => RUNS[k].s !== 'Running' && RUNS[k].s !== 'Completed').map(runRow), true, 'Nothing held.'),
+          gDef('ag.r3', 'Finished', 'receipts kept', D.ok, myRuns.filter(k => RUNS[k].s === 'Completed').map(runRow), false)];
+      } else if (tab === 'Schedules') { v.hasPanels = true;
+        v.panels = [P('ms.1', 'Daily', '3 scheduled', [row('08:00 digest', 'Chief of Staff', { dot:D.ok }), row('09:00 reconcile', 'Ledger Analyst', { dot:D.ok }), row('17:30 file decisions', 'Archivist', { dot:D.ok })], { d:true, note:'Schedules run in the cloud whether or not anyone is signed in.' }),
+          P('ms.2', 'On an event', '2 triggers', [row('item enters Tests', 'run checks', { dot:D.run, sub:'needs no approval' }), row('SLA within 4h', 'propose resequence', { dot:D.warn, sub:'asks first' })], { d:true }),
+          P('ms.3', 'Automate', 'coming later', [], { lead:'Unattended chains are specified but switched off. Visible so you know they exist.' })];
+      } else { v.hasGroups = true;
+        v.groups = [gDef('ag.rc', 'Receipts', 'every action, in plain language', D.ok, myRuns.slice(0, 5).map(k => { const r = RUNS[k];
+          return gRow('mrc.' + k, { key:k, label:r.p, dot:r.dot, meta:r.st, blurb:'Receipt: ' + AGENTS[r.agent].name + ' ran in ' + r.mode + ' mode for ' + r.el + ', band ' + r.band + '.',
+            facts:[{ k:'target ', v:r.item }], acts:[act('Open', this.peek({ k:'run', id:k }), 'primary'), act('Export', () => this.toast('Exported — the export itself is recorded.'))] }); }), true)];
+      }
+    } else if (PID === 'work') {
+      if (tab === 'Items') { v.hasGroups = true;
+        const byStage = {};
+        myItems.forEach(k => { const s2 = ITEMS[k].st; (byStage[s2] = byStage[s2] || []).push(k); });
+        v.groups = Object.keys(byStage).sort((a, b) => b - a).map(s2 => gDef('mw.' + s2, LOOP[s2 - 1], byStage[s2].length + ' · stage ' + s2, byStage[s2].length >= 3 ? D.warn : D.run, byStage[s2].map(itemRow), true));
+      } else if (tab === 'Loop') { v.hasLoop = true; v.hasGroups = true;
+        const counts = LOOP.map((_, i) => myItems.filter(k => ITEMS[k].st === i + 1).length);
+        const busiest = counts.indexOf(Math.max.apply(null, counts));
+        v.loopSentence = 'Most items sit at ' + LOOP[busiest].toLowerCase() + ' — worker capacity, not a decision. Open a stage to see what is there.';
+        const NOTES = ['Requests arrive from you or a channel.', 'Reading only. No writes, no secrets.', 'What “done” means, approved.', 'Steps, deadline and budget.', 'An agent takes it, sponsored by a person.', 'Written on a branch, never main.', 'Checks run, receipt attached.', 'A person looks at it — agents stop here.', 'A proposal only; release grant off.', 'Watching it in the wild.', 'What was learned, recorded.'];
+        v.groups = LOOP.map((label, i) => { const n = i + 1, items = myItems.filter(k => ITEMS[k].st === n);
+          return gDef('mwl' + n, String(n).padStart(2, '0') + ' · ' + label, items.length ? items.length + ' here' : 'empty', items.length ? D.run : D.idle, items.map(itemRow), false, NOTES[i]); });
+      } else if (tab === 'Plans') { v.hasGroups = true;
+        const PL = [['PLAN-014', 'Release 1 — Founder desktop', '72%', '30 Sep', D.ok, 'on track'], ['PLAN-019', 'T2-1 interception hardening', '41%', '24 Sep', D.warn, 'at risk'], ['PLAN-022', 'Grants matrix v3', '12%', '18 Oct', D.idle, 'planning']];
+        v.groups = [gDef('mw.pl', 'Plans I can see', R.domains, D.ok, PL.map(p => { const t = tagOf(p[4]);
+          return gRow('mpl.' + p[0], { key:p[0], label:p[1], dot:p[4], meta:p[3], tag:p[5], tagBg:t.bg, tagInk:t.ink,
+            blurb:p[2] + ' of the accepted milestones are done. Acceptance is checked by a person, not the agent.',
+            facts:[{ k:'progress ', v:p[2] }, { k:'items ', v:String(myItems.filter(k => ITEMS[k].plan === p[0]).length) }],
+            acts:[act('Inspect', this.peek({ k:'plan', id:p[0] }), 'primary')] }); }), true)];
+      } else { v.hasGroups = true;
+        v.groups = [gDef('mw.wk', 'Knowledge pages', 'written at stage 11, never before', D.ok, [
+          gRow('mwk.1', { label:'How the eleven-stage loop works', dot:D.ok, meta:'v3', blurb:'The canonical description of request → retained knowledge, with what each stage may and may not do.', facts:[{ k:'domain ', v:'B11' }], acts:[act('Open', this.peek({ k:'rec', id:'DEC-0033' }), 'primary')] }),
+          gRow('mwk.2', { label:'Why agents stop at review', dot:D.ok, meta:'v2', blurb:'Stage 8 is a person by design. No instruction, prompt or setting moves it.', facts:[{ k:'domain ', v:'P10' }], acts:[act('Open', this.peek({ k:'rec', id:'DEC-0024' }), 'primary')] })
+        ], true)];
+      }
+    } else if (PID === 'runs') {
+      const byS = { Running:['Running'], Waiting:['Held', 'Waiting on you'], Completed:['Completed'], Failed:['Failed'] };
+      const ks = myRuns.filter(k => (byS[tab] || byS.Running).indexOf(RUNS[k].s) >= 0);
+      v.hasGroups = true;
+      v.groups = [gDef('mrn.' + tab, tab, ks.length + ' run' + (ks.length === 1 ? '' : 's'), ks.length ? RUNS[ks[0]].dot : D.idle, ks.map(runRow), true, ks.length ? '' : 'No runs in this state.')];
+      if (tab === 'Failed' || tab === 'Waiting') v.groups.push(gDef('mrn.rec', 'Recovery policy', 'what happens without you', D.info, [
+        gRow('mrp.1', { label:'Retry once, then escalate', dot:D.ok, meta:'default', blurb:'A transient failure is retried once. A second failure stops the run and asks a person — it never loops.', facts:[{ k:'domain ', v:'P04' }], acts:[act('Change policy', () => this.toast('Recovery policy is a ceiling — changes are recorded.'))] })], true));
+    } else if (PID === 'pipeline') {
+      const OPP = { 'OPP-114':['Acme Corp', 'Proposal', D.warn, 'Security questionnaire outstanding'], 'OPP-118':['Northwind', 'Contract', D.run, 'Redlines returned, awaiting signature'], 'OPP-121':['Baseline Health', 'Enquiry', D.idle, 'Discovery call booked Thursday'] };
+      if (tab === 'Opportunities') { v.hasTiles = true; v.hasGroups = true;
+        v.tiles = [{ label:'Open pipeline', value:'9', meta:'4 stages', dot:D.run, ink:'var(--brand)', pulse:'', go: () => this.toast('Nine open opportunities.') },
+          { label:'Closing this week', value:'3', meta:'2 need you', dot:D.warn, ink:'var(--amber)', pulse:'', go: this.peek({ k:'opp', id:'OPP-114' }) },
+          { label:'Drafts waiting', value:'1', meta:'Pipeline Assistant', dot:D.warn, ink:'var(--amber)', pulse:'', go: this.peek({ k:'agent', id:'pipe' }) },
+          { label:'Consent on file', value:'11', meta:'B04 · no gaps', dot:D.ok, ink:'var(--green)', pulse:'', go: () => this.toast('Every contactable record has consent recorded.') }];
+        v.groups = [gDef('mp.o', 'Opportunities', 'B05', D.run, Object.keys(OPP).map(k => { const o = OPP[k], t = tagOf(o[2]);
+          return gRow('mop.' + k, { key:k, label:o[0], dot:o[2], meta:o[1], tag:o[1], tagBg:t.bg, tagInk:t.ink, blurb:o[3],
+            facts:[{ k:'stage ', v:o[1] }, { k:'agent ', v:'Pipeline Assistant' }],
+            acts:[act('Inspect', this.peek({ k:'opp', id:k }), 'primary'), act('Ask for a follow-up', () => this.setState({ asking:true, query:'Draft a follow-up for ' + o[0] }))] }); }), true)];
+      } else if (tab === 'Proposals') { v.hasGroups = true;
+        v.groups = [gDef('mp.p', 'Proposals', 'drafted by agent, sent by you', D.warn, [
+          gRow('mpp.1', { key:'PRO-0044', label:'Acme Corp — platform pilot', dot:D.warn, meta:'draft', tag:'needs you', tagBg:'var(--amber-soft)', tagInk:'var(--amber)',
+            blurb:'The agent answered the security questionnaire from approved knowledge only. Nothing sends until you approve the wording.', facts:[{ k:'value ', v:'medium band' }],
+            acts:[act('Approve and send', () => this.toast('Sent. A copy is filed with your approval.'), 'primary'), act('Reject', () => this.toast('Rejected — the agent will ask what to change.'), 'danger')] })], true)];
+      } else { v.hasGroups = true;
+        v.groups = [gDef('mp.s', 'Support tickets', 'B10', D.run, [gRow('msu.1', { key:'TCK-0182', label:'Interception behaviour before policy resolution', dot:D.run, meta:'09:12', tag:'open', tagBg:'var(--brand-soft)', tagInk:'var(--brand)',
+          blurb:'Linked to CCO-245. The customer wants the fix confirmed by test, not by description.', facts:[{ k:'channel ', v:'in-app' }],
+          acts:[act('Open linked item', this.peek({ k:'item', id:'CCO-245' }), 'primary')] })], true)];
+      }
+    } else if (PID === 'people') {
+      if (tab === 'Seats' || tab === 'Directory') { v.hasMatrix = true; }
+      else if (tab === 'Capacity') { v.hasPanels = true;
+        v.panels = [P('mc.1', 'Human capacity', 'this week', [row('Platform', '3 people · 2 on call', { dot:D.ok }), row('Revenue', '2 people', { dot:D.ok }), row('Operations', '2 · 1 on leave', { dot:D.warn })], { d:true }),
+          P('mc.2', 'Agent capacity', 'the real constraint', [row('Hermes workers', '8 of 8 busy', { dot:D.warn, sub:'nine checks queued' }), row('Allowance today', '112 of 184', { dot:D.ok })], { d:true, buttons:[act('Inspect Hermes', this.peek({ k:'health', id:'hermes' }), 'primary')] })];
+      } else { v.hasGroups = true;
+        v.groups = [gDef('mpe.o', 'Onboarding', 'B03 · run by People Coordinator', D.warn, [gRow('mon.1', { label:'Two starters, Monday 22 Sep', dot:D.warn, meta:'B03', tag:'in progress', tagBg:'var(--amber-soft)', tagInk:'var(--amber)',
+          blurb:'Checklists drafted, accounts requested, hardware pending. The agent never issues a seat — the owner does.', facts:[{ k:'checklist ', v:'9 of 14' }],
+          acts:[act('Open agent', this.peek({ k:'agent', id:'people' }), 'primary')] })], true)];
+      }
+    } else if (PID === 'money') {
+      if (tab === 'Receivables' || tab === 'Payables') { v.hasTiles = true; v.hasGroups = true;
+        const ar = tab === 'Receivables';
+        v.tiles = [{ label: ar ? 'Outstanding' : 'Due this week', value: ar ? '8' : '11', meta: ar ? '2 overdue 30+' : 'PAY-0091', dot:D.warn, ink:'var(--amber)', pulse:'', go: this.peek({ k:'agent', id:'ledger' }) },
+          { label:'Reconciled', value:'94%', meta:'by Ledger Analyst', dot:D.ok, ink:'var(--green)', pulse:'', go: this.peek({ k:'agent', id:'ledger' }) },
+          { label:'Needs signatory', value:'1', meta:'B14 · treasury', dot:D.bad, ink:'var(--red)', pulse:'', go: this.peek({ k:'grants', id:'repo' }) },
+          { label:'Variance', value:'−2.4%', meta:'within tolerance', dot:D.ok, ink:'var(--t1)', pulse:'', go: () => this.toast('Inside the agreed tolerance.') }];
+        v.groups = [gDef('mm.1', ar ? 'Receivables' : 'Payables', 'B13–B14', D.warn, [gRow('mmo.1', { key: ar ? 'INV-0312' : 'PAY-0091', label: ar ? 'Acme Corp — September usage' : 'Supplier payment run', dot:D.warn, meta: ar ? '34 days' : '11 items',
+          tag: ar ? 'overdue' : 'needs signatory', tagBg:'var(--amber-soft)', tagInk:'var(--amber)',
+          blurb: ar ? 'Two reminders sent by the agent. A third needs your wording.' : 'Reconciled cleanly. Treasury needs a designated authority and reauthentication.',
+          facts:[{ k:'agent ', v:'Ledger Analyst' }, { k:'band ', v:'low' }],
+          acts: ar ? [act('Draft a reminder', () => this.toast('Reminder drafted for your approval.'), 'primary')] : [act('Sign and release', () => this.toast('Confirm it’s you — treasury needs reauthentication.'), 'primary'), act('Reject', () => this.toast('Rejected — the batch returns to the agent.'), 'danger')] })], true)];
+      } else if (tab === 'Budgets') { v.hasPanels = true;
+        v.panels = [P('mb.1', 'Budgets', 'B13 · read from the source', [row('Platform', '−2.4%', { dot:D.ok }), row('Revenue', '+1.1%', { dot:D.ok }), row('Operations', '−6.8%', { dot:D.warn, sub:'fuel and subcontractor cost' })], { d:true, note:'Papership never becomes the ledger. It reads, reasons and drafts.' })];
+      } else { v.hasPanels = true;
+        v.panels = [P('mpr.1', 'Procurement', 'B15', [row('Active subscriptions', '12', { dot:D.ok }), row('Renewing in 30 days', '2', { dot:D.warn, sub:'usage summaries drafted' })], { d:true })];
+      }
+    } else if (PID === 'ops') {
+      if (tab === 'Queues') { v.hasTiles = true; v.hasGroups = true;
+        v.tiles = [{ label:'Breaching in 4h', value:'2', meta:'WO-441, WO-447', dot:D.bad, ink:'var(--red)', pulse:'animation:mPulse 1.6s infinite', go: this.peek({ k:'agent', id:'dispatch' }) },
+          { label:'Today', value:'9', meta:'7 on schedule', dot:D.run, ink:'var(--brand)', pulse:'', go: () => this.toast('Nine orders today.') },
+          { label:'First-time fix', value:'88%', meta:'B21', dot:D.ok, ink:'var(--green)', pulse:'', go: () => this.toast('Last 30 days.') },
+          { label:'Below reorder', value:'1', meta:'B19', dot:D.warn, ink:'var(--amber)', pulse:'', go: () => this.toast('One line below its reorder point.') }];
+        v.groups = [gDef('mo.q', 'Work orders', 'B09 · sequenced against SLA', D.bad, [
+          gRow('mwo.1', { key:'WO-441', label:'Harbour Freight — quarterly service', dot:D.bad, meta:'4h', tag:'breaching', tagBg:'var(--red-soft)', tagInk:'var(--red)',
+            blurb:'Dispatch Coordinator proposes resequencing the afternoon route. It needs your call because it moves a committed appointment.', facts:[{ k:'sla ', v:'4h left' }],
+            acts:[act('Approve resequence', () => this.toast('Route resequenced. The customer is notified with your wording.'), 'primary'), act('Keep as is', () => this.toast('Kept. The breach is recorded.'), 'danger')] }),
+          gRow('mwo.2', { key:'WO-447', label:'Baseline Health — install', dot:D.warn, meta:'6h', tag:'at risk', tagBg:'var(--amber-soft)', tagInk:'var(--amber)', blurb:'Parts arrived late. The agent has already offered the customer two windows.', facts:[{ k:'sla ', v:'6h left' }], acts:[act('Inspect', this.peek({ k:'agent', id:'dispatch' }), 'primary')] })], true)];
+      } else if (tab === 'SOPs') { v.hasPanels = true;
+        v.panels = [P('mso.1', 'Standard procedures', 'what the agent follows', [row('Site visit', 'v4 · 11 steps', { dot:D.ok }), row('Return to base', 'v2 · 6 steps', { dot:D.ok }), row('Escalate a breach', 'v3', { dot:D.ok, sub:'always ends with a person' })], { d:true, note:'A procedure is a ceiling. The agent may do less, never more.' })];
+      } else if (tab === 'Inventory') { v.hasPanels = true;
+        v.panels = [P('min.1', 'Stock', 'B19', [row('Below reorder', '1 line', { dot:D.warn, sub:'agent drafted a purchase order' }), row('Healthy', '18 lines', { dot:D.ok }), row('Assets in field', '7', { dot:D.ok })], { d:true })];
+      } else { v.hasPanels = true;
+        v.panels = [P('mq.1', 'Quality', 'B21', [row('First-time fix', '88%', { dot:D.ok }), row('Rework', '4 jobs', { dot:D.warn }), row('Inspections due', '2', { dot:D.warn })], { d:true })];
+      }
+    } else if (PID === 'inbox') { v.hasGroups = true;
+      const TH = [['TCK-0182', 'Interception behaviour before policy resolution', 'in-app', '09:12', D.run, 'open'], ['TCK-0181', 'Worker pool ceiling during checks', 'in-app', '08:40', D.warn, 'escalated'], ['TCK-0179', 'Vendor documentation allow-list', 'email', 'Yesterday', D.warn, 'waiting']];
+      const want = tab === 'Mine' ? TH.slice(0, 2) : TH;
+      v.groups = [gDef('mib.' + tab, tab, 'B12 · ticketed, never a raw mailbox', D.run, want.map(t => { const g = tagOf(t[4]);
+        return gRow('mib.' + t[0], { key:t[0], label:t[1], dot:t[4], meta:t[3], tag:t[5], tagBg:g.bg, tagInk:g.ink,
+          blurb:'Channel: ' + t[2] + '. The agent drafts replies; a person sends them.', facts:[{ k:'channel ', v:t[2] }, { k:'assignee ', v:R.name }],
+          acts:[act('Draft a reply', () => this.setState({ asking:true, query:'Draft a reply to ' + t[0] }), 'primary'), act('Inspect', this.peek({ k:'ticket', id:t[0] }))] }); }), true)];
+    } else if (PID === 'knowledge') { v.hasGroups = true;
+      const REC = { Decisions:[['DEC-0031', 'Close never cancels cloud work', '09 Sep · v1', D.ok], ['DEC-0033', 'Interception runs before policy resolution', '09 Sep · v2', D.ok], ['DEC-0024', 'Instructions are not a security boundary', '28 Aug · v3', D.ok]],
+        Memory:[['mem_00184', 'The bound repository is GitHub · Papership', 'source · verified 2m ago', D.run], ['mem_00201', 'The Hermes pool ceiling is eight workers', 'source · 30 d', D.run], ['mem_00133', 'Vendor docs usually sit behind a sign-in', 'inferred · unverified', D.warn]],
+        Documents:[['doc_00412', 'Loop note — CCO-245 interception', 'v3 · 18 KB', D.ok], ['doc_00398', 'Specification v4 — interception', 'approved', D.ok]],
+        Policies:[['POL-0009', 'Retention — conversations 365 days', 'active', D.ok], ['POL-0012', 'Web research allow-list', 'v12 · 14 domains', D.run]] };
+      v.groups = [gDef('mkn.' + tab, tab, 'B11, P09, P13 · everything has provenance', D.ok, (REC[tab] || REC.Decisions).map(x => gRow('mkn.' + x[0], {
+        key:x[0], label:x[1], dot:x[3], tag: x[2].indexOf('inferred') >= 0 ? 'inferred' : '', tagBg:'var(--amber-soft)', tagInk:'var(--amber)',
+        blurb:'Owner ' + R.name + ' · ' + x[2] + '. Anything inferred is labelled as inferred, never presented as fact.', facts:[{ k:'state ', v:x[2] }],
+        acts:[act('Inspect', this.peek({ k:'rec', id:x[0] }), 'primary'), act('Correct', () => this.toast('Correction recorded as a new version.')), act('Restrict', () => this.toast('Restricted — agents can no longer read this.'), 'danger')] })), true)];
+    } else if (PID === 'systems') {
+      if (tab === 'Health') { v.hasTiles = true; v.hasGroups = true;
+        const H = [['api', 'API', 'Healthy', 'p95 142 ms', D.ok], ['hermes', 'Hermes', 'Degraded', '8/8 busy · 9 q', D.warn], ['db', 'Database', 'Healthy', 'lag 0.4 s', D.ok], ['repo', 'Repository', 'Healthy', 'GitHub', D.ok]];
+        v.tiles = H.map(h => ({ label:h[1], value:h[2], meta:h[3], dot:h[4], ink: h[4] === D.ok ? 'var(--green)' : 'var(--amber)', pulse:'', go: this.peek({ k:'health', id:h[0] }) }));
+        v.groups = [gDef('msy.h', 'Incidents', 'P18 · one open', D.warn, [gRow('msy.i', { label:'Hermes worker pool at its ceiling', dot:D.warn, meta:'11:20', tag:'open', tagBg:'var(--amber-soft)', tagInk:'var(--amber)',
+          blurb:'Concurrent check runs exceed the pool ceiling, so stage 7 queues for up to nine minutes. Raise the ceiling, or serialise checks per item.', facts:[{ k:'affects ', v:'CCO-244, CCO-247' }],
+          acts:[act('Ask for a fix plan', () => this.setState({ asking:true, query:'Plan a fix for the Hermes worker pool ceiling' }), 'primary'), act('Inspect', this.peek({ k:'health', id:'hermes' }))] })], true)];
+      } else if (tab === 'Connections') { v.hasGroups = true;
+        v.groups = [gDef('msy.c', 'Connections', 'P06 · what Papership can reach', D.ok, Object.keys(CONNS).map(k => { const c = CONNS[k], g = tagOf(c.dot);
+          return gRow('msc.' + k, { label:c.n, dot:c.dot, meta:c.v, tag:c.s, tagBg:g.bg, tagInk:g.ink, blurb:c.says, facts:[{ k:'kind ', v:c.k }],
+            acts: k === 'vercel' ? [act('Reconnect', () => this.toast('Opening your browser to authorise on Vercel’s own site.'), 'primary')]
+              : c.s === 'Not set up' ? [act('Set up', () => this.toast('Set-up runs in your browser, on the provider’s own site.'), 'primary')]
+              : [act('Test', () => this.toast('Tested — responded in 142 ms.'), 'primary'), act('Inspect', this.peek({ k:'conn', id:k })), act('Revoke', () => this.toast('Revoked. Runs that need it pause.'), 'danger')] }); }), true)];
+      } else if (tab === 'Registry') { v.hasRegistry = true;
+        const RB = ['Strategy', 'Org structure', 'People & HR', 'CRM', 'Sales', 'Plans', 'Priorities', 'Dev loop', 'Operations', 'Support', 'Knowledge', 'Comms', 'Finance', 'Treasury', 'Procurement', 'Marketing', 'Legal & risk', 'IT & access', 'Inventory', 'Field work', 'Quality', 'Research', 'Guests', 'Sector packs'];
+        const RP = ['Agents', 'Identity', 'Assistant', 'Runs', 'Durable jobs', 'Registry', 'Sync', 'Metrics', 'Memory', 'Grants', 'Retention', 'Secrets', 'Audit', 'Outcomes', 'Usage', 'Desktop shell', 'Adaptive views', 'Health', 'Connector SDK'];
+        const WB = [5, 6, 7, 10], CB = [0, 16], UB = [11], WP = [0, 1, 2, 3, 4, 5, 9, 12, 15, 17], CP = [6, 10, 14];
+        const paint = (s2) => s2 === 'working' ? { bg:'var(--green-soft)', bd:'var(--green)', ink:'var(--t1)', codeInk:'var(--green)' }
+          : s2 === 'configured' ? { bg:'var(--brand-soft)', bd:'var(--brand)', ink:'var(--t1)', codeInk:'var(--brand)' }
+          : s2 === 'unavailable' ? { bg:'var(--red-soft)', bd:'var(--red)', ink:'var(--t1)', codeInk:'var(--red)' }
+          : { bg:'transparent', bd:'var(--line2)', ink:'var(--t3)', codeInk:'var(--t3)' };
+        const cell = (pfx, i, short, w, c2, u) => { const s2 = w.indexOf(i) >= 0 ? 'working' : c2.indexOf(i) >= 0 ? 'configured' : u.indexOf(i) >= 0 ? 'unavailable' : 'planned';
+          const code = pfx + String(i + 1).padStart(2, '0');
+          return Object.assign({ code, short, s:s2, go: this.peek({ k:'reg', id:code, short, state:s2 }) }, paint(s2)); };
+        const bC = RB.map((l, i) => cell('B', i, l, WB, CB, UB)), pC = RP.map((l, i) => cell('P', i, l, WP, CP, []));
+        const filt = this.subOf('reg', 'All'), keep = (c2) => filt === 'All' || c2.s === filt.toLowerCase();
+        v.regBlocks = [{ title:'Business · B01–B24', cells: bC.filter(keep) }, { title:'Platform · P01–P19', cells: pC.filter(keep) }];
+        const all = bC.concat(pC), cnt = (s2) => String(all.filter(c2 => c2.s === s2).length);
+        v.regFilters = [['All', '', String(all.length)], ['Working', D.ok, cnt('working')], ['Configured', D.run, cnt('configured')], ['Planned', D.idle, cnt('planned')], ['Unavailable', D.bad, cnt('unavailable')]]
+          .map(f => ({ label:f[0], dot:f[1], n:f[2], go:this.setSub('reg', f[0]), bg: filt === f[0] ? 'var(--brand-soft)' : 'var(--surface)', bd: filt === f[0] ? 'var(--brand)' : 'var(--line)', ink: filt === f[0] ? 'var(--brand)' : 'var(--t2)' }));
+      } else { v.hasPanels = true;
+        const g = st.grants;
+        const flipG = (key) => () => { const nx = !g[key]; this.setState(s => ({ grants: Object.assign({}, s.grants, { [key]:nx }) }));
+          this.toast(nx && key === 'release' ? 'Release needs a designated authority to confirm it’s you.' : (nx ? 'Grant turned on — recorded with your name.' : 'Grant turned off.')); };
+        v.panels = [P('mgr.1', 'Repository grants', (g.branch ? 1 : 0) + (g.change ? 1 : 0) + (g.check ? 1 : 0) + (g.release ? 1 : 0) + ' of 4 on', [
+            swRow('Branch', g.branch, 'Create and update branches.', flipG('branch')), swRow('Change', g.change, 'Isolated change. Never on main.', flipG('change')),
+            swRow('Check', g.check, 'Run checks and read results.', flipG('check')), swRow('Release', g.release, 'Off by default.', flipG('release'))
+          ], { d:true, note:'Grants are enforced in the runtime. No instruction can widen them.' }),
+          P('mgr.2', 'Treasury · B14', 'reauth required', [row('Draft a payment', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('Release a payment', 'authority only', { dot:D.bad, vInk:'var(--red)' })]),
+          P('mgr.3', 'Web research · P06', '14 domains', [row('Read approved domains', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('Read anything else', 'asks first', { dot:D.warn, vInk:'var(--amber)' }), row('Write anywhere', 'refused', { dot:D.bad, vInk:'var(--red)' })])];
+      }
+    } else if (PID === 'settings') {
+      if (tab === 'Directory') { v.hasMatrix = true; }
+      else if (tab === 'Account') { v.hasPanels = true;
+        v.panels = [P('mac.1', 'Profile', R.code, [row('Name', R.name, { vFont:'400 11px ' + IN }), row('Seat', R.title, { vFont:'400 11px ' + IN }), row('Email', R.name.toLowerCase().split(' ')[0] + '@enginelabs.com.au'), row('Timezone', 'Australia/Sydney')], { d:true, buttons:[act('Sign in as another role', () => this.setState({ sheet:'roles' }), 'primary'), act('Sign out', () => this.toast('Signed out. Cloud work continues.'), 'danger')] }),
+          P('mac.2', 'Sessions & security', '2 active', [row('This device', 'Sydney · now', { dot:D.ok }), row('Desktop app', 'Sydney · 08:02', { dot:D.ok }), row('Two-factor', 'authenticator app', { dot:D.ok }), row('Secrets on device', 'none', { dot:D.ok })], { buttons:[act('Sign out everywhere', () => this.toast('All other sessions ended.'), 'danger')] }),
+          P('mac.3', 'Cookies', '2 on', [row('Essential', 'always on', { dot:D.ok }), swRow('Analytics', true, 'Anonymous first-party events only.', () => this.toast('Saved.')), swRow('Marketing', false, 'Not used.', () => this.toast('Marketing cookies stay off.'))])];
+      } else if (tab === 'Seat') { v.hasPanels = true;
+        v.panels = [P('mse.1', 'What this seat may see', R.domains, R.pages.map(p => row(PAGES[p].label, PAGES[p].meta.split(' · ')[0], { dot:D.ok, cursor:'pointer', go:this.goPage(p), vFont:'400 10px ' + M })), { d:true, note:'Pages appear because the seat owns the domain behind them.' }),
+          P('mse.2', 'What this seat may not', 'refused by the runtime', Object.keys(PAGES).filter(p => R.pages.indexOf(p) < 0).map(p => row(PAGES[p].label, 'not in scope', { dot:D.bad, vInk:'var(--red)' })), { d: R.pages.length < 12, note: R.pages.length === 12 ? 'The owner seat sees everything.' : 'A title outside your scope is never shown.' }),
+          P('mse.3', 'Agent of record', R.agent, [row('Agent', R.agent, { dot:D.run, cursor:'pointer', go:this.peek({ k:'agent', id: myAgents[0] }), vFont:'400 11px ' + IN }), row('Acts as', 'you — never more', { vFont:'400 11px ' + IN })])];
+      } else if (tab === 'Ceilings') { v.hasPanels = true;
+        v.panels = [P('mce.1', 'Ceilings', 'medium band', [row('Budget band', 'Medium'), row('Allowance per day', '184'), row('Automate', 'coming later', { sub:'Off until Release 3.' }), row('Escalate after', '2 failed attempts')], { d:true }),
+          P('mce.2', 'Per agent', myAgents.length + ' agents', myAgents.map(k => row(AGENTS[k].name, AGENTS[k].spend, { dot:AGENTS[k].dot, cursor:'pointer', go:this.peek({ k:'agent', id:k }) })), { d:true })];
+      } else if (tab === 'Notifications') { v.hasPanels = true;
+        v.panels = [P('mno.1', 'What reaches you', '', [swRow('Approvals', st.prefs.approvals, 'Immediately, every time.', () => this.setState(s => ({ prefs: Object.assign({}, s.prefs, { approvals: !s.prefs.approvals }) }))),
+          swRow('Daily digest', st.prefs.digest, 'One summary at 08:00 from ' + R.agent + '.', () => this.setState(s => ({ prefs: Object.assign({}, s.prefs, { digest: !s.prefs.digest }) }))),
+          swRow('Deployments', st.prefs.deploys, 'Off — deployment status is noisy.', () => this.setState(s => ({ prefs: Object.assign({}, s.prefs, { deploys: !s.prefs.deploys }) })))], { d:true })];
+      } else if (tab === 'Retention') { v.hasPanels = true;
+        v.panels = [P('mre.1', 'Data & retention', 'your content is yours', [row('Conversations', '365 days'), row('Logs', '30 days'), row('Approved knowledge', 'until superseded'), row('Usage disclosure', 'anonymous only')], { d:true, buttons:[act('Export everything', () => this.toast('Export queued.'), 'primary'), act('Request erasure', () => this.toast('Erasure needs three confirmations — that was the first.'), 'danger')] })];
+      } else if (tab === 'Plan') { v.hasPanels = true;
+        v.panels = [P('mpl.1', 'Plan', 'not priced', [row('Allowance', '184 per day'), row('Used today', '112'), row('Seats issued', String(Object.keys(ROLES).length)), row('Commercial terms', 'pending')], { d:true, note:'Usage is an allowance count, not a price.' })];
+      } else { v.hasPanels = true;
+        v.panels = [P('map.1', 'Appearance', theme, [
+          row('Light — ivory', theme === 'light' ? 'on' : '', { dot: theme === 'light' ? D.run : D.idle, cursor:'pointer', go: () => this.setState({ theme:'light' }) }),
+          row('Dark — near-black purple', theme === 'dark' ? 'on' : '', { dot: theme === 'dark' ? D.run : D.idle, cursor:'pointer', go: () => this.setState({ theme:'dark' }) }),
+          row('Dimmed — slate', theme === 'dimmed' ? 'on' : '', { dot: theme === 'dimmed' ? D.run : D.idle, cursor:'pointer', go: () => this.setState({ theme:'dimmed' }) })
+        ], { d:true, note:'Density follows what you open, not a setting.' })];
+      }
+    }
+
+    v.matrix = Object.keys(ROLES).map(k => { const r = ROLES[k];
+      return { title:r.title, name:r.name, initials:r.initials, av:r.av, domains:r.domains, pageN:String(r.pages.length),
+        dot: k === st.role ? D.run : D.ok, go: this.peek({ k:'seat', id:k }) }; });
+
+    const IT = st.inspTab, ins = st.insp;
+    v.inspTabs = ['Detail', 'Related', 'Authority'].map(t => ({ label:t, go: () => this.setState({ inspTab:t }),
+      bg: IT === t ? 'var(--brand-soft)' : 'transparent', ink: IT === t ? 'var(--brand)' : 'var(--t3)', fw: IT === t ? '600' : '500' }));
+    const IG = (id, label, meta, rows, d, o) => Object.assign({ label, meta, rows, lead:'', buttons:null,
+      open: this.on('exp', 'mg.' + id, d), rot: this.on('exp', 'mg.' + id, d) ? '90deg' : '0deg', toggle: this.flip('exp', 'mg.' + id) }, o || {});
+    v.inspGroups = []; v.inspActions = null; v.inspBody = ''; v.inspTitle = ''; v.inspMeta = ''; v.inspDot = D.idle;
+    if (ins) {
+      const K = ins.k;
+      if (K === 'agent') { const a = AGENTS[ins.id];
+        v.inspTitle = a.name; v.inspMeta = a.dept + ' · ' + a.status; v.inspDot = a.dot; v.inspBody = a.purpose;
+        v.inspActions = [act('Brief it', () => this.setState({ asking:true, query:'Brief ' + a.name + ' on ', sheet:null }), 'primary'), act('Pause', () => this.toast(a.name + ' paused.'), 'danger')];
+        v.inspGroups = IT === 'Detail' ? [IG('a1', 'Identity', '', [row('Sponsor', a.sponsor, { vFont:'400 11px ' + IN }), row('Model band', a.model), row('Modes', a.modes, { vFont:'400 10px ' + IN }), row('Domain', a.dept.split(' · ')[1])], true),
+            IG('a2', 'Budget', a.spend, [row('Allowance used', a.spend), row('Runs today', String(a.runs))], true)]
+          : IT === 'Related' ? [IG('a3', 'Runs', '', Object.keys(RUNS).filter(k => RUNS[k].agent === ins.id).map(k => link(k, RUNS[k].s.toLowerCase(), { k:'run', id:k }, { dot:RUNS[k].dot })), true),
+              IG('a4', 'Items it touches', '', Object.keys(ITEMS).filter(k => ITEMS[k].agent === ins.id).slice(0, 4).map(k => link(k, ITEMS[k].s.toLowerCase(), { k:'item', id:k }, { dot:ITEMS[k].dot })), true)]
+          : [IG('a5', 'What it may do', '', [row('Read in scope', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('Propose', 'allowed', { dot:D.ok, vInk:'var(--green)' }),
+              row('Act in scope', a.modes.indexOf('Execute') >= 0 ? 'allowed' : 'refused', { dot: a.modes.indexOf('Execute') >= 0 ? D.ok : D.bad, vInk: a.modes.indexOf('Execute') >= 0 ? 'var(--green)' : 'var(--red)' }),
+              row('Widen its own scope', 'impossible', { dot:D.bad, vInk:'var(--red)', sub:'grants live in the runtime' })], true, { buttons:[act('Open grants', this.peek({ k:'grants', id:'repo' }), 'primary')] })];
+      } else if (K === 'item') { const it = ITEMS[ins.id];
+        v.inspTitle = ins.id; v.inspMeta = it.plan + ' · stage ' + it.st + '/11 · ' + it.dom; v.inspDot = it.dot; v.inspBody = it.t;
+        v.inspActions = [act('Ask ' + AGENTS[it.agent].name.split(' ')[0], () => this.setState({ asking:true, query:'Take ' + ins.id + ' to the next stage', sheet:null }), 'primary')];
+        v.inspGroups = IT === 'Detail' ? [IG('i1', 'Identity', '', [row('Key', ins.id), row('Status', it.s, { dot:it.dot, vFont:'400 11px ' + IN }), row('Priority', it.pri, { vFont:'400 11px ' + IN }), row('Due', it.due)], true),
+            IG('i2', 'Loop position', LOOP[it.st - 1], LOOP.slice(Math.max(0, it.st - 2), it.st + 2).map((l, i) => { const n = Math.max(0, it.st - 2) + i + 1;
+              return row(String(n).padStart(2, '0') + ' · ' + l, n < it.st ? 'done' : n === it.st ? 'here' : 'ahead', { dot: n < it.st ? D.ok : n === it.st ? D.run : D.idle, vInk: n === it.st ? 'var(--brand)' : 'var(--t3)' }); }), true),
+            IG('i3', 'Source', '', [row('Branch', it.br), row('Revision', it.rev)], false)]
+          : IT === 'Related' ? [IG('i4', 'Runs', '', Object.keys(RUNS).filter(k => RUNS[k].item === ins.id).map(k => link(k, RUNS[k].s.toLowerCase(), { k:'run', id:k }, { dot:RUNS[k].dot })), true),
+              IG('i5', 'Agent', '', [link(AGENTS[it.agent].name, AGENTS[it.agent].status.toLowerCase(), { k:'agent', id:it.agent }, { dot:AGENTS[it.agent].dot, vFont:'400 10px ' + IN })], true),
+              IG('i6', 'Plan', '', [link(it.plan, 'open', { k:'plan', id:it.plan }, { dot:D.ok })], true)]
+          : [IG('i7', 'Grants used', '3 of 4', [row('branch', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('change', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('check', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('release', 'refused', { dot:D.bad, vInk:'var(--red)' })], true)];
+      } else if (K === 'run') { const r = RUNS[ins.id];
+        v.inspTitle = ins.id; v.inspMeta = r.s + ' · ' + r.el + ' · ' + r.mode; v.inspDot = r.dot; v.inspBody = r.p;
+        v.inspActions = [act('Pause', () => this.toast('Run paused. Nothing is lost.'), 'primary'), act('Cancel', () => this.toast('Cancelling is not closing — work so far is kept.'), 'danger')];
+        v.inspGroups = IT === 'Detail' ? [IG('r1', 'Run', '', [row('Mode', r.mode, { vFont:'400 11px ' + IN }), row('Started', r.st), row('Elapsed', r.el), row('Progress', r.pct), row('Cost band', r.band, { vFont:'400 10px ' + IN })], true),
+            IG('r2', 'Checkpoints', '4 of 6', [row('scope', '14:29:04', { dot:D.ok }), row('read', '14:29:51', { dot:D.ok }), row('change', '14:33:12', { dot:D.ok }), row('checks', '14:37:40', { dot:D.ok, sub:'retried once' }), row('approval', 'waiting', { dot:D.warn })], true),
+            IG('r3', 'Tool calls', '7 · 2 writes', [row('repo.readFile', '×3', { dot:D.ok }), row('repo.writeChange', '1', { dot:D.ok }), row('repo.runChecks', '2', { dot:D.warn }), row('repo.openPullRequest', 'blocked', { dot:D.warn, vInk:'var(--amber)' }), row('repo.publishRelease', 'refused', { dot:D.bad, vInk:'var(--red)' })], false)]
+          : IT === 'Related' ? [IG('r4', 'Agent', '', [link(AGENTS[r.agent].name, AGENTS[r.agent].status.toLowerCase(), { k:'agent', id:r.agent }, { dot:AGENTS[r.agent].dot, vFont:'400 10px ' + IN })], true),
+              IG('r5', 'Target', '', [link(r.item, 'work item', { k:'item', id: ITEMS[r.item] ? r.item : 'CCO-245' }, { dot:D.run })], true)]
+          : [IG('r6', 'Scope of this run', '', [row('Sponsor', AGENTS[r.agent].sponsor, { vFont:'400 11px ' + IN }), row('Acting as', 'the sponsor — never more', { vFont:'400 10px ' + IN }), row('May release', 'refused', { dot:D.bad, vInk:'var(--red)' })], true, { lead:'A run inherits its sponsor’s authority when it starts, and cannot gain more while it runs.' })];
+      } else if (K === 'seat') { const r = ROLES[ins.id];
+        v.inspTitle = r.title; v.inspMeta = r.name + ' · ' + r.code; v.inspDot = ins.id === st.role ? D.run : D.ok;
+        v.inspBody = 'Owns ' + r.domains + '. ' + r.pages.length + ' pages. Agent of record: ' + r.agent + '.';
+        v.inspActions = [act(ins.id === st.role ? 'This is you' : 'Sign in as', ins.id === st.role ? (() => this.toast('You already hold this seat.')) : (() => { this.setState({ role:ins.id, sheet:null, stack:[{ k:'page', id:'today' }], insp:null, sub:{}, exp:{} }); this.toast('Signed in as ' + r.title + '.'); }), 'primary')];
+        v.inspGroups = IT === 'Detail' ? [IG('s1', 'Seat', '', [row('Holder', r.name, { vFont:'400 11px ' + IN }), row('Code', r.code), row('Domains', r.domains), row('Agent of record', r.agent, { vFont:'400 11px ' + IN })], true),
+            IG('s2', 'Pages it sees', String(r.pages.length), r.pages.map(p => row(PAGES[p].label, PAGES[p].meta.split(' · ')[0], { dot:D.ok, vFont:'400 10px ' + M })), true)]
+          : IT === 'Related' ? [IG('s3', 'Agents on this seat', '', Object.keys(AGENTS).filter(k => AGENTS[k].roles.indexOf(ins.id) >= 0).map(k => link(AGENTS[k].name, AGENTS[k].status.toLowerCase(), { k:'agent', id:k }, { dot:AGENTS[k].dot, vFont:'400 10px ' + IN })), true)]
+          : [IG('s4', 'Authority', '', [row('Delegation', 'a subset of its own', { dot:D.ok, vFont:'400 10px ' + IN }), row('Escalation', 'to the owner', { vFont:'400 10px ' + IN }), row('Out of scope', 'never shown', { dot:D.bad, vFont:'400 10px ' + IN })], true)];
+      } else if (K === 'conn') { const c = CONNS[ins.id];
+        v.inspTitle = c.n; v.inspMeta = c.k + ' · ' + c.v; v.inspDot = c.dot; v.inspBody = c.says;
+        v.inspActions = ins.id === 'vercel' ? [act('Reconnect', () => this.toast('Opening your browser to authorise on Vercel’s own site.'), 'primary')]
+          : c.s === 'Not set up' ? [act('Set up', () => this.toast('Set-up runs in your browser.'), 'primary')]
+          : [act('Test', () => this.toast('Tested — 142 ms.'), 'primary'), act('Revoke', () => this.toast('Revoked. Runs that need it pause.'), 'danger')];
+        v.inspGroups = [IG('c1', 'What it may do', '', ins.id === 'github' ? [row('branch', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('change', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('check', 'allowed', { dot:D.ok, vInk:'var(--green)' }), row('release', 'off', { dot:D.bad, vInk:'var(--red)' })]
+            : [row('read', 'in scope only', { dot:D.ok, vInk:'var(--green)' }), row('write', 'refused', { dot:D.bad, vInk:'var(--red)' })], true),
+          IG('c2', 'State', '', [row('Status', c.s, { dot:c.dot, vFont:'400 10px ' + IN }), row('Verified', c.v, { vFont:'400 10px ' + IN })], true)];
+      } else if (K === 'grants') { const g = st.grants;
+        v.inspTitle = 'Repository grants'; v.inspMeta = 'GitHub · Papership · P10'; v.inspDot = g.release ? D.warn : D.ok;
+        v.inspBody = 'Four separate classes. Release is off by default and needs a designated authority with reauthentication.';
+        v.inspActions = [act('Open the grants page', () => { this.setState(s => ({ sub: Object.assign({}, s.sub, { systems:'Grants' }), sheet:null, stack:[{ k:'page', id:'systems' }] })); }, 'primary')];
+        v.inspGroups = [IG('g1', 'Current', '', [row('branch', g.branch ? 'on' : 'off', { dot: g.branch ? D.ok : D.idle }), row('change', g.change ? 'on' : 'off', { dot: g.change ? D.ok : D.idle }), row('check', g.check ? 'on' : 'off', { dot: g.check ? D.ok : D.idle }), row('release', g.release ? 'ON' : 'off', { dot: g.release ? D.bad : D.ok, vInk: g.release ? 'var(--red)' : 'var(--t2)' })], true),
+          IG('g2', 'Who can change this', '', [link('Founder', 'designated', { k:'seat', id:'founder' }, { dot:D.ok, vFont:'400 10px ' + IN }), row('Everyone else', 'refused', { dot:D.bad, vInk:'var(--red)', vFont:'400 10px ' + IN })], true)];
+      } else if (K === 'health') {
+        const HD = { api:['API', 'Healthy', D.ok, 'p95 142 ms · checked 14:41'], hermes:['Workers · Hermes', 'Degraded', D.warn, '8 of 8 busy · 9 checks queued'], db:['Database', 'Healthy', D.ok, 'replica lag 0.4 s'], repo:['Bound repository', 'Healthy', D.ok, 'GitHub · Papership · main'] };
+        const h = HD[ins.id] || HD.api;
+        v.inspTitle = h[0]; v.inspMeta = h[1] + ' · P18'; v.inspDot = h[2]; v.inspBody = h[3];
+        v.inspActions = ins.id === 'hermes' ? [act('Ask for a fix plan', () => this.setState({ asking:true, query:'Plan a fix for the Hermes worker pool ceiling', sheet:null }), 'primary')] : null;
+        v.inspGroups = [IG('h1', 'Measurements', '', [row('Checked', '14:41'), row('Window', 'last 30 s'), row('Region', 'au-syd-2')], true),
+          IG('h2', 'Affected work', ins.id === 'hermes' ? '2' : '0', ins.id === 'hermes' ? [link('CCO-244', 'queued 14m', { k:'item', id:'CCO-244' }, { dot:D.warn }), link('CCO-247', 'queued 44m', { k:'item', id:'CCO-247' }, { dot:D.warn })] : [row('Nothing affected', '—')], true)];
+      } else if (K === 'blocker') {
+        const B = { hermes:['Hermes pool saturates on checks', 'Platform · stage 7', 'Concurrent check runs exceed the pool ceiling, so stage 7 queues for up to nine minutes.', { k:'health', id:'hermes' }],
+          release:['Release grant intentionally off', 'Governance · stage 9', 'Stage 9 can only produce a release proposal until a designated authority turns the grant on.', { k:'grants', id:'repo' }] };
+        const b = B[ins.id] || B.hermes;
+        v.inspTitle = b[0]; v.inspMeta = b[1]; v.inspDot = D.bad; v.inspBody = b[2];
+        v.inspActions = [act('Open the cause', this.peek(b[3]), 'primary')];
+        v.inspGroups = [IG('b1', 'Impact', '', [row('Stage', ins.id === 'hermes' ? '7 · Tests' : '9 · Release proposal'), row('By design', ins.id === 'hermes' ? 'no' : 'yes', { dot: ins.id === 'hermes' ? D.bad : D.ok })], true)];
+      } else if (K === 'plan') {
+        const PD = { 'PLAN-014':['Release 1 — Founder desktop', '72% · due 30 Sep', D.ok], 'PLAN-019':['T2-1 interception hardening', '41% · due 24 Sep', D.warn], 'PLAN-022':['Grants matrix v3', '12% · due 18 Oct', D.idle] };
+        const p = PD[ins.id] || PD['PLAN-014'];
+        v.inspTitle = p[0]; v.inspMeta = ins.id + ' · ' + p[1] + ' · B06'; v.inspDot = p[2];
+        v.inspBody = 'Acceptance criteria are checked by a person. An agent may report progress but never accept its own work.';
+        v.inspGroups = [IG('p1', 'Items', '', Object.keys(ITEMS).filter(k => ITEMS[k].plan === ins.id).map(k => link(k, ITEMS[k].s.toLowerCase(), { k:'item', id:k }, { dot:ITEMS[k].dot })), true)];
+      } else if (K === 'reg') {
+        v.inspTitle = ins.short || ins.id; v.inspMeta = ins.id + ' · ' + (ins.state || 'planned');
+        v.inspDot = ins.state === 'working' ? D.ok : ins.state === 'configured' ? D.run : ins.state === 'unavailable' ? D.bad : D.idle;
+        v.inspBody = ins.state === 'planned' ? 'Registered but not configured. It stays on the board so you can see what Papership could do, not only what it does.'
+          : ins.state === 'working' ? 'Connected and doing real work today.' : ins.state === 'unavailable' ? 'Was working — a connection needs reauthorising.' : 'Configured within limits.';
+        v.inspGroups = [IG('rg1', 'Group', '', [row('Code', ins.id), row('State', ins.state || 'planned', { vFont:'400 11px ' + IN }), row('Owned by', ins.id.charAt(0) === 'B' ? 'a business seat' : 'the platform', { vFont:'400 10px ' + IN })], true)];
+      } else if (K === 'rec') {
+        const RD = { 'DEC-0031':['Close never cancels cloud work', '09 Sep · v1'], 'DEC-0033':['Interception runs before policy resolution', '09 Sep · v2'], 'DEC-0024':['Instructions are not a security boundary', '28 Aug · v3'] };
+        const d = RD[ins.id] || [ins.id, 'recorded'];
+        v.inspTitle = d[0]; v.inspMeta = ins.id + ' · ' + d[1] + ' · B11'; v.inspDot = D.ok;
+        v.inspBody = 'Recorded with its provenance. Anything the system inferred is labelled as inferred, never presented as fact.';
+        v.inspActions = [act('Correct', () => this.toast('Correction recorded as a new version.'), 'primary'), act('Restrict', () => this.toast('Restricted.'), 'danger')];
+        v.inspGroups = [IG('rc1', 'Provenance', '', [row('Owner', R.name, { vFont:'400 11px ' + IN }), row('Verification', 'approved by owner', { dot:D.ok, vFont:'400 10px ' + IN }), row('Expiry', 'until superseded', { vFont:'400 10px ' + IN })], true)];
+      } else if (K === 'scope') {
+        v.inspTitle = R.title + ' scope'; v.inspMeta = R.domains; v.inspDot = D.info;
+        v.inspBody = 'Every page in your navigation exists because this seat owns the domain behind it. Nothing is decoration.';
+        v.inspGroups = [IG('sp1', 'Pages from domains', String(R.pages.length), R.pages.map(p => row(PAGES[p].label, PAGES[p].meta.split(' · ')[0], { dot:D.ok, cursor:'pointer', go:this.goPage(p), vFont:'400 10px ' + M })), true),
+          IG('sp2', 'Out of scope', String(12 - R.pages.length), Object.keys(PAGES).filter(p => R.pages.indexOf(p) < 0).map(p => row(PAGES[p].label, 'refused', { dot:D.bad, vInk:'var(--red)' })), false, { lead:'Shown only because you are looking at your own scope.' })];
+      } else { v.inspTitle = ins.id || 'Selection'; v.inspMeta = ins.k;
+        v.inspBody = K === 'opp' ? 'The agent keeps the record current and drafts follow-ups. A person sends anything that leaves the building.' : K === 'ticket' ? 'A ticket, not a mailbox. Papership reads only the conversations linked to work.' : '';
+        v.inspGroups = [IG('x1', 'Detail', '', [row('Id', ins.id), row('Domain', K === 'opp' ? 'B05' : K === 'ticket' ? 'B12' : 'B02')], true)];
+      }
+    }
+
+    v.resultGroups = []; v.hasAnswer = false; v.answerText = '';
+    if (st.asking) {
+    const IX = [];
+    R.pages.forEach(p => IX.push({ label:PAGES[p].label, meta:'page', dot:D.idle, kind:'Places', go:this.goPage(p) }));
+    myAgents.forEach(k => IX.push({ label:AGENTS[k].name, meta:AGENTS[k].status.toLowerCase(), dot:AGENTS[k].dot, kind:'Agents', go:this.peek({ k:'agent', id:k }) }));
+    myItems.forEach(k => IX.push({ label:k + ' ' + ITEMS[k].t, meta:ITEMS[k].s.toLowerCase(), dot:ITEMS[k].dot, kind:'Work', go:this.peek({ k:'item', id:k }) }));
+    myRuns.forEach(k => IX.push({ label:k + ' ' + RUNS[k].p, meta:RUNS[k].s.toLowerCase(), dot:RUNS[k].dot, kind:'Runs', go:this.peek({ k:'run', id:k }) }));
+    asks.forEach(a => IX.push({ label:a.head, meta:'needs you', dot:a.dot, kind:'Decisions', go:this.peek(a.sel) }));
+    const q = st.query.trim().toLowerCase();
+    const matches = q ? IX.filter(e => (e.label + ' ' + e.meta).toLowerCase().indexOf(q) >= 0) : IX.slice(0, 6);
+    v.resultGroups = ['Decisions', 'Places', 'Agents', 'Work', 'Runs'].map(label => ({ label, items: matches.filter(m => m.kind === label) })).filter(g => g.items.length);
+    const isQ = q.length > 3 && (q.split(' ').length > 2 || /\?|^(what|who|why|how|when|show|find|make|build|draft|start|take|brief|plan)/.test(q));
+    v.hasAnswer = isQ;
+    v.answerText = !isQ ? '' : (q.indexOf('need') >= 0 || q.indexOf('today') >= 0)
+      ? (asks.length ? asks.length + ' thing' + (asks.length === 1 ? '' : 's') + ' need your authority. ' + asks[0].head + '.' : 'Nothing needs your authority.')
+      : (q.indexOf('hermes') >= 0 || q.indexOf('slow') >= 0) ? 'All eight Hermes workers are busy, so nine checks are queued. Nothing has failed — stage 7 is just slow.'
+      : 'Here is how ' + R.agent + ' would do that. Nothing starts until you dispatch it, and it stops at anything needing your authority.';
+    }
+
+    return v;
+  }
+}
+</script>
+</body>
+</html>

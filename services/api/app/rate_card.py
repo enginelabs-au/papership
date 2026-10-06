@@ -19,7 +19,7 @@ PLANS: list[dict[str, Any]] = [
         "token_scope": "organisation",
         "overage": "none",
         "overage_usd_per_100k": None,
-        "note": "Try Hey Engine. Hard stop at the pool — add Pro to continue.",
+        "note": "Try Hey Papership. Hard stop at the pool — add Pro to continue.",
     },
     {
         "id": "pro",
@@ -31,7 +31,7 @@ PLANS: list[dict[str, Any]] = [
         "token_scope": "per_seat",
         "overage": "credits",
         "overage_usd_per_100k": 8,
-        "note": "Team standard. 4× Free tokens. Buy usage credits when the pool runs out.",
+        "note": "Paid operator seat for one founder/solo operator. All Papership domains. Charges stay off until enabled.",
     },
     {
         "id": "max",
