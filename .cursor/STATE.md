@@ -6,7 +6,7 @@
 
 ## Current Status
 
-- Increment continues on `cursor/engine-labs-job-loop-b87f` (PR #7) tip `9eaae27`: command-room UI deep links + Today cards for paid seat and Workflows. CDP-verified `#settings/plan` and `#work/workflows`.
+- `main` is the only GitHub branch (`2360b00`). PR #7 merged. Parallel PR #8 closed as superseded. Feature remotes deleted.
 
 ## Project Phase
 
@@ -32,18 +32,17 @@
 
 ## Current Working State
 
-- Branch `cursor/engine-labs-job-loop-b87f`. Registry still 43 rows; only B08.01, P01.01, P04.01 move to `configured`. Jobs queue with a work item at `request`. Hermes write and live GitHub open stay false.
+- Branch `main` @ `2360b00` (PR #7 merged). Registry still 43 rows; only B08.01, P01.01, P04.01 move to `configured`. Jobs queue with a work item at `request`. Hermes write and live GitHub open stay false.
 
 ## Next Actions
 
-1. Verify API tests for Engine Labs jobs and catalogue.
-2. Open PR; do not merge without owner review.
-3. Do not treat write/external Hermes tools as accepted.
-4. Charges stay off (OT-08).
-5. Repeat open rows from `docs/handover/outstanding-tasks.md`.
+1. Repeat open rows from `docs/handover/outstanding-tasks.md` (none open).
+2. Do not treat write/external Hermes tools as accepted.
+3. Charges stay off (OT-08).
 
 ## Last Updated
 
+- 2026-10-06T11:53Z — Merged PR #7 to main; closed PR #8 as redundant; deleted leftover feature remotes. GitHub now has only `main`.
 - 2026-09-16T14:16Z — Added `docs/ui-blueprint/blueprint-3` from owner Papership UI Mockups drop. Live chrome stays blueprint-2.
 - 2026-09-16T13:20Z — Fixed product-ci PIL failure on icons test; tip `edc0713`; run 35101017265 green.
 - 2026-09-16T12:45Z — Engine Labs managed project + loop job wiring increment (P-009). Not fake-shipping 43 products.
