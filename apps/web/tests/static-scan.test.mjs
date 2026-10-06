@@ -105,10 +105,38 @@ test("local sign-in continues without a password check", () => {
   assert.match(app, /email and password are ignored/);
 });
 
-test("Integrations Set up preselects the connector id", () => {
+test("command room uses blueprint-3 tiles", () => {
+  const screens = readFileSync(join(root, "src/blueprint2/screens.jsx"), "utf8");
+  const css = readFileSync(join(root, "src/blueprint2/blueprint2.css"), "utf8");
+  const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
+  assert.match(css, /blueprint-3/);
+  assert.match(screens, /bp2-command-tiles/);
+  assert.match(screens, /bp2-command-greet/);
+  assert.match(app, /commandTiles/);
+  assert.match(app, /goDecisions/);
+});
+
+test("command room seat and workflows are deep-linkable", () => {
+  const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
+  const screens = readFileSync(join(root, "src/blueprint2/screens.jsx"), "utf8");
+  assert.match(app, /#settings\/\$\{toSlug\(setPane/);
+  assert.match(app, /goWorkflows/);
+  assert.match(app, /goSeat/);
+  assert.match(app, /commandRoom/);
+  assert.match(app, /Work · Workflows/);
+  assert.match(screens, /bp2-command-room/);
+  assert.match(screens, /Start Founder loop/);
+  assert.match(screens, /Advance to/);
+  assert.match(screens, /Stage output/);
+  assert.match(app, /advanceEngineLabsLoop/);
+  assert.match(screens, /seatSummary/);
+});
+
+test("founder loop survives API outage via local mock", () => {
   const api = readFileSync(join(root, "src/api/papership.js"), "utf8");
   const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
-  assert.match(api, /ui\.openWizard\?\.\(provider\)/);
-  assert.match(app, /const openWizard = useCallback/);
-  assert.match(app, /Continue to Slack/);
+  assert.match(api, /ENGINE_LABS_LOOP_LOCAL_KEY/);
+  assert.match(api, /localStartEngineLabsJob/);
+  assert.match(api, /coalesceEngineLabsLoop/);
+  assert.match(app, /Loop ·/);
 });

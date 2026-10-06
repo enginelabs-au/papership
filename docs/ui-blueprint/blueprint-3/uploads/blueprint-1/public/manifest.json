@@ -1,0 +1,8 @@
+{
+  "name": "Papership",
+  "short_name": "Papership",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fd",
+  "theme_color": "#3b82f6"
+}

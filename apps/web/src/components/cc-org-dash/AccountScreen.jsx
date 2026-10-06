@@ -280,7 +280,7 @@ export default function AccountScreen({ T, setTab, isMobile }) {
           <TextArea
             T={T}
             rows={4}
-            defaultValue="Founder of Engine Labs. Papership is the product. Ask via Inbox or Hey Engine — I do not take ownership of your content."
+            defaultValue="Founder of Engine Labs. Papership is the product. Ask via Inbox or Hey Papership — I do not take ownership of your content."
           />
         </div>
 

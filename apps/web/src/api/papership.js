@@ -1,7 +1,7 @@
 export const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 const SEAT_LABEL = {
-  founder: "Founder",
+  founder: "Paid operator",
   project_lead: "Project Lead",
   operator: "Operator",
   guest: "Guest",
@@ -199,6 +199,343 @@ export async function requestErasure(confirmations) {
   return postPapershipJson("/erasure/request", { confirmations });
 }
 
+export const ENGINE_LABS_PROJECT_ID = "proj-engine-labs";
+export const ENGINE_LABS_JOB_PURPOSE = "engine_labs.loop";
+export const ENGINE_LABS_LOOP_STAGES = [
+  "request",
+  "research",
+  "specification",
+  "plan",
+  "assignment",
+  "isolated_change",
+  "tests",
+  "review",
+  "release_proposal",
+  "monitoring",
+  "retained_knowledge",
+];
+export const ENGINE_LABS_LOOP_LOCAL_KEY = "papership-engine-labs-loop";
+
+const LOOP_STAGE_ARTIFACT_TYPES = {
+  request: "intake_brief",
+  research: "research_brief",
+  specification: "spec_outline",
+  plan: "task_list",
+  assignment: "assignment_record",
+  isolated_change: "change_stub",
+  tests: "test_plan",
+  review: "review_checklist",
+  release_proposal: "pr_draft_stub",
+  monitoring: "monitoring_note",
+  retained_knowledge: "knowledge_summary",
+};
+
+function buildLocalLoopStageArtifact({ stage, workItemId, jobId, title, boundRepo = "enginelabs-au/papership" }) {
+  const digest = `${workItemId}:${stage}:${jobId}`.split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0);
+  const slug = String(Math.abs(digest)).slice(0, 8);
+  const artifactType = LOOP_STAGE_ARTIFACT_TYPES[stage] || "stage_note";
+  const stageLabel = stage.replace(/_/g, " ");
+  const lines = [
+    `# Loop · ${stageLabel} · ${title}`,
+    "",
+    `- **Stage:** \`${stage}\``,
+    `- **Work item:** \`${workItemId}\``,
+    `- **Job:** \`${jobId}\``,
+    `- **Repository:** \`${boundRepo}\``,
+    "",
+    `## ${stageLabel} output (browser offline)`,
+    "",
+    "The Papership API was unreachable. This offline copy is **not** a Hermes run — reconnect the API and Hermes Host, then Start/Advance again.",
+  ];
+  const bodyMarkdown = lines.join("\n");
+  const ledgerPath = `.papership/loop/${workItemId}/${stage.replace(/_/g, "-")}.md`;
+  return {
+    id: `lart_local_${slug}_${stage}`,
+    work_item_id: workItemId,
+    job_id: jobId,
+    stage,
+    artifact_type: artifactType,
+    title: `Loop · ${stageLabel} · ${title}`,
+    body_markdown: bodyMarkdown,
+    ledger_path: ledgerPath,
+    memory_item_id: `mem_local_${slug}`,
+    meta: {
+      stage,
+      artifact_type: artifactType,
+      ledger_path: ledgerPath,
+      hermes_status: "offline_api",
+      live_github_open: false,
+      hermes_write: false,
+      mock: true,
+      offline: true,
+    },
+    created_at: new Date().toISOString(),
+    mock: true,
+  };
+}
+
+function applyLocalStageWork(state, stage) {
+  const workItem = state.workItem;
+  const job = state.job;
+  if (!workItem?.id || !job?.id) return state;
+  const artifact = buildLocalLoopStageArtifact({
+    stage,
+    workItemId: workItem.id,
+    jobId: job.id,
+    title: workItem.title || "Engine Labs loop",
+    boundRepo: state.boundRepo,
+  });
+  const artifacts = [...(state.artifacts || []), artifact];
+  const loopEvents = [
+    ...(workItem.loop || []),
+    { stage, evidence: `loop.stage.artifact:${artifact.id}` },
+  ];
+  const workItemNext = { ...workItem, stage, loop: loopEvents };
+  const jobNext = { ...job, stage, status: "running" };
+  return buildEngineLabsLoopState({
+    projectId: state.projectId,
+    projectName: state.projectName,
+    boundRepo: state.boundRepo,
+    loopStages: state.loopStages,
+    job: jobNext,
+    workItem: workItemNext,
+    currentStage: stage,
+    loopEventCount: loopEvents.length,
+    artifacts,
+    currentArtifact: artifact,
+    mock: true,
+  });
+}
+
+function isLoopTransportError(err) {
+  if (!err) return false;
+  if (err.status === 503 || err.status === 422 || err.status === 403 || err.status === 404) return false;
+  if (err.name === "TypeError") return true;
+  if (err.status === undefined) return /fetch|network|failed/i.test(String(err.message || ""));
+  return err.status >= 500 || err.status === 0;
+}
+
+export function readLocalEngineLabsLoop() {
+  try {
+    const raw = localStorage.getItem(ENGINE_LABS_LOOP_LOCAL_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalEngineLabsLoop(state) {
+  try {
+    if (state) localStorage.setItem(ENGINE_LABS_LOOP_LOCAL_KEY, JSON.stringify(state));
+    else localStorage.removeItem(ENGINE_LABS_LOOP_LOCAL_KEY);
+  } catch {
+    /* */
+  }
+}
+
+function buildEngineLabsLoopState({
+  projectId,
+  projectName,
+  boundRepo,
+  loopStages,
+  job,
+  workItem,
+  currentStage,
+  loopEventCount,
+  mock = false,
+  artifacts = null,
+  currentArtifact = null,
+}) {
+  const stages = loopStages?.length ? loopStages : ENGINE_LABS_LOOP_STAGES;
+  const stage = currentStage || workItem?.stage || job?.stage || null;
+  const idx = stage ? stages.indexOf(stage) : -1;
+  const nextStage =
+    job && idx >= 0 && idx < stages.length - 1 ? stages[idx + 1] : job ? null : null;
+  const resolvedArtifacts =
+    artifacts ??
+    workItem?.artifacts ??
+    (currentArtifact || workItem?.current_artifact ? [currentArtifact || workItem?.current_artifact].filter(Boolean) : []);
+  const resolvedCurrent =
+    currentArtifact ?? workItem?.current_artifact ?? (resolvedArtifacts.length ? resolvedArtifacts[resolvedArtifacts.length - 1] : null);
+  return {
+    projectId: projectId || ENGINE_LABS_PROJECT_ID,
+    projectName: projectName || "Engine Labs · Papership",
+    boundRepo: boundRepo || "enginelabs-au/papership",
+    loopStages: stages,
+    job: job && stage ? { ...job, stage } : job,
+    workItem: workItem
+      ? {
+          ...workItem,
+          artifacts: resolvedArtifacts,
+          current_artifact: resolvedCurrent,
+        }
+      : workItem,
+    currentStage: stage,
+    nextStage,
+    loopEventCount: loopEventCount ?? (workItem?.loop?.length || 0),
+    artifacts: resolvedArtifacts,
+    currentArtifact: resolvedCurrent,
+    mock,
+  };
+}
+
+function localStartEngineLabsJob(projectId, title = "Engine Labs loop") {
+  const now = Date.now();
+  const jid = `job_local_${now}`;
+  const wid = `wi_local_${now}`;
+  const stage = "request";
+  const job = {
+    id: jid,
+    status: "queued",
+    purpose: ENGINE_LABS_JOB_PURPOSE,
+    project_id: projectId,
+    work_item_id: wid,
+    stage,
+    title,
+    live_github_open: false,
+    hermes_write: false,
+    mock: true,
+  };
+  const workItem = {
+    id: wid,
+    title,
+    stage,
+    project_id: projectId,
+    job_id: jid,
+    loop: [{ stage, evidence: "engine_labs.job.start" }],
+  };
+  let state = buildEngineLabsLoopState({
+    projectId,
+    job,
+    workItem,
+    currentStage: stage,
+    loopEventCount: 1,
+    mock: true,
+  });
+  state = applyLocalStageWork(state, stage);
+  writeLocalEngineLabsLoop(state);
+  return { ...job, stage, status: "running", current_artifact: state.currentArtifact, mock: true };
+}
+
+function localAdvanceEngineLabsLoopStage(workItemId, stage, evidence) {
+  const prev = readLocalEngineLabsLoop();
+  if (!prev?.workItem?.id || prev.workItem.id !== workItemId) {
+    throw new Error("No local loop job. Start the Founder loop first.");
+  }
+  const loopEvents = [...(prev.workItem.loop || []), { stage, evidence: `founder.advance.${stage}` }];
+  const workItem = { ...prev.workItem, stage, loop: loopEvents };
+  let state = buildEngineLabsLoopState({
+    projectId: prev.projectId,
+    projectName: prev.projectName,
+    boundRepo: prev.boundRepo,
+    loopStages: prev.loopStages,
+    job: prev.job,
+    workItem,
+    currentStage: stage,
+    loopEventCount: loopEvents.length,
+    artifacts: prev.artifacts,
+    currentArtifact: prev.currentArtifact,
+    mock: true,
+  });
+  state = applyLocalStageWork(state, stage);
+  writeLocalEngineLabsLoop(state);
+  return state.workItem;
+}
+
+export function coalesceEngineLabsLoop(apiLoop) {
+  if (apiLoop?.job?.work_item_id) {
+    writeLocalEngineLabsLoop({ ...apiLoop, mock: false });
+    return apiLoop;
+  }
+  const local = readLocalEngineLabsLoop();
+  if (local?.job) return local;
+  return apiLoop || local || null;
+}
+
+export async function startEngineLabsJob(projectId, title = "Engine Labs loop") {
+  try {
+    await ensureLocalSession();
+    const result = await postPapershipJson(`/projects/${projectId}/jobs`, {
+      title,
+      purpose: ENGINE_LABS_JOB_PURPOSE,
+    });
+    return { ...result, mock: false };
+  } catch (err) {
+    if (isLoopTransportError(err)) {
+      return localStartEngineLabsJob(projectId, title);
+    }
+    throw err;
+  }
+}
+
+export async function advanceEngineLabsLoopStage(workItemId, stage, evidence = "founder.advance") {
+  try {
+    const body = await postPapershipJson(`/work-items/${workItemId}/stage`, { stage, evidence });
+    return { ...body, mock: false };
+  } catch (err) {
+    if (isLoopTransportError(err)) {
+      return localAdvanceEngineLabsLoopStage(workItemId, stage, evidence);
+    }
+    throw err;
+  }
+}
+
+/** Latest engine_labs.loop job + work-item stage from the managed project (live API). */
+export async function fetchEngineLabsLoopState(projectId = ENGINE_LABS_PROJECT_ID) {
+  try {
+    const project = await fetchPapershipJson(`/projects/${projectId}`);
+    const stages = project.loop_stages || ENGINE_LABS_LOOP_STAGES;
+    const purpose = project.job_purpose || ENGINE_LABS_JOB_PURPOSE;
+    const loopJobs = (project.jobs || []).filter((j) => j.purpose === purpose);
+    const job = loopJobs[0] || null;
+    if (!job?.work_item_id) {
+      const empty = buildEngineLabsLoopState({
+        projectId,
+        projectName: project.name,
+        boundRepo: project.bound_repo,
+        loopStages: stages,
+        job: null,
+        workItem: null,
+        currentStage: null,
+        loopEventCount: 0,
+        mock: false,
+      });
+      return coalesceEngineLabsLoop(empty);
+    }
+    const workItem = await fetchPapershipJson(`/work-items/${job.work_item_id}`);
+    const currentStage = workItem.stage || job.stage || "request";
+    const state = buildEngineLabsLoopState({
+      projectId,
+      projectName: project.name,
+      boundRepo: project.bound_repo,
+      loopStages: stages,
+      job,
+      workItem,
+      currentStage,
+      loopEventCount: (workItem.loop || []).length,
+      artifacts: workItem.artifacts,
+      currentArtifact: workItem.current_artifact,
+      mock: false,
+    });
+    writeLocalEngineLabsLoop(state);
+    return state;
+  } catch (err) {
+    const local = readLocalEngineLabsLoop();
+    if (local) return local;
+    if (isLoopTransportError(err)) {
+      return buildEngineLabsLoopState({
+        projectId,
+        job: null,
+        workItem: null,
+        currentStage: null,
+        loopEventCount: 0,
+        mock: true,
+      });
+    }
+    throw err;
+  }
+}
+
 export async function fetchHealth() {
   try {
     const response = await fetch(`${API_BASE}/health`, { headers: { Accept: "application/json" } });
@@ -252,8 +589,8 @@ export const TRIAL_RATE_CARD = {
   aud_per_usd: 1.5,
   credit_increment_usd: 10,
   plans: [
-    { id: "free", label: "Free", usd_month: 0, seats: "1", tokens_month: 50000, token_scope: "organisation", overage: "none", overage_usd_per_100k: null, note: "Try Hey Engine. Hard stop at the pool — add Pro to continue." },
-    { id: "pro", label: "Pro", usd_month: 24, seats: "1+", tokens_month: 200000, token_scope: "per_seat", overage: "credits", overage_usd_per_100k: 8, note: "Team standard. 4× Free tokens. Buy usage credits when the pool runs out." },
+    { id: "free", label: "Free", usd_month: 0, seats: "1", tokens_month: 50000, token_scope: "organisation", overage: "none", overage_usd_per_100k: null, note: "Try Hey Papership. Hard stop at the pool — add Pro to continue." },
+    { id: "pro", label: "Pro", usd_month: 24, seats: "1+", tokens_month: 200000, token_scope: "per_seat", overage: "credits", overage_usd_per_100k: 8, note: "Paid operator seat for one founder/solo operator. All Papership domains. Charges stay off until enabled." },
     { id: "max", label: "Max", usd_month: 120, seats: "1+", tokens_month: 800000, token_scope: "per_seat", overage: "credits", overage_usd_per_100k: 6, note: "Power seat (5× Pro price, 4× Pro tokens). Cheaper overage than Pro." },
     { id: "enterprise", label: "Enterprise", usd_month: 32, seats: "5 minimum", tokens_month: 400000, token_scope: "per_seat_pooled", overage: "credits", overage_usd_per_100k: 5, note: "Affordable org seats. Tokens pool across the tenant. Floor 5 × $32 = $160 / month." },
   ],
@@ -291,21 +628,33 @@ export async function loadPapershipOverlay() {
       measurement: defaultMeasurement(),
       rateCard: TRIAL_RATE_CARD,
       health: mapHealth(await fetchHealth()),
+      hermesHost: {
+        status: "not_configured",
+        message:
+          "Hermes Host is not configured. Founder loop Start/Advance fail until HERMES_API_BASE_URL points at the Host API (typically http://127.0.0.1:8642 via tunnel).",
+        write_tools: false,
+        mock: true,
+        api_server: false,
+        pin: null,
+      },
+      operatorSeat: null,
       erasure: { status: "none", destroyed: false, items: [] },
       memory: [],
       strategy: [],
       personalisation: defaultPersonalisation(),
       view: { fallback: true, personalisation: false },
       domains: [],
+      managedProjects: [],
       packs: [],
       proposals: [],
       evidence: [],
       references: defaultReferences(),
       schedules: [],
+      engineLabsLoop: coalesceEngineLabsLoop(null),
     };
   }
   try {
-    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, references, schedules, packs, proposals, evidence, erasure, rateCard, health] = await Promise.all([
+    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, operatorSeat, engineLabsLoop] = await Promise.all([
       fetchPapershipJson("/people"),
       fetchPapershipJson("/teams"),
       fetchPapershipJson("/inbox"),
@@ -316,6 +665,7 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/settings/personalisation"),
       fetchPapershipJson("/views/current"),
       fetchPapershipJson("/domains/catalogue"),
+      fetchPapershipJson("/projects").catch(() => ({ items: [] })),
       fetchPapershipJson("/references"),
       fetchPapershipJson("/schedules"),
       fetchPapershipJson("/packs"),
@@ -324,6 +674,9 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/erasure/status").catch(() => ({ status: "none", destroyed: false, items: [] })),
       fetchPapershipJson("/billing/rate-card").catch(() => TRIAL_RATE_CARD),
       fetchHealth(),
+      fetchPapershipJson("/hermes/host").catch(() => null),
+      fetchPapershipJson("/seats/operator").catch(() => null),
+      fetchEngineLabsLoopState().catch(() => null),
     ]);
     return {
       source: "api",
@@ -342,12 +695,23 @@ export async function loadPapershipOverlay() {
       personalisation,
       view,
       domains: domains.items || [],
+      managedProjects: projects.items || [],
       packs: packs.items || [],
       proposals: proposals.items || [],
       evidence: evidence.items || [],
       erasure: erasure || { status: "none", destroyed: false, items: [] },
       rateCard: rateCard?.published ? rateCard : TRIAL_RATE_CARD,
       health: mapHealth(health),
+      hermesHost: hermesHost || {
+        status: health?.hermes || "not_configured",
+        message: "Hermes Host status from health probe.",
+        write_tools: false,
+        mock: !(hermesHost?.api_server || health?.hermes === "reachable"),
+        api_server: Boolean(hermesHost?.api_server),
+        pin: health?.hermes_pin || hermesHost?.pin || null,
+      },
+      operatorSeat,
+      engineLabsLoop: coalesceEngineLabsLoop(engineLabsLoop),
       references,
       schedules: schedules.items || [],
     };
@@ -370,11 +734,13 @@ export async function loadPapershipOverlay() {
       personalisation: defaultPersonalisation(),
       view: { fallback: true, personalisation: false },
       domains: [],
+      managedProjects: [],
       packs: [],
       proposals: [],
       evidence: [],
       references: defaultReferences(),
       schedules: [],
+      engineLabsLoop: coalesceEngineLabsLoop(null),
     };
   }
 }
@@ -641,6 +1007,15 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
     }));
   }
   out.domainShells = overlay.domains || [];
+  out.managedProjects = overlay.managedProjects || [];
+  out.hermesHost = overlay.hermesHost || null;
+  out.operatorSeat = overlay.operatorSeat || null;
+  const loop = overlay.engineLabsLoop || null;
+  out.engineLabsLoop = loop;
+  out.lastEngineLabsJob =
+    overlay.lastEngineLabsJob ||
+    loop?.job ||
+    null;
   out.packs = overlay.packs || [];
   out.proposals = overlay.proposals || [];
   out.evidence = overlay.evidence || [];
@@ -657,6 +1032,57 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
       if (!String(mode.label).startsWith("Automate")) return mode;
       return { ...mode, label: "Automate · configured", cursor: "pointer", ink: "var(--t2)" };
     });
+  }
+
+  // Prefer live domain catalogue statuses for the Integrations registry.
+  if (overlay.domains?.length === 43) {
+    const chip = (s) =>
+      s === "working"
+        ? { bg: "var(--green-soft)", ink: "var(--green)", dot: "var(--green)", action: "Open" }
+        : s === "configured"
+          ? { bg: "var(--blue-soft)", ink: "var(--blue)", dot: "var(--blue)", action: "Review" }
+          : s === "unavailable"
+            ? { bg: "var(--red-soft)", ink: "var(--red)", dot: "var(--red)", action: "Recover" }
+            : { bg: "var(--line2)", ink: "var(--t3)", dot: "var(--t3)", action: "Plan" };
+    const bRows = overlay.domains
+      .filter((d) => String(d.id).startsWith("B"))
+      .map((d) => ({ code: d.id, label: d.label, status: d.status || "planned", ...chip(d.status || "planned") }));
+    const pRows = overlay.domains
+      .filter((d) => String(d.id).startsWith("P"))
+      .map((d) => ({ code: d.id, label: d.label, status: d.status || "planned", ...chip(d.status || "planned") }));
+    out.registrySections = [
+      { title: "Business domains", range: "B01–B24 · 24 groups", rows: bRows },
+      { title: "Platform domains", range: "P01–P19 · 19 groups", rows: pRows },
+    ];
+    const all = bRows.concat(pRows);
+    const cnt = (s) => String(all.filter((r) => r.status === s).length);
+    out.registryFilters = [
+      { label: "All", n: "43", dot: "var(--t3)", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)" },
+      { label: "Working", n: cnt("working"), dot: "var(--green)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+      { label: "Configured", n: cnt("configured"), dot: "var(--blue)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+      { label: "Planned", n: cnt("planned"), dot: "var(--t3)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+      { label: "Unavailable", n: cnt("unavailable"), dot: "var(--red)", bg: "transparent", bd: "var(--line)", ink: "var(--t2)" },
+    ];
+  }
+
+  // Surface the first managed project (Papership / Engine Labs) at the top of Work → Projects.
+  if (overlay.managedProjects?.length && Array.isArray(out.projects)) {
+    const mapped = overlay.managedProjects.map((p) => ({
+      name: p.name,
+      key: p.slug || p.id,
+      dept: "Engine Labs",
+      status: p.status === "active" ? "on_track" : p.status || "planning",
+      dot: "var(--blue)",
+      priority: "Highest",
+      pct: 0,
+      pctw: "0%",
+      due: "—",
+      open: typeof out.projects[0]?.open === "function" ? out.projects[0].open : () => {},
+      managed: true,
+      projectId: p.id,
+    }));
+    const fixtureKeys = new Set(mapped.map((p) => p.key));
+    out.projects = [...mapped, ...out.projects.filter((p) => !fixtureKeys.has(p.key))];
   }
   return out;
 }

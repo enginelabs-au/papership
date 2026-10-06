@@ -227,7 +227,7 @@ export default function HomeScreen({ T, isMobile, onOpenHey }) {
             style={{ height: 36, padding: 3, border: 0, borderRadius: 8, background: T.rainbow, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}
           >
             <span style={{ display: "flex", alignItems: "center", height: 30, padding: "0 13px", borderRadius: 6, background: "rgba(11,6,20,.45)", color: "#fff", font: "600 12.5px Inter,sans-serif" }}>
-              Send to Hey Engine
+              Send to Hey Papership
             </span>
           </button>
         </div>

@@ -20,7 +20,7 @@ function newSession(id, title) {
     messages: [
       {
         role: "assistant",
-        text: "Hey Engine. I stay on the Papership API — I will not call Hermes write tools until T2-1 passes. Ask about the loop, grants, or the GitHub App.",
+        text: "Hey Papership. I stay on the Papership API — I will not call Hermes write tools until T2-1 passes. Ask about the loop, grants, or the GitHub App.",
       },
     ],
     input: "",

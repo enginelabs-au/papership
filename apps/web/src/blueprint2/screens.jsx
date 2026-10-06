@@ -40,11 +40,51 @@ export function SubNav({ items }) {
 export function TodayOverview({ v }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      {v.commandGreet ? (
+        <div className="bp2-command-greet">
+          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-.25px" }}>{v.commandGreet.title}</div>
+          <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 4, lineHeight: 1.45 }}>{v.commandGreet.meta}</div>
+        </div>
+      ) : null}
+      {v.commandTiles?.length ? (
+        <div className="bp2-command-tiles">
+          {v.commandTiles.map((tile) => (
+            <button key={tile.label} type="button" className="bp2-command-tile" onClick={tile.go}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: tile.dot, flex: "none" }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--t3)", letterSpacing: ".04em", textTransform: "uppercase" }}>{tile.label}</span>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-.3px", color: tile.ink, marginTop: 6 }}>{tile.value}</div>
+              <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)", marginTop: 3 }}>{tile.meta}</div>
+            </button>
+          ))}
+        </div>
+      ) : null}
+      {v.commandRoom?.length ? (
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 9 }}>Quick paths</div>
+          <div className="bp2-command-room" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 10 }}>
+          {v.commandRoom.map((card) => (
+            <button
+              key={card.id}
+              type="button"
+              className="bp2-command-room-card"
+              onClick={card.go}
+              style={{ textAlign: "left", border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 10, padding: "12px 14px", cursor: "pointer", color: "inherit", font: "inherit", boxShadow: "var(--shadow)" }}
+            >
+              <div style={{ fontSize: 13, fontWeight: 600 }}>{card.title}</div>
+              <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)", marginTop: 4 }}>{card.meta}</div>
+              <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 6 }}>{card.body}</div>
+            </button>
+          ))}
+          </div>
+        </div>
+      ) : null}
       <div className="bp2-composer" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, boxShadow: "var(--shadow)", padding: "14px 16px 13px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <input placeholder="What would you like to do?" onFocus={v.openHey} style={{ flex: 1, height: 36, border: "1px solid var(--line)", borderRadius: 8, background: "var(--canvas)", color: "var(--t1)", padding: "0 12px", font: "400 13.5px Inter,sans-serif" }} />
           <button type="button" onClick={v.openHey} style={{ height: 36, padding: "0 3px", border: 0, borderRadius: 8, background: "linear-gradient(135deg,#2563eb,#22d3ee,#4ade80,#fbbf24,#f472b6,#a78bfa)", cursor: "pointer", display: "flex", alignItems: "center" }}>
-            <span style={{ display: "flex", alignItems: "center", height: 30, padding: "0 13px", borderRadius: 6, background: v.heyStripBg, color: "#fff", font: "600 12.5px Inter,sans-serif" }}>Send to Hey Engine</span>
+            <span style={{ display: "flex", alignItems: "center", height: 30, padding: "0 13px", borderRadius: 6, background: v.heyStripBg, color: "#fff", font: "600 12.5px Inter,sans-serif" }}>Send to Hey Papership</span>
           </button>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 11, flexWrap: "wrap" }}>
@@ -273,6 +313,18 @@ export function Registry({ v }) {
 export function WorkProjects({ v }) {
   return (
     <div className="bp2-table-wrap" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", borderBottom: "1px solid var(--line)" }}>
+        <span style={{ font: "600 12px Inter,sans-serif", color: "var(--t3)" }}>Managed projects</span>
+        {typeof v.startEngineLabsJob === "function" ? (
+          <button
+            type="button"
+            onClick={() => void v.startEngineLabsJob()}
+            style={{ height: 28, padding: "0 12px", border: "1px solid var(--line)", background: "var(--canvas)", color: "var(--t1)", borderRadius: 6, font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}
+          >
+            Start Engine Labs loop
+          </button>
+        ) : null}
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,2.4fr) 130px 150px 110px 92px 150px 92px", gap: 10, padding: "9px 14px", borderBottom: "1px solid var(--line)", font: "600 12px Inter,sans-serif", color: "var(--t3)" }}>
         <span>Plan</span><span>Department</span><span>Owner</span><span>Status</span><span>Priority</span><span>Progress</span><span>Due</span>
       </div>
@@ -280,7 +332,7 @@ export function WorkProjects({ v }) {
         <div key={p.key} className="bp2-project-row" onClick={p.open} style={{ display: "grid", gridTemplateColumns: "minmax(0,2.4fr) 130px 150px 110px 92px 150px 92px", gap: 10, alignItems: "center", padding: "10px 14px", borderBottom: "1px solid var(--line2)", cursor: "pointer" }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12.5, fontWeight: 500 }}>{p.name}</div>
-            <div style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.key}</div>
+            <div style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.key}{p.managed ? " · managed" : ""}</div>
           </div>
           <span style={{ fontSize: 12, color: "var(--t2)" }}>{p.dept}</span>
           <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: "var(--t2)" }}><span style={{ width: 20, height: 20, borderRadius: "50%", background: "linear-gradient(135deg,#2563eb,#a78bfa)", color: "#fff", font: "600 9px Inter,sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>CD</span>Cam Douglas</span>
@@ -364,27 +416,156 @@ export function WorkRoadmap({ v }) {
 }
 
 export function WorkWorkflows({ v }) {
+  const stages = v.workflowStages || [];
+  const job = v.lastEngineLabsJob;
+  const loop = v.engineLabsLoop;
+  const host = v.hermesHost;
+  const nextStage = loop?.nextStage;
+  const boundRepo = loop?.boundRepo || "enginelabs-au/papership";
+  const projectName = loop?.projectName || "Engine Labs · Papership";
+  const busy = Boolean(v.loopActionBusy);
+  const artifact = loop?.currentArtifact || loop?.workItem?.current_artifact || job?.current_artifact || null;
+  const artifactBody = artifact?.body_markdown || "";
   return (
-    <div className="bp2-workflows" style={{ display: "flex", gap: 14, minHeight: 420 }}>
-      <div className="bp2-workflows-lib" style={{ width: 180, flex: "none", background: "var(--raised)", border: "1px solid var(--line2)", borderRadius: 10, padding: 10 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Nodes</div>
-        {v.nodeLibrary.map((n) => (
-          <div key={n.label} style={{ padding: "8px 9px", borderRadius: 7, background: n.bg, marginBottom: 6, fontSize: 12 }}>{n.label}</div>
-        ))}
-      </div>
-      <div className="bp2-workflows-canvas" style={{ flex: 1, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, position: "relative", overflow: "hidden" }}>
-        {v.wires.map((w, i) => (
-          <span key={i} style={{ position: "absolute", left: w.x, top: w.y, width: w.w, height: w.h, background: "var(--line)" }} />
-        ))}
-        {v.nodes.map((n) => (
-          <div key={n.label} style={{ position: "absolute", left: n.x, top: n.y, width: 210, padding: "10px 12px", borderRadius: 8, background: "var(--canvas)", border: `1px solid ${n.bd}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot }} />
-              <span style={{ fontSize: 12, fontWeight: 600 }}>{n.label}</span>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 4 }}>{n.meta}</div>
+    <div className="bp2-workflows" style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 420 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>Founder / Engine Labs loop</div>
+          <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 4, lineHeight: 1.45 }}>
+            Self-build Papership on <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{boundRepo}</span> through PRD-B.1. Each job is purpose{" "}
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>engine_labs.loop</span> on project{" "}
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{projectName}</span>. Stages persist in the work ledger; Hermes stays read-only and GitHub stays dry-run until release grants land.
           </div>
-        ))}
+          {job ? (
+            <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4, font: "400 11.5px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
+              <span>
+                Live job · {job.id} · status {job.status || "queued"} · stage {job.stage || loop?.currentStage || "request"}
+                {loop?.mock || job.mock ? " · mock/offline" : ""}
+              </span>
+              {job.work_item_id ? (
+                <span>
+                  Work item · {job.work_item_id}
+                  {typeof loop?.loopEventCount === "number" ? ` · ${loop.loopEventCount} stage event(s)` : ""}
+                </span>
+              ) : null}
+              {nextStage ? (
+                <span style={{ color: "var(--blue)" }}>Next advance · {nextStage}</span>
+              ) : (
+                <span style={{ color: "var(--green)" }}>Final stage reached on this work item.</span>
+              )}
+              {artifact ? (
+                <span>
+                  Stage output · {artifact.artifact_type || "artifact"}
+                  {artifact.ledger_path ? ` · ${artifact.ledger_path}` : ""}
+                </span>
+              ) : null}
+            </div>
+          ) : (
+            <div style={{ marginTop: 8, fontSize: 12, color: "var(--t3)" }}>
+              No loop job on this session yet. Start one to queue <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>engine_labs.loop</span> at stage request. Requires Hermes Host on <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>HERMES_API_BASE_URL</span> (tunnel :8642).
+            </div>
+          )}
+          {v.actionError ? <div style={{ marginTop: 8, fontSize: 12, color: "var(--amber)" }}>{v.actionError}</div> : null}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: "none", alignItems: "stretch" }}>
+          {typeof v.startEngineLabsJob === "function" ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void v.startEngineLabsJob()}
+              style={{ height: 32, padding: "0 14px", border: 0, borderRadius: 7, background: busy ? "var(--t3)" : "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: busy ? "wait" : "pointer", opacity: busy ? 0.85 : 1 }}
+            >
+              {busy ? "Working…" : job ? "Start another loop job" : "Start Founder loop"}
+            </button>
+          ) : null}
+          {typeof v.advanceEngineLabsLoop === "function" && nextStage ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void v.advanceEngineLabsLoop()}
+              style={{ height: 32, padding: "0 14px", border: "1px solid var(--blue)", borderRadius: 7, background: "var(--blue-soft)", color: "var(--blue)", font: "600 12px Inter,sans-serif", cursor: busy ? "wait" : "pointer", opacity: busy ? 0.7 : 1 }}
+            >
+              {busy ? "Advancing…" : `Advance to ${nextStage.replace(/_/g, " ")}`}
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {stages.length ? (
+        <div className="bp2-workflows-strip" aria-hidden="true">
+          {stages.map((n) => (
+            <div key={n.label} className="bp2-workflows-strip-seg" title={n.label}>
+              <span style={{ width: n.current ? "100%" : n.done ? "100%" : "28%", background: n.current ? "var(--brand)" : n.done ? "var(--green)" : "var(--line)" }} />
+            </div>
+          ))}
+        </div>
+      ) : null}
+      <div style={{ display: "flex", gap: 14, flex: 1, minHeight: 280 }}>
+        <div className="bp2-workflows-lib" style={{ width: 180, flex: "none", background: "var(--raised)", border: "1px solid var(--line2)", borderRadius: 10, padding: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Loop stages</div>
+          {stages.map((n) => (
+            <div key={n.label} style={{ padding: "8px 9px", borderRadius: 7, background: n.bg, marginBottom: 6, fontSize: 12, display: "flex", gap: 8, alignItems: "center", opacity: n.done || n.current ? 1 : 0.85 }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot, flex: "none" }} />
+              {n.label}
+              {n.current ? <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--blue)", fontWeight: 600 }}>now</span> : null}
+            </div>
+          ))}
+        </div>
+        <div className="bp2-workflows-canvas" style={{ flex: 1, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 14, overflow: "auto" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 10 }}>Pipeline</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {stages.map((n, i) => (
+              <div key={n.label} style={{ minWidth: 140, flex: "1 1 140px", padding: "10px 12px", borderRadius: 8, background: n.current ? "var(--blue-soft)" : "var(--canvas)", border: `1px solid ${n.bd}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.dot }} />
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{i + 1}. {n.label}</span>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--t3)", marginTop: 4 }}>{n.meta}</div>
+              </div>
+            ))}
+          </div>
+          {host ? (
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, border: "1px solid var(--line2)", background: "var(--raised)" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600 }}>Hermes Host · always-on agent box</div>
+              <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 4 }}>{host.message}</div>
+              <div style={{ marginTop: 8, font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>
+                status={host.status} · write_tools={String(host.write_tools)} · mock={String(host.mock)}
+              </div>
+            </div>
+          ) : null}
+          {artifact ? (
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, border: "1px solid var(--blue)", background: "var(--blue-soft)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600 }}>Stage output · {loop?.currentStage || job?.stage || "request"}</div>
+                <span style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>
+                  {artifact.id}
+                  {artifact.meta?.hermes_run_id ? ` · ${artifact.meta.hermes_run_id}` : ""}
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--t2)", marginTop: 4 }}>{artifact.title}</div>
+              <pre
+                style={{
+                  marginTop: 10,
+                  padding: 10,
+                  borderRadius: 6,
+                  background: "var(--surface)",
+                  border: "1px solid var(--line2)",
+                  font: "400 11px/1.45 'JetBrains Mono',monospace",
+                  color: "var(--t1)",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  maxHeight: 280,
+                  overflow: "auto",
+                }}
+              >
+                {artifactBody}
+              </pre>
+            </div>
+          ) : job ? (
+            <div style={{ marginTop: 16, padding: 12, borderRadius: 8, border: "1px dashed var(--line)", color: "var(--t3)", fontSize: 12 }}>
+              No stage artifact yet. Start or advance the loop to produce ledger output.
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -448,28 +629,80 @@ export function InboxView({ v }) {
 }
 
 export function PeopleView({ v }) {
+  const seat = v.seatSummary;
+  const seatCard = seat ? (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "14px 16px", marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>{seat.label}</div>
+          <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 4 }}>
+            SKU <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11.5 }}>{seat.sku}</span>
+            {" · "}
+            {seat.domainCount} domains entitled
+            {" · "}
+            plan {seat.planHint}
+            {" · "}
+            charges {seat.charges}
+          </div>
+          <div style={{ marginTop: 8, fontSize: 12, color: "var(--t2)" }}>
+            Products: {(seat.products || []).length ? seat.products.join(", ") : "hey_papership, workflows, hermes_host, engine_labs.loop"}
+            {seat.contextMusic ? "" : " · Context Music out of scope"}
+          </div>
+        </div>
+        {typeof v.goSeat === "function" ? (
+          <button type="button" onClick={v.goSeat} style={{ height: 30, padding: "0 12px", border: 0, borderRadius: 7, background: "var(--blue)", color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer", flex: "none" }}>
+            Open Plan
+          </button>
+        ) : null}
+      </div>
+      {seat.domains?.length ? (
+        <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {seat.domains.slice(0, 24).map((d) => (
+            <span key={d} style={{ height: 22, padding: "0 8px", borderRadius: 6, background: "var(--raised)", border: "1px solid var(--line2)", font: "500 10.5px 'JetBrains Mono',monospace", color: "var(--t2)", display: "inline-flex", alignItems: "center" }}>{d}</span>
+          ))}
+          {seat.domains.length > 24 ? <span style={{ fontSize: 11, color: "var(--t3)", alignSelf: "center" }}>+{seat.domains.length - 24} more</span> : null}
+        </div>
+      ) : (
+        <div style={{ marginTop: 10, fontSize: 12, color: "var(--t3)" }}>
+          Domain list loads from <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>GET /seats/operator</span> after founder sign-in. Catalogue also lives under Today → Registry.
+          {typeof v.goDomains === "function" ? (
+            <>
+              {" "}
+              <button type="button" onClick={v.goDomains} style={{ border: 0, background: "transparent", color: "var(--blue)", font: "600 12px Inter,sans-serif", cursor: "pointer", padding: 0 }}>Open Registry</button>
+            </>
+          ) : null}
+        </div>
+      )}
+    </div>
+  ) : null;
   if (!v.people?.length) {
     return (
-      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 40, textAlign: "center" }}>
-        <div style={{ fontSize: 14, fontWeight: 600 }}>No people to show</div>
-        <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 6 }}>{v.peopleNote || "Papership does not show fixture seats on the product path."}</div>
+      <div>
+        {seatCard}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 40, textAlign: "center" }}>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>No people to show</div>
+          <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 6 }}>{v.peopleNote || "Papership does not show fixture seats on the product path."}</div>
+        </div>
       </div>
     );
   }
   return (
-    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
-      {v.people.map((p) => (
-        <div key={p.name} className="bp2-people-row" onClick={p.open} style={{ display: "grid", gridTemplateColumns: "200px 110px 1fr 140px 90px", gap: 12, alignItems: "center", padding: "11px 14px", borderBottom: "1px solid var(--line2)", cursor: "pointer" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 26, height: 26, borderRadius: "50%", background: p.av, color: "#fff", font: "600 10px Inter,sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>{p.initials}</span>
-            {p.name}
-          </span>
-          <span style={{ fontSize: 12, color: "var(--t2)" }}>{p.seat}</span>
-          <span style={{ font: "400 11.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.email}</span>
-          <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.capacity || "capacity unknown"}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: p.dot }} />{p.status}</span>
-        </div>
-      ))}
+    <div>
+      {seatCard}
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+        {v.people.map((p) => (
+          <div key={p.name} className="bp2-people-row" onClick={p.open} style={{ display: "grid", gridTemplateColumns: "200px 110px 1fr 140px 90px", gap: 12, alignItems: "center", padding: "11px 14px", borderBottom: "1px solid var(--line2)", cursor: "pointer" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 26, height: 26, borderRadius: "50%", background: p.av, color: "#fff", font: "600 10px Inter,sans-serif", display: "flex", alignItems: "center", justifyContent: "center" }}>{p.initials}</span>
+              {p.name}
+            </span>
+            <span style={{ fontSize: 12, color: "var(--t2)" }}>{p.seat}</span>
+            <span style={{ font: "400 11.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.email}</span>
+            <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{p.capacity || "capacity unknown"}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: p.dot }} />{p.status}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -618,7 +851,10 @@ export function ConnectionsView({ v }) {
           {v.domainShells.map((d) => (
             <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
               <span>{d.id} · {d.label}</span>
-              <span style={{ color: "var(--t3)" }}>{d.status} · needs connection</span>
+              <span style={{ color: "var(--t3)" }}>
+                {d.status || "planned"}
+                {d.needs_connection ? " · needs connection" : d.live_write ? "" : " · no live write"}
+              </span>
             </div>
           ))}
         </div>
@@ -641,22 +877,41 @@ export function SettingsView({ v }) {
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: 18 }}>
         <div style={{ fontSize: 15, fontWeight: 600 }}>{v.setTitle}</div>
         <div style={{ fontSize: 12.5, color: "var(--t3)", marginTop: 4 }}>{v.setDesc}</div>
-        {v.set_permissions ? (
-          <div style={{ marginTop: 16 }}>
-            {v.repoGrants.map((g) => (
-              <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--line2)" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{g.label}</div>
-                  <div style={{ fontSize: 12, color: "var(--t3)" }}>{g.desc}</div>
-                </div>
-                <button type="button" onClick={g.toggle} style={{ width: 40, height: 22, borderRadius: 11, border: `1px solid ${g.bd}`, background: g.track, position: "relative", cursor: "pointer" }}>
-                  <span style={{ position: "absolute", top: 2, left: g.knob, width: 16, height: 16, borderRadius: "50%", background: "#fff" }} />
-                </button>
-              </div>
-            ))}
+        {v.set_ai_agents && v.hermesHost ? (
+          <div style={{ marginTop: 16, padding: 14, borderRadius: 9, border: "1px solid var(--line2)", background: "var(--raised)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: v.hermesHost.status === "reachable" ? "var(--green)" : "var(--amber)" }} />
+              <span style={{ fontSize: 13.5, fontWeight: 600 }}>Hermes Host</span>
+              <span style={{ marginLeft: "auto", font: "500 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{v.hermesHost.status}</span>
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 8 }}>{v.hermesHost.message}</div>
+            <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12 }}>
+              <div>Always-on agent box · technical operators</div>
+              <div style={{ textAlign: "right", color: "var(--t3)" }}>Write tools · blocked</div>
+              <div>Pin · {v.hermesHost.pin || "not set"}</div>
+              <div style={{ textAlign: "right", color: "var(--t3)" }}>{v.hermesHost.api_server ? "Host API ready" : v.hermesHost.mock ? "Host not ready" : "Probe only"}</div>
+            </div>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--t3)" }}>Workspace product stays Papership. Hermes Host is the runtime box inside it. Context Music is out of scope.</div>
           </div>
-        ) : v.set_plan ? (
+        ) : null}
+        {v.set_plan ? (
           <div style={{ marginTop: 16 }}>
+            {v.seatSummary ? (
+              <div style={{ marginBottom: 14, padding: 14, borderRadius: 9, border: "1px solid var(--line2)", background: "var(--raised)" }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600 }}>{v.seatSummary.label}</div>
+                <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 6 }}>
+                  {v.seatSummary.domainCount} domains entitled · SKU {v.seatSummary.sku} · plan {v.seatSummary.planHint}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--t3)", marginTop: 6 }}>
+                  Products: {(v.seatSummary.products || []).join(", ") || "hey_papership, workflows, hermes_host, engine_labs.loop"}
+                </div>
+                {typeof v.goWorkflows === "function" ? (
+                  <button type="button" onClick={v.goWorkflows} style={{ marginTop: 10, height: 28, padding: "0 12px", border: "1px solid var(--line)", background: "var(--surface)", color: "var(--t1)", borderRadius: 6, font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>
+                    Open Workflows · Founder loop
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10 }}>
               {(v.planTiers || []).map((t) => (
                 <div key={t.label} style={{ border: "1px solid var(--line2)", borderRadius: 8, padding: 12 }}>
@@ -671,6 +926,20 @@ export function SettingsView({ v }) {
             {(v.setRows || []).map((r) => (
               <div key={r.k} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid var(--line2)", fontSize: 13 }}>
                 <span>{r.k}</span><span style={{ color: "var(--t2)" }}>{r.v}</span>
+              </div>
+            ))}
+          </div>
+        ) : v.set_permissions ? (
+          <div style={{ marginTop: 16 }}>
+            {v.repoGrants.map((g) => (
+              <div key={g.label} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--line2)" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{g.label}</div>
+                  <div style={{ fontSize: 12, color: "var(--t3)" }}>{g.desc}</div>
+                </div>
+                <button type="button" onClick={g.toggle} style={{ width: 40, height: 22, borderRadius: 11, border: `1px solid ${g.bd}`, background: g.track, position: "relative", cursor: "pointer" }}>
+                  <span style={{ position: "absolute", top: 2, left: g.knob, width: 16, height: 16, borderRadius: "50%", background: "#fff" }} />
+                </button>
               </div>
             ))}
           </div>
