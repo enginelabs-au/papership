@@ -76,6 +76,7 @@ Do not store secret values here. Charges stay off until a later owner flip.
 | OT-70 | done | papership | Command room: paid operator seat (43 domain entitlements), Hey Papership, Workflows Founder loop, Hermes Host probe box. Context Music excluded. Continues PR #7. Tests: `test_command_room.py` + related 57 passed. |
 | OT-69 | done | papership | Engine Labs managed project + loop job wiring. Catalogue is 43 domains; B08/P01/P04 `configured` not `working`. Jobs stay queued. No live GitHub open, no Hermes write. Quark/portability stay out. PR https://github.com/enginelabs-au/papership/pull/7. Tests: `test_engine_labs_job.py` + related 37 passed. |
 | OT-71 | done | — | Owner Papership UI mockups copied to `docs/ui-blueprint/blueprint-3` (233 files + SOURCE). Live chrome stays blueprint-2. |
+| OT-72 | done | — | Owner merged all live feature work to `main` (PR #7). Closed PR #8 as superseded (conflicts with #7). Deleted remotes `cursor/engine-labs-job-loop-b87f`, `cursor/engine-labs-operator-loop-ee2c`, `cursor/rename-lauch-to-launch-8c4d`. GitHub now has only `main`. |
 
 ## Standing rules for this list
 
