@@ -21,6 +21,8 @@ sources:
 
 This roadmap maps every intake phase (01–18) exactly once to an execution plan and a release, records the gates that must pass between plans, the dependencies between them, and the human-only actions deferred to each release's final checklist. It contains no prices, no dates beyond phase 0, and no metric values: every threshold without data is labelled `first-baseline` (NFR-4).
 
+Forward planning for the Knowledge Layer mission is `docs/knowledge-layer/PHASE_ROADMAP.md` (D-36, 2026-10-06). This file remains the Company OS intake map. "No Phase 8" in state means this series ended at phase 7. It does not forbid Knowledge Layer phase KL-P8.
+
 Rules that govern this document:
 
 - Exactly one later phase plan is generated after each verified completion (`.cursor/instructions/PROJECT_PLANNING.md`); the plan names below are commitments to file names, not to content.

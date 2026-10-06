@@ -123,5 +123,6 @@ If a procedure is still experimental or not outcome-stable, keep it in a **runbo
 | `launch-pipeline` | Start, resume, remediate, or close the complete linked product-delivery pipeline | [SKILL.md](skills/launch-pipeline/SKILL.md) |
 | `supabase-linked-migrations` | SQL migrations to linked Supabase; local/remote alignment | [SKILL.md](skills/supabase-linked-migrations/SKILL.md) |
 | `vercel-deploy-workflow` | Next.js → Vercel via Git or CLI; env; MCP optional | [SKILL.md](skills/vercel-deploy-workflow/SKILL.md) |
+| `git-safety` | Anonymous git identity and staged-secret refusal before commit or push | [SKILL.md](skills/git-safety/SKILL.md) |
 
 ---

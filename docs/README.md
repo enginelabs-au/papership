@@ -26,3 +26,7 @@ Start or resume the complete product lifecycle with `/launch-pipeline`; its deta
 - Hey Engine (PRD-E.13): persistent assistant control + wake phrase; R1 ships the control and an honest unavailable state; runtime and wake word are later phases
 - Decisions: `decisions/` — D-01…D-33 (Phase 6 planning D-33; route D-32; Phase 5 D-31; Phase 4 closeout D-22…D-30)
 - Papership product UI: `apps/web` (blueprint-2 at `/papership`; leftover `/cc-org-dash` redirects) on Vercel project `orgos`. Engine Labs marketing stays on `enginelabs.com.au`.
+
+## Knowledge Layer
+
+Forward mission (D-36): Papership is the Knowledge Layer for agents. Architecture: `knowledge-layer/`. Plans: `plans/knowledge-layer/`. The Company OS plans and the 43-domain capability registry stay as the operational baseline. "Papership Registry" means the later Agent Materials surface, not that catalogue.

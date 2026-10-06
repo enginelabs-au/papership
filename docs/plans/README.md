@@ -9,3 +9,5 @@ Plans are generated and executed sequentially.
 Each substantive plan links its `docs/workstreams/<task-id>/manifest.md`, records every canonical role as required or skipped, and closes only after required role gates have evidence-backed verdicts.
 
 Canonical process: `/instructions/PROJECT_PLANNING.md` and `/instructions/ROLES.md`.
+
+The Knowledge Layer roadmap (D-36) uses a separate sequence under `knowledge-layer/`. `phase_0_foundations_plan.md` through `phase_7_ecosystem_mobile_plan.md` remain the closed Company OS lifecycle. Do not add Knowledge Layer phases to that series. KL-P0: `knowledge-layer/phase_0_architecture_alignment_plan.md`.

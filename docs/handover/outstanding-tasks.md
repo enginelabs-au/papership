@@ -77,6 +77,7 @@ Do not store secret values here. Charges stay off until a later owner flip.
 | OT-69 | done | papership | Engine Labs managed project + loop job wiring. Catalogue is 43 domains; B08/P01/P04 `configured` not `working`. Jobs stay queued. No live GitHub open, no Hermes write. Quark/portability stay out. PR https://github.com/enginelabs-au/papership/pull/7. Tests: `test_engine_labs_job.py` + related 37 passed. |
 | OT-71 | done | — | Owner Papership UI mockups copied to `docs/ui-blueprint/blueprint-3` (233 files + SOURCE). Live chrome stays blueprint-2. |
 | OT-72 | done | — | Owner merged all live feature work to `main` (PR #7). Closed PR #8 as superseded (conflicts with #7). Deleted remotes `cursor/engine-labs-job-loop-b87f`, `cursor/engine-labs-operator-loop-ee2c`, `cursor/rename-lauch-to-launch-8c4d`. GitHub now has only `main`. |
+| OT-73 | done | papership | Knowledge Layer Phase 0 (D-36): architecture set in `docs/knowledge-layer/`, plan `docs/plans/knowledge-layer/phase_0_architecture_alignment_plan.md`. Security CONDITIONAL (KL-SEC-01 and KL-SEC-02 remain code seams). No product code change. KL-P1 not started. |
 
 ## Standing rules for this list
 

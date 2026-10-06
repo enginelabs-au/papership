@@ -2,19 +2,19 @@
 
 ## Current Objective
 
-- Papership command room: paid founder/solo operator seat (all domains entitled), Hey Papership chat, Workflows + Founder/`engine_labs.loop`, Hermes Host always-on agent box. Context Music / Quark / portability out of scope.
+- Knowledge Layer Phase 0 is recorded (D-36). Papership is the Knowledge Layer for agents. KL-P1 has not started. Company OS behaviour stays. Charges stay off. Hermes write/external `accepted` stays unauthorized.
 
 ## Current Status
 
-- `main` is the only GitHub branch (`2360b00`). PR #7 merged. Parallel PR #8 closed as superseded. Feature remotes deleted.
+- KL-P0 `complete_conditional`. Security verdict CONDITIONAL. No high or critical finding. KL-SEC-01 and KL-SEC-02 are open code seams with later due points. Product trees were not edited.
 
 ## Project Phase
 
-- Post-closure increment toward the intake registry. Not a new numbered phase. Active plan remains `docs/plans/final_implementation_checklist.md`.
+- KL-P0 architecture alignment. Not a Company OS phase. "No Phase 8" still means the Company OS series ended at phase 7.
 
 ## Active Plan
 
-- `docs/plans/final_implementation_checklist.md` plus this Engine Labs job-loop increment.
+- `docs/plans/knowledge-layer/phase_0_architecture_alignment_plan.md`
 
 ## Files in Active Use
 
@@ -39,9 +39,11 @@
 1. Repeat open rows from `docs/handover/outstanding-tasks.md` (none open).
 2. Do not treat write/external Hermes tools as accepted.
 3. Charges stay off (OT-08).
+4. Do not start KL-P1 until the owner asks, and only after `docs/plans/knowledge-layer/phase_1_workspace_foundation_plan.md` exists.
 
 ## Last Updated
 
+- 2026-10-06T12:50Z — KL-P0 architecture alignment recorded (D-36). Security CONDITIONAL. Product code unchanged. KL-P1 not started.
 - 2026-10-06T11:53Z — Merged PR #7 to main; closed PR #8 as redundant; deleted leftover feature remotes. GitHub now has only `main`.
 - 2026-09-16T14:16Z — Added `docs/ui-blueprint/blueprint-3` from owner Papership UI Mockups drop. Live chrome stays blueprint-2.
 - 2026-09-16T13:20Z — Fixed product-ci PIL failure on icons test; tip `edc0713`; run 35101017265 green.
@@ -50,11 +52,11 @@
 
 ## Active Workstream
 
-- `docs/workstreams/20260910-engine-labs-company-os/manifest.md` (Tier 3; G11 PASS)
+- `docs/workstreams/20261006-knowledge-layer/manifest.md` (Tier 2; KL-P0 CONDITIONAL)
 
 ## Active Role and Gate
 
-- G11 PASS (2026-09-12). Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later). OQ-G2 recorded locally.
+- KL-P0 security CONDITIONAL. Owner handoff: `docs/workstreams/20261006-knowledge-layer/delivery/owner-handoff.md`. Company OS G11 PASS remains historical. Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later).
 
 ## Predecessor Handoff
 
