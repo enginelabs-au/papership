@@ -1,6 +1,6 @@
 ---
 plan: phase_11_optional_economics
-status: implemented_pending_security
+status: complete
 created: 2026-10-06
 updated: 2026-10-06
 owner: lead-agent
@@ -15,7 +15,7 @@ decision: docs/decisions/2026-10-06-knowledge-layer-mission.md
 
 A human in the tenant can attach an economic model to a Papership Registry material. The model is metadata. Charges stay off.
 
-The owner asked to implement this plan. The model is in the tree and waiting on the security review. KL-P12 is not started.
+The owner asked to implement this plan. Security review returned PASS. The phase is complete. The owner then asked to plan KL-P12. That plan is a draft and is not implemented.
 
 ## 2. Relation to project end-state
 
@@ -168,7 +168,7 @@ Charters are written at implementation start under `docs/workstreams/20261006-kn
 | Index | pytest | the new route is documented, and the human-writer true set is still trust and impact | passed |
 | Materials label | browser, desktop and under 768px | the row label and "Charges stay off."; empty copy remains | passed |
 | Bottom tabs | static scan | `BOTTOM_TABS` still `today`, `work`, `inbox` | passed |
-| Security gate | handoff | not BLOCKED | in progress |
+| Security gate | handoff | not BLOCKED | passed |
 
 ## 15. Security, privacy, reliability, accessibility, and performance checks
 
@@ -221,7 +221,7 @@ Stop writing the economics row and omit the two list fields. Materials, the rate
 
 Planning evidence: this file and `docs/workstreams/20261006-knowledge-layer-p11/manifest.md`.
 
-Implementation evidence is empty until the owner asks.
+Implementation evidence: pytest economics, index, and materials tests 8 passed. Contracts 16 passed. Web static scan 15 passed. Browser checked Materials at 1280 and 390. Security review PASS. Project lead accepted. The implementation is on `main` at `8efc8c2`. The owner then asked to plan KL-P12. That plan is a draft.
 
 ## 21. Deviations and follow-ups
 

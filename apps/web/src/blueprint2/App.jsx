@@ -334,7 +334,7 @@ export default function Blueprint2App() {
     if (typeof window === "undefined" || !authed) return;
     const next = hashFromNav(tab, sub, setPane);
     if (window.location.hash !== next) {
-      window.history.replaceState({}, "", `${window.location.pathname || "/papership"}${next}`);
+      window.history.replaceState({}, "", `${window.location.pathname || "/"}${next}`);
     }
   }, [authed, tab, sub, setPane]);
 
@@ -355,7 +355,7 @@ export default function Blueprint2App() {
       setOauthNote(`${provider} authorisation failed${reason ? ` (${reason})` : ""}. Retry Set up from Integrations.`);
     }
     loadPapershipOverlay().then(setOverlay);
-    const path = window.location.pathname || "/papership";
+    const path = window.location.pathname || "/";
     window.history.replaceState({}, "", `${path}#integrations/connected`);
   }, []);
 
@@ -1051,12 +1051,22 @@ export default function Blueprint2App() {
   if (rk === "agent") {
     const agent = (v.agents || []).find((row) => row.principal_id === route.id);
     pageTitle = agent?.display_name || "Agent";
-    pageDesc = agent?.context_plan_id ? `Context plan ${agent.context_plan_id}` : "No context plan";
+    const planId = agent?.context_plan_id || "";
+    if (!planId) {
+      pageDesc = "No context plan";
+    } else if (contextPlan?.id === planId) {
+      const citations = Array.isArray(contextPlan.citations) ? contextPlan.citations : [];
+      const organisation = citations.filter((row) => row.band === "organisation").length;
+      const packs = citations.length - organisation;
+      pageDesc = `Context plan ${planId} · Organisation ${organisation} · Packs ${packs} · Organisation stays ahead of impact · Same plan for an external agent`;
+    } else {
+      pageDesc = `Context plan ${planId}`;
+    }
     pageActions = [{ label: "Back to Agents", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: go("agents") }];
   }
   if (!rk && tab === "knowledge" && cur === "Materials") {
     pageTitle = "Papership Registry";
-    pageDesc = "Candidates this organisation can see. Skill hosts, MCP directories, and publisher catalogues are not connected. Charges stay off.";
+    pageDesc = "Two examples point at native files. Skill hosts, MCP directories, and publisher catalogues are not connected. Charges stay off.";
   }
   if (rk === "knowledge-object") {
     pageTitle = v.knowledgeDetail?.object?.title || "Knowledge object";

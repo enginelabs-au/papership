@@ -63,3 +63,7 @@ Server-side transitions are the source for these events. Clients emit navigation
 From KL-P1, an operator can inspect role, task, active context, source, version, and approvals. Gaps, automatic resolution, and impact scores stay empty or clearly unavailable until their phases. See [CLIENT_ARCHITECTURE.md](CLIENT_ARCHITECTURE.md).
 
 From KL-P10, a recorded loop stage cites the work item's context plan id and that plan's version ids. The citation is identifiers only and does not call the runtime.
+
+From KL-P12, a context plan cites organisation context before downloaded packs. The citation stores a band, `organisation` or `pack`, and does not store a body or a path.
+
+From KL-P14, pack citations are ordered by the newest impact outcome for that version and work item: helped, then unknown or none, then harmed. Organisation context stays ahead of that order. There is no score.

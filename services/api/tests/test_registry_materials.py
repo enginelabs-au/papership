@@ -91,6 +91,49 @@ def test_materials_are_tenant_scoped_and_leave_the_catalogue(client, founder_hea
     assert other.status_code == 200
     assert "ledger/art-founder.md" not in {row["locator"] for row in other.json()["materials"]}
     assert "education-demo" in {row["locator"] for row in other.json()["materials"]}
+    assert "example-skill" in {row["locator"] for row in other.json()["materials"]}
+
+
+def test_example_pointers_are_listed_and_not_installable(client, founder_headers, tmp_path: Path):
+    listed = client.get("/registry/materials", headers=founder_headers)
+    assert listed.status_code == 200
+    materials = {row["locator"]: row for row in listed.json()["materials"]}
+    assert materials["example-skill"]["title"] == "Example skill"
+    assert materials["example-mcp"]["title"] == "Example MCP server"
+    assert materials["example-skill"]["class"] == "inferred"
+    assert materials["example-mcp"]["kind"] == "pack"
+    assert "SKILL.md" not in listed.text
+    assert "/" not in materials["example-skill"]["locator"]
+    assert "/" not in materials["example-mcp"]["locator"]
+
+    packs = client.get("/packs", headers=founder_headers)
+    assert packs.status_code == 200
+    ids = {row["id"] for row in packs.json()["items"]}
+    assert ids == {"education-demo", "example-executable"}
+    assert "example-skill" not in ids
+
+    for pack_id in ("example-skill", "example-mcp"):
+        denied = client.post("/packs/install", headers=founder_headers, json={"pack_id": pack_id})
+        assert denied.status_code == 404
+
+    db = sqlite3.connect(tmp_path / "store.sqlite")
+    db.execute(
+        """
+        INSERT INTO work_items
+          (id, tenant_id, title, stage, stage_changed_at, created_at, updated_at)
+        VALUES ('work-example', 'tenant-founder', 'Examples', 'request', '2026-10-09T00:00:00Z', '2026-10-09T00:00:00Z', '2026-10-09T00:00:00Z')
+        """
+    )
+    db.commit()
+    created = client.post(
+        "/knowledge/plans",
+        headers=founder_headers,
+        json={"agent_principal_id": "principal-agent", "work_item_id": "work-example"},
+    )
+    assert created.status_code == 200
+    cited = next(row for row in created.json()["citations"] if row["object_id"] == materials["example-skill"]["object_id"])
+    assert cited["band"] == "pack"
+    assert "SKILL.md" not in created.text
 
 
 def test_material_route_does_not_install_or_hardcode_tenant():

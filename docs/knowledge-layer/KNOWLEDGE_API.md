@@ -1,6 +1,6 @@
 # Knowledge API
 
-The Workspace and an external agent call these routes. This list does not copy their records. Zod schemas in `packages/contracts` are the response contract: `KnowledgeIndexSchema`, `KnowledgeObjectSummarySchema`, `ContextGraphSummarySchema`, `ContextPlanSchema`, `ContextSignalsSchema`, and `RegistryMaterialSchema`.
+The Workspace and an external agent call these routes. This list does not copy their records. An external agent resolves with `POST /knowledge/plans`, `GET /knowledge/plans/{plan_id}`, and `GET /knowledge/plans/{plan_id}/signals`. Those payloads are identifiers and enums. They are not a copy of the graph. Zod schemas in `packages/contracts` are the response contract: `KnowledgeIndexSchema`, `KnowledgeObjectSummarySchema`, `ContextGraphSummarySchema`, `ContextPlanSchema`, `ContextSignalsSchema`, and `RegistryMaterialSchema`.
 
 An agent principal with `memory.read` or `org.admin` may call the reads. `POST /knowledge/trust` and `POST /knowledge/impact` stay limited to a human principal with `memory.write` or `org.admin`. `POST /knowledge/local-files` stores a title, digest, and size for the registering owner. The path and the bytes are not fields.
 

@@ -23,9 +23,9 @@ Telegram and WhatsApp are catalogue rows. They are not Papership send paths.
 | Agent Skills (`SKILL.md`) | KL-P3 discovery, KL-P2 reference | Reference the skill. Do not fork the standard |
 | MCP servers | KL-P3 | Reference capability and trust. Do not build a second protocol |
 | Other plugins | KL-P3 | Same as MCP |
-| Other agent runtimes (Cursor, Claude Code, Codex, OpenCode, custom) | KL-P6 consumers | They call the Knowledge API. Papership does not embed their agents |
+| Other agent runtimes (Cursor, Claude Code, Codex, OpenCode, custom) | KL-P6 consumers, KL-P15 resolve | They call `POST /knowledge/plans`, `GET /knowledge/plans/{plan_id}`, and `GET /knowledge/plans/{plan_id}/signals`. The payload is identifiers and enums, not a copy of the graph. Papership does not embed their agents and does not ship an SDK |
 | Local and private files | KL-P8 Desktop Bridge | Resolved on the machine. Not uploaded by default |
-| Publisher catalogues | KL-P13 | Examples of excellent Agent Materials. Not a marketplace requirement |
+| Publisher catalogues | KL-P13 | Two example pointers, `example-skill` and `example-mcp`, are listed on Materials. They are not installable. Skill and MCP standards stay outside Papership. Live catalogues are not connected. |
 
 ## Compatibility target
 

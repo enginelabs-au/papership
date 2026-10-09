@@ -1,17 +1,21 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Papership from './pages/papership';
+
+function ToHome() {
+  const location = useLocation()
+  return <Navigate to={{ pathname: "/", search: location.search, hash: location.hash }} replace />
+}
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/papership" replace />} />
-        <Route path="/papership" element={<Papership />} />
-        <Route path="/cc-org-dash" element={<Navigate to="/papership" replace />} />
-        <Route path="/EcoOS" element={<Navigate to="/papership" replace />} />
-        <Route path="/ecoos" element={<Navigate to="/papership" replace />} />
-        <Route path="/Dashboard_new" element={<Navigate to="/papership" replace />} />
-        <Route path="/Dashboard" element={<Navigate to="/papership" replace />} />
+        <Route path="/" element={<Papership />} />
+        <Route path="/cc-org-dash" element={<ToHome />} />
+        <Route path="/EcoOS" element={<ToHome />} />
+        <Route path="/ecoos" element={<ToHome />} />
+        <Route path="/Dashboard_new" element={<ToHome />} />
+        <Route path="/Dashboard" element={<ToHome />} />
       </Routes>
     </BrowserRouter>
   )

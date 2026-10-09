@@ -78,6 +78,9 @@ def migrate_workspace(store: Any) -> None:
     work_columns = {row["name"] for row in store.conn.execute("PRAGMA table_info(work_items)").fetchall()}
     if "context_refs" not in work_columns:
         store.conn.execute("ALTER TABLE work_items ADD COLUMN context_refs TEXT")
+    citation_columns = {row["name"] for row in store.conn.execute("PRAGMA table_info(context_plan_citations)").fetchall()}
+    if citation_columns and "band" not in citation_columns:
+        store.conn.execute("ALTER TABLE context_plan_citations ADD COLUMN band TEXT")
     store.conn.executescript(
         """
         CREATE TABLE IF NOT EXISTS context_objects (
@@ -139,6 +142,7 @@ def migrate_workspace(store: Any) -> None:
           plan_id TEXT NOT NULL,
           object_id TEXT NOT NULL,
           version_id TEXT NOT NULL,
+          band TEXT,
           created_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS material_economics (
@@ -436,7 +440,7 @@ def create_plan(
     ensure_pack_pointers(store, tenant_id)
     rows = store.conn.execute(
         """
-        SELECT o.id AS object_id, v.id AS version_id
+        SELECT o.id AS object_id, v.id AS version_id, v.class AS version_class, o.source_kind, o.created_at
         FROM context_objects o
         JOIN context_versions v ON v.object_id = o.id
           AND v.version_number = (
@@ -445,19 +449,25 @@ def create_plan(
         WHERE o.tenant_id = ?
           AND v.tenant_id = ?
           AND o.kind NOT IN ('preferences', 'sessions')
-          AND o.source_kind NOT IN ('registry', 'connection')
+          AND o.source_kind NOT IN ('registry', 'connection', 'local_file')
           AND (
             o.source_kind IN ('pack', 'artifact', 'attachment')
             OR (o.source_kind = 'memory' AND o.owner_principal_id = ?)
           )
         ORDER BY o.created_at DESC
-        LIMIT ?
         """,
-        (tenant_id, tenant_id, agent_id, PLAN_CITATION_CAP),
+        (tenant_id, tenant_id, agent_id),
     ).fetchall()
+    organisation = []
+    packs = []
+    for row in rows:
+        band = _citation_band(row["source_kind"], row["version_class"])
+        (organisation if band == "organisation" else packs).append((row, band))
+    packs.sort(key=lambda item: _pack_impact_rank(store, tenant_id, item[0]["version_id"], work_item_id))
+    chosen = (organisation + packs)[:PLAN_CITATION_CAP]
     now = _now()
     plan_id = _digest(tenant_id, agent_id, work_item_id, now)
-    gap = None if rows else PLAN_GAP
+    gap = None if chosen else PLAN_GAP
     store.conn.execute(
         """
         INSERT INTO context_plans
@@ -466,14 +476,14 @@ def create_plan(
         """,
         (plan_id, tenant_id, agent_id, work_item_id, gap, now),
     )
-    for row in rows:
+    for row, band in chosen:
         store.conn.execute(
             """
             INSERT INTO context_plan_citations
-              (id, tenant_id, plan_id, object_id, version_id, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+              (id, tenant_id, plan_id, object_id, version_id, band, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (_digest(plan_id, row["version_id"]), tenant_id, plan_id, row["object_id"], row["version_id"], now),
+            (_digest(plan_id, row["version_id"]), tenant_id, plan_id, row["object_id"], row["version_id"], band, now),
         )
     store.conn.execute(
         "UPDATE work_items SET context_plan_id = ? WHERE id = ? AND tenant_id = ?",
@@ -513,9 +523,9 @@ def get_plan(store: Any, tenant_id: str, plan_id: str) -> dict[str, Any]:
         raise StoreError("not found", 404)
     citations = store.conn.execute(
         """
-        SELECT object_id, version_id FROM context_plan_citations
+        SELECT object_id, version_id, band FROM context_plan_citations
         WHERE plan_id = ? AND tenant_id = ?
-        ORDER BY created_at ASC
+        ORDER BY created_at ASC, rowid ASC
         """,
         (plan_id, tenant_id),
     ).fetchall()
@@ -524,8 +534,42 @@ def get_plan(store: Any, tenant_id: str, plan_id: str) -> dict[str, Any]:
         "agent_principal_id": row["agent_principal_id"],
         "work_item_id": row["work_item_id"],
         "gap": row["gap"],
-        "citations": [{"object_id": item["object_id"], "version_id": item["version_id"]} for item in citations],
+        "citations": [
+            {
+                "object_id": item["object_id"],
+                "version_id": item["version_id"],
+                "band": item["band"] if item["band"] in ("organisation", "pack") else "pack",
+            }
+            for item in citations
+        ],
     }
+
+
+def _citation_band(source_kind: str, version_class: str) -> str:
+    if source_kind == "pack" or version_class == "inferred":
+        return "pack"
+    if version_class in ("source", "approved"):
+        return "organisation"
+    return "pack"
+
+
+def _pack_impact_rank(store: Any, tenant_id: str, version_id: str, work_item_id: str) -> int:
+    row = store.conn.execute(
+        """
+        SELECT outcome FROM context_impact_observations
+        WHERE tenant_id = ? AND version_id = ? AND work_item_id = ?
+        ORDER BY created_at DESC, rowid DESC
+        LIMIT 1
+        """,
+        (tenant_id, version_id, work_item_id),
+    ).fetchone()
+    if row is None or row["outcome"] == "unknown":
+        return 1
+    if row["outcome"] == "helped":
+        return 0
+    if row["outcome"] == "harmed":
+        return 2
+    return 1
 
 
 TRUST_VERDICTS = {"accepted", "refused"}
@@ -747,6 +791,12 @@ def set_material_economics(
     return {"object_id": object_id, "economic_model": economic_model, "list_usd": list_usd}
 
 
+EXAMPLE_MATERIALS = (
+    {"id": "example-skill", "title": "Example skill"},
+    {"id": "example-mcp", "title": "Example MCP server"},
+)
+
+
 def ensure_pack_pointers(store: Any, tenant_id: str) -> None:
     from app.phase7 import PACKS
 
@@ -762,6 +812,19 @@ def ensure_pack_pointers(store: Any, tenant_id: str) -> None:
             source_id=str(pack["id"]),
             owner_principal_id=None,
             locator=str(pack["id"]),
+            created_at=now,
+        )
+    for example in EXAMPLE_MATERIALS:
+        _project(
+            store,
+            tenant_id,
+            kind="pack",
+            title=example["title"],
+            item_class="inferred",
+            source_kind="pack",
+            source_id=example["id"],
+            owner_principal_id=None,
+            locator=example["id"],
             created_at=now,
         )
     store.flush()

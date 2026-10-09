@@ -71,7 +71,10 @@ Later phases are done only when these stories are possible. KL-P0 records them s
 | KL-P8 | `docs/plans/knowledge-layer/phase_8_desktop_bridge_plan.md` (`complete`; security PASS) |
 | KL-P9 | `docs/plans/knowledge-layer/phase_9_mobile_companion_plan.md` (`complete`, security PASS) |
 | KL-P10 | `docs/plans/knowledge-layer/phase_10_lifecycle_fabric_plan.md` (`complete`, security PASS) |
-| KL-P11 | `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md` (`implemented_pending_security`) |
-| KL-P12 onward | Generated only after the previous phase is verified |
+| KL-P11 | `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md` (`complete`, security PASS) |
+| KL-P12 | `docs/plans/knowledge-layer/phase_12_private_organisation_context_plan.md` (`complete`, security PASS) |
+| KL-P13 | `docs/plans/knowledge-layer/phase_13_publisher_supply_plan.md` (`complete`, security PASS) |
+| KL-P14 | `docs/plans/knowledge-layer/phase_14_empirical_optimisation_plan.md` (`complete`, security PASS) |
+| KL-P15 | `docs/plans/knowledge-layer/phase_15_ecosystem_scale_plan.md` (`complete`, security PASS) |
 
 Company OS plans `docs/plans/phase_0_foundations_plan.md` through `phase_7_ecosystem_mobile_plan.md` are historical. Do not append Knowledge Layer tasks to them.

@@ -5,6 +5,7 @@ import {
   ApprovalListRowSchema,
   AuditListRowSchema,
   ContextGraphSummarySchema,
+  ContextPlanCitationSchema,
   ContextPlanSchema,
   ContextSignalsSchema,
   KnowledgeIndexSchema,
@@ -117,9 +118,11 @@ test("context graph records are metadata and a fixed relationship vocabulary", (
     agent_principal_id: "principal-agent",
     work_item_id: "work-1",
     gap: null,
-    citations: [{ object_id: hex, version_id: hex }],
+    citations: [{ object_id: hex, version_id: hex, band: "organisation" }],
   });
   assert.equal("trust" in plan, false);
+  assert.throws(() => ContextPlanCitationSchema.parse({ object_id: hex, version_id: hex, band: "public" }));
+  assert.throws(() => ContextPlanCitationSchema.parse({ object_id: hex, version_id: hex }));
   ContextPlanSchema.parse({
     id: "plan-empty",
     agent_principal_id: "principal-agent",

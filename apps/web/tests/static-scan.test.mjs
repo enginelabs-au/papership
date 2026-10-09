@@ -11,11 +11,11 @@ test("product title is Papership", () => {
   assert.match(html, /<title>Papership<\/title>/);
 });
 
-test("canonical product route is /papership", () => {
+test("public home is / with no papership or lander redirect", () => {
   const app = readFileSync(join(root, "src/App.jsx"), "utf8");
-  assert.match(app, /path="\/papership" element=\{<Papership/);
-  assert.match(app, /path="\/cc-org-dash" element=\{<Navigate to="\/papership"/);
-  assert.match(app, /path="\/" element=\{<Navigate to="\/papership"/);
+  assert.match(app, /path="\/" element=\{<Papership/);
+  assert.doesNotMatch(app, /path="\/papership"/);
+  assert.doesNotMatch(app, /lander/);
 });
 
 test("localStorage keys are papership-* with legacy migrate", () => {
@@ -64,13 +64,13 @@ test("Data view has no unpublished trace counts or leftover prices", () => {
   assert.doesNotMatch(leftover, /\$0\./);
 });
 
-test("PWA starts at /papership and registers a shell service worker", () => {
+test("PWA starts at / and registers a shell service worker", () => {
   const manifest = readFileSync(join(root, "public/manifest.json"), "utf8");
   const html = readFileSync(join(root, "index.html"), "utf8");
   const sw = readFileSync(join(root, "public/sw.js"), "utf8");
-  assert.match(manifest, /"start_url": "\/papership"/);
+  assert.match(manifest, /"start_url": "\/"/);
   assert.match(html, /serviceWorker\.register\("\/sw\.js"\)/);
-  assert.match(sw, /papership-shell-v1/);
+  assert.match(sw, /papership-shell-v2/);
   assert.match(sw, /method !== "GET"/);
 });
 

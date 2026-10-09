@@ -2,19 +2,23 @@
 
 ## Current Objective
 
-- Knowledge Layer KL-P11 optional economics is `implemented_pending_security`. A material can carry a list model. Charges stay off. KL-P10 is `complete` (security PASS). KL-P9 is `complete` (security PASS). Registrar DNS for `papership.com.au` is still GoDaddy (OT-89). Hermes write/external `accepted` stays unauthorized.
+- Knowledge Layer KL-P15 ecosystem scale is `complete` (security PASS). An external agent uses the existing plan payload and does not receive a copy of the graph. Charges stay off. Registrar DNS for `papership.com.au` is still GoDaddy (OT-89). Hermes write/external `accepted` stays unauthorized.
 
 ## Current Status
 
-- KL-P0 `complete_conditional`. KL-P1 is `complete_conditional`. KL-P2 through KL-P6 are `complete` (security PASS). KL-P7 is `complete_conditional` (security PASS; registrar DNS remains). KL-P8, KL-P9, and KL-P10 are `complete` (security PASS). KL-P11 is `implemented_pending_security`. KL-SEC-01 and KL-SEC-02 from Phase 0 remain open.
+- KL-P0 `complete_conditional`. KL-P1 is `complete_conditional`. KL-P2 through KL-P6 are `complete` (security PASS). KL-P7 is `complete_conditional` (security PASS; registrar DNS remains). KL-P8 through KL-P15 are `complete` (security PASS). KL-SEC-01 and KL-SEC-02 from Phase 0 remain open.
 
 ## Project Phase
 
-- KL-P7 is `complete_conditional`. KL-P8 and KL-P9 are `complete`. KL-P10 is `complete`. KL-P11 is implemented and waiting on security. "No Phase 8" still means the Company OS series ended at phase 7. It does not forbid Knowledge Layer KL-P8.
+- KL-P7 is `complete_conditional`. KL-P8 through KL-P15 are `complete`. "No Phase 8" still means the Company OS series ended at phase 7. It does not forbid Knowledge Layer KL-P8.
 
 ## Active Plan
 
-- `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md` (`implemented_pending_security`)
+- `docs/plans/knowledge-layer/phase_15_ecosystem_scale_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_14_empirical_optimisation_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_13_publisher_supply_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_12_private_organisation_context_plan.md` (`complete`)
+- `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md` (`complete`)
 - `docs/plans/knowledge-layer/phase_10_lifecycle_fabric_plan.md` (`complete`)
 - `docs/plans/knowledge-layer/phase_9_mobile_companion_plan.md` (`complete`)
 - `docs/plans/knowledge-layer/phase_8_desktop_bridge_plan.md` (`complete`)
@@ -49,17 +53,23 @@
 
 ## Current Working State
 
-- Branch `main` @ `2360b00` (PR #7 merged). Registry still 43 rows; only B08.01, P01.01, P04.01 move to `configured`. Jobs queue with a work item at `request`. Hermes write and live GitHub open stay false.
+- Branch `main` matches `origin/main` at `8efc8c2` for the Knowledge Layer through KL-P11. KL-P12 through KL-P15 are local and not committed. Registry still 43 rows. Hermes write and live GitHub open stay false. Charges stay off.
 
 ## Next Actions
 
-1. Repeat open rows from `docs/handover/outstanding-tasks.md` (OT-89, OT-96).
-2. Record the KL-P11 security verdict when it returns. Do not start KL-P12 unless the owner asks.
+1. Repeat the open row from `docs/handover/outstanding-tasks.md` (OT-89).
+2. Do not write a KL-P16 plan. Do not commit unless the owner asks. Do not update the final checklist unless the owner asks to close the Knowledge Layer.
 3. Do not treat write/external Hermes tools as accepted.
 4. Charges stay off (OT-08).
 
 ## Last Updated
 
+- 2026-10-09T12:50Z — KL-P15 security PASS recorded. Project lead accepted. Phase complete. Not committed. No KL-P16 plan.
+- 2026-10-09T14:10Z — Production `dpl` for the apex home is Ready. `https://papership.com.au/` serves the app. `www` 308s to the apex. No `/papership` or `/lander` redirect is in the app. GoDaddy `/lander` still appears while resolvers cache `ns09` and `ns10`. OT-89 stays open.
+- 2026-10-09T13:35Z — Cloudflare zone `papership.com.au` created. Apex A `76.76.21.21` and `www` CNAME `cname.vercel-dns.com` are DNS-only. Nameservers to set at GoDaddy are `clark.ns.cloudflare.com` and `nancy.ns.cloudflare.com`. Public DNS still GoDaddy. OT-89 stays open.
+- 2026-10-09T11:10Z — Owner asked to plan KL-P13 while KL-P12 security was still open. Publisher supply plan drafted. Two example pointers. Implementation not started. Not committed. KL-P14 not started.
+- 2026-10-09T11:05Z — KL-P12 private organisation context implemented. A context plan cites organisation context before packs. Pytest 13 passed. Contracts 16 passed. Web scan 15 passed. Browser checked the agent page at 1280 and 390. Security review in progress. Not committed. KL-P13 not started.
+- 2026-10-06T23:45Z — KL-P11 security PASS recorded. Project lead accepted. Phase complete. Owner asked to plan KL-P12. Draft written. Implementation not started. Not committed. KL-P13 not started.
 - 2026-10-06T16:35Z — KL-P10 security PASS recorded. Project lead accepted. Phase complete. Not committed. KL-P11 stays on its own review. KL-P12 not started.
 - 2026-10-06T16:30Z — KL-P11 optional economics implemented. A human can attach free, listed, or unavailable to a material. Charges stay off. Pytest 8 passed. Contracts 16 passed. Web scan 15 passed. Browser checked Materials at 1280 and 390. Security review in progress. Not committed. KL-P12 not started.
 - 2026-10-06T16:20Z — Owner asked to plan KL-P11 while KL-P10 security was still open. Optional economics plan drafted. A material can carry a list model. Charges stay off. Implementation not started. Not committed. KL-P12 not started.
@@ -102,7 +112,11 @@
 
 ## Active Workstream
 
-- `docs/workstreams/20261006-knowledge-layer-p11/manifest.md` (Tier 3; implemented_pending_security)
+- `docs/workstreams/20261006-knowledge-layer-p15/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p14/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p13/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p12/manifest.md` (Tier 3; complete, security PASS)
+- `docs/workstreams/20261006-knowledge-layer-p11/manifest.md` (Tier 3; complete, security PASS)
 - `docs/workstreams/20261006-knowledge-layer-p10/manifest.md` (Tier 3; complete, security PASS)
 - `docs/workstreams/20261006-knowledge-layer-p9/manifest.md` (Tier 3; complete, security PASS)
 - `docs/workstreams/20261006-knowledge-layer-p8/manifest.md` (Tier 3; complete, security PASS)
@@ -116,7 +130,7 @@
 
 ## Active Role and Gate
 
-- KL-P7 is `complete_conditional`. KL-P8 and KL-P9 are `complete` (security PASS). KL-P10 is `complete` (security PASS). KL-P11 is `implemented_pending_security` (OT-96). Registrar DNS remains (OT-89). KL-P0 security remains CONDITIONAL. Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later).
+- KL-P7 is `complete_conditional`. KL-P8 through KL-P15 are `complete` (security PASS). Registrar DNS remains (OT-89). KL-P0 security remains CONDITIONAL. Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later).
 
 ## Predecessor Handoff
 

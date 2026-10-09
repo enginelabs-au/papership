@@ -93,14 +93,22 @@ Do not store secret values here. Charges stay off until a later owner flip.
 | OT-86 | done | papership | KL-P7 Web consolidation plan is at `docs/plans/knowledge-layer/phase_7_web_consolidation_plan.md`. Implementation followed in the same day. |
 | OT-87 | done | papership | KL-P7 Web consolidation security review is PASS. The phase is `complete_conditional` because registrar DNS still does not serve the Workspace. KL-P8 is planned and not implemented. |
 | OT-88 | done | papership | KL-P8 Desktop Bridge plan is at `docs/plans/knowledge-layer/phase_8_desktop_bridge_plan.md`. Implementation is in the tree. A local file stays on the machine. The API stores a title, digest, and size. |
-| OT-89 | open | papership | Point `papership.com.au` nameservers off `ns09.domaincontrol.com` and `ns10.domaincontrol.com` so `https://papership.com.au/papership` serves the Workspace. The domain is already attached to Vercel project `papership`. |
+| OT-89 | open | papership | Registry nameservers are `clark.ns.cloudflare.com` and `nancy.ns.cloudflare.com`. Some resolvers still cache `ns09.domaincontrol.com` and `ns10.domaincontrol.com`, and those still return the GoDaddy `/lander` page. Cloudflare serves `https://papership.com.au/` and sends `www` there. |
 | OT-90 | done | papership | KL-P8 Desktop Bridge security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P9 is planned and not implemented. |
 | OT-91 | done | papership | KL-P9 Mobile Companion plan is at `docs/plans/knowledge-layer/phase_9_mobile_companion_plan.md`. Implementation is in the tree. A phone approves or rejects through the existing approval API. |
 | OT-92 | done | papership | KL-P9 Mobile Companion security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P10 stays on its own review. |
 | OT-93 | done | papership | KL-P10 Lifecycle Fabric plan is at `docs/plans/knowledge-layer/phase_10_lifecycle_fabric_plan.md`. A stage event cites a context plan and version ids. |
 | OT-94 | done | papership | KL-P10 Lifecycle Fabric security review is PASS. Handoff recorded. The phase is complete in the tree and not committed. KL-P11 stays on its own review. |
 | OT-95 | done | papership | KL-P11 optional economics plan is at `docs/plans/knowledge-layer/phase_11_optional_economics_plan.md`. A material can carry a list model. Charges stay off. |
-| OT-96 | open | papership | KL-P11 optional economics is implemented and waiting on the security review. The phase stays `implemented_pending_security` until that verdict is recorded and is not BLOCKED. |
+| OT-96 | done | papership | KL-P11 optional economics security review is PASS. Handoff recorded. The phase is complete. The implementation is on `main` at `8efc8c2`. KL-P12 is planned and not implemented. |
+| OT-97 | done | papership | KL-P12 private organisation context plan is at `docs/plans/knowledge-layer/phase_12_private_organisation_context_plan.md`. A context plan cites organisation context before packs. Implementation followed. |
+| OT-98 | done | papership | KL-P12 private organisation context security review is PASS. Handoff recorded. The phase is complete. KL-P13 stays a draft and is not implemented. |
+| OT-99 | done | papership | KL-P13 publisher supply plan is at `docs/plans/knowledge-layer/phase_13_publisher_supply_plan.md`. Materials will list two example pointers. Implementation followed. |
+| OT-100 | done | papership | KL-P13 publisher supply security review is PASS. Handoff recorded. The phase is complete. KL-P14 is not started. |
+| OT-101 | done | papership | KL-P14 empirical optimisation plan is at `docs/plans/knowledge-layer/phase_14_empirical_optimisation_plan.md`. Implementation followed. |
+| OT-102 | done | papership | KL-P14 empirical optimisation security review is PASS. Handoff recorded. The phase is complete. KL-P15 is not started. |
+| OT-103 | done | papership | KL-P15 ecosystem scale plan is at `docs/plans/knowledge-layer/phase_15_ecosystem_scale_plan.md`. Implementation followed. |
+| OT-104 | done | papership | KL-P15 ecosystem scale security review is PASS. Handoff recorded. The phase is complete. No KL-P16 plan. |
 
 ## Standing rules for this list
 

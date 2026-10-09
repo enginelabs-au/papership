@@ -1,5 +1,5 @@
-const CACHE = "papership-shell-v1";
-const SHELL = ["/papership", "/manifest.json", "/favicon.ico", "/index.html"];
+const CACHE = "papership-shell-v2";
+const SHELL = ["/", "/manifest.json", "/favicon.ico", "/index.html"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -25,6 +25,6 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(request).then((cached) => cached || caches.match("/papership")))
+      .catch(() => caches.match(request).then((cached) => cached || caches.match("/")))
   );
 });

@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "npm run dev --prefix ../.. --workspace @papership/web -- --host 127.0.0.1 --port 5173",
     "beforeBuildCommand": "npm run build --prefix ../.. --workspace @papership/web",
-    "devUrl": "http://127.0.0.1:5173/papership",
+    "devUrl": "http://127.0.0.1:5173/",
     "frontendDist": "../../web/dist"
   },
   "app": {

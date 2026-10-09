@@ -337,6 +337,7 @@ export const ContextSourceSchema = z.object({
 export const ContextPlanCitationSchema = z.object({
   object_id: VersionIdSchema,
   version_id: VersionIdSchema,
+  band: z.enum(["organisation", "pack"]),
 }).strict();
 
 export const ContextPlanSchema = z.object({

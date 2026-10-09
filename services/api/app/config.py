@@ -115,6 +115,7 @@ LOCAL_BROWSER_ORIGINS = (
     "tauri://localhost",
 )
 PAPERSHIP_WEB_ORIGIN = "https://papership.com.au"
+PAPERSHIP_WWW_ORIGIN = "https://www.papership.com.au"
 
 
 def cors_allowlist(configured: Sequence[str]) -> list[str]:
@@ -124,7 +125,7 @@ def cors_allowlist(configured: Sequence[str]) -> list[str]:
     A wildcard origin is rejected.
     """
     allowed: list[str] = []
-    for origin in (*LOCAL_BROWSER_ORIGINS, PAPERSHIP_WEB_ORIGIN, *configured):
+    for origin in (*LOCAL_BROWSER_ORIGINS, PAPERSHIP_WEB_ORIGIN, PAPERSHIP_WWW_ORIGIN, *configured):
         item = origin.strip()
         if not item:
             continue
