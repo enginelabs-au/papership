@@ -6,6 +6,10 @@
   "outputDirectory": "apps/web/dist",
   "rewrites": [
     {
+      "source": "/pitch",
+      "destination": "/pitch/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

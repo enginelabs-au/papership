@@ -53,7 +53,7 @@
 
 ## Current Working State
 
-- Branch `main` matches `origin/main` at `8efc8c2` for the Knowledge Layer through KL-P11. KL-P12 through KL-P15 are local and not committed. Registry still 43 rows. Hermes write and live GitHub open stay false. Charges stay off.
+- Branch `main` matches `origin/main` at `6f54264` with KL-P12 through KL-P15 and the apex home. The pitch deck lives at `apps/web/public/pitch/index.html` and is served at `https://papership.com.au/pitch` (`vercel.json` rewrites `/pitch` to it). Uncommitted locally: `.cursor/hooks/policy.mjs`, `.cursor/hooks/policy.test.mjs` (owner-edited, agent cannot stage), untracked `apps/desktop/src-tauri/gen/`. Registry still 43 rows. Hermes write and live GitHub open stay false. Charges stay off.
 
 ## Next Actions
 
@@ -66,6 +66,7 @@
 
 - 2026-10-09T12:50Z — KL-P15 security PASS recorded. Project lead accepted. Phase complete. Not committed. No KL-P16 plan.
 - 2026-10-09T14:10Z — Production `dpl` for the apex home is Ready. `https://papership.com.au/` serves the app. `www` 308s to the apex. No `/papership` or `/lander` redirect is in the app. GoDaddy `/lander` still appears while resolvers cache `ns09` and `ns10`. OT-89 stays open.
+- 2026-10-12T17:05Z — Pitch deck (owner copy, 13 slides, brand icon `/papership-icon.png`) moved to `apps/web/public/pitch/index.html`; `vercel.json` gained a `/pitch` rewrite. Web static scan 15 pass; Vite build emits `dist/pitch/index.html`. Committing, deploying to production, pushing.
 - 2026-10-09T13:35Z — Cloudflare zone `papership.com.au` created. Apex A `76.76.21.21` and `www` CNAME `cname.vercel-dns.com` are DNS-only. Nameservers to set at GoDaddy are `clark.ns.cloudflare.com` and `nancy.ns.cloudflare.com`. Public DNS still GoDaddy. OT-89 stays open.
 - 2026-10-09T11:10Z — Owner asked to plan KL-P13 while KL-P12 security was still open. Publisher supply plan drafted. Two example pointers. Implementation not started. Not committed. KL-P14 not started.
 - 2026-10-09T11:05Z — KL-P12 private organisation context implemented. A context plan cites organisation context before packs. Pytest 13 passed. Contracts 16 passed. Web scan 15 passed. Browser checked the agent page at 1280 and 390. Security review in progress. Not committed. KL-P13 not started.
