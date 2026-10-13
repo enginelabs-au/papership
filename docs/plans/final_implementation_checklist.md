@@ -73,6 +73,8 @@ Never put values in git, chat, or agent files.
 | `APPLE_*` / `TAURI_SIGNING_*` / `ANDROID_KEYSTORE_*` | Apple / Google / signing | CI or local signing | store/desktop binaries | no | signed build exists |
 | `BACKUP_TARGET_URL` / `BACKUP_ENCRYPTION_KEY_PATH` | your off-VPS backup | infra | DRR / restore drill | no | restore drill receipt |
 | `DIGITALOCEAN_API_TOKEN` | DigitalOcean | owner/CI only | droplet automation | no | never paste here |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET` | @BotFather bot; secret is a long random string you choose | API host (`~/.config/papership/connectors.env`) | Telegram inbound and approved send (D-37) | no | Integrations → Telegram shows configured; Register webhook |
+| `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET` | Meta WhatsApp Cloud API app; verify token is a string you choose | API host (`~/.config/papership/connectors.env`) | WhatsApp inbound and approved send (D-37) | no | Integrations → WhatsApp shows configured; set the callback URL in Meta |
 | `HERMES_API_SERVER_KEY` | Hermes gateway | **worker/VPS only** | `/v1/*` transport | yes on VPS | do not copy onto the API or desktop |
 | `GITHUB_APP_*` | App `papership-dev` | local API | bound repo | yes locally | `/health` github reachable |
 

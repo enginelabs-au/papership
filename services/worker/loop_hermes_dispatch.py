@@ -73,6 +73,7 @@ def dispatch_loop_stage(
         purpose=purpose,
         idempotency_key=idempotency_key,
         tool=LOOP_HERMES_TOOL,
+        trusted_purpose=True,  # purpose is Papership-generated and the tool is read-only
     )
     if started.get("status") != "accepted":
         return {

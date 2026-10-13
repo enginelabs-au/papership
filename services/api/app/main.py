@@ -13,11 +13,12 @@ from typing import Any
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
 
 from app.auth import AuthContext, auth_dep, issue_local_founder_token, require_reauth
 from app.config import cors_allowlist, load_settings
 from app.connectors import get_connector, list_connectors
+from app import messaging
 from app.oauth import annotate_connection, complete_oauth_callback, frontend_redirect, oauth_readiness, start_oauth_connect
 from app.github_app import GithubError, installation_permissions, list_pulls, open_pull, probe_github
 from app.github_grants import intersect_repo_grants, may_open_pull
@@ -147,8 +148,9 @@ def create_app(store_path: str | None = None) -> FastAPI:
             "configured": configured,
             "api_server": api_ready,
             "pin": settings.hermes_version_pin or None,
-            "write_tools": False,
-            "live_production_writes": False,
+            "write_tools": True,
+            "live_production_writes": api_ready,
+            "write_gate": "receipt for write; approval then receipt for external (D-37)",
             "mock": not api_ready,
             "message": {
                 "reachable": (
@@ -165,6 +167,93 @@ def create_app(store_path: str | None = None) -> FastAPI:
             }.get(status, "Hermes Host status unknown."),
             "context_music": False,
         }
+
+    @app.get("/hermes/inventory")
+    def hermes_inventory(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app.hermes_inventory import inventory
+
+        probe = probe_hermes_api_server(settings.hermes_api_base_url)
+        live = "reachable" if probe.get("api_server") is True else "blocked_runtime"
+        return inventory(store, ctx.principal_id, live=live, pin=settings.hermes_version_pin)
+
+    @app.post("/hermes/inventory/{area_id}/execute")
+    def hermes_inventory_execute(
+        area_id: str, body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)
+    ) -> JSONResponse:
+        from app.hermes_inventory import execute
+
+        queued = execute(
+            store,
+            ctx.principal_id,
+            ctx.tenant_id,
+            area_id,
+            str(body.get("tool") or ""),
+            body.get("arguments") if isinstance(body.get("arguments"), dict) else {},
+            str(body.get("session_id") or ""),
+        )
+        return JSONResponse(queued, status_code=202)
+
+    _query_log: dict[str, list[float]] = {}
+
+    def _query_throttle(principal_id: str) -> None:
+        """Each query spawns a worker subprocess, so cap it: 12 per 30 seconds per principal."""
+        import time as _time
+
+        now = _time.monotonic()
+        recent = [t for t in _query_log.get(principal_id, []) if now - t < 30.0]
+        if len(recent) >= 12:
+            _query_log[principal_id] = recent
+            raise HTTPException(status_code=429, detail="slow down: Hermes queries are rate limited")
+        recent.append(now)
+        _query_log[principal_id] = recent
+
+    @app.get("/hermes/query/{op}")
+    def hermes_query(op: str, arg: str = "", ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        """Live Hermes catalogues, read through the worker. Never a made-up list."""
+        from app.hermes_inventory import QUERY_OPS, SESSION_ID, can_run
+        from app.loop_hermes_bridge import LoopHermesUnavailableError, query_hermes
+
+        if op not in QUERY_OPS:
+            raise HTTPException(status_code=404, detail="unknown hermes query")
+        can_run(store, ctx.principal_id)
+        if op == "session_messages":
+            from app import hermes_runs
+
+            if not SESSION_ID.fullmatch(arg):
+                raise HTTPException(status_code=422, detail="invalid session id")
+            if not hermes_runs.session_owned(store, ctx.tenant_id, arg):
+                raise HTTPException(status_code=404, detail="unknown session")
+        _query_throttle(ctx.principal_id)
+        if op == "session_create":
+            raise HTTPException(status_code=405, detail="use POST /hermes/sessions")
+        try:
+            result = query_hermes(settings.hermes_api_base_url, op, arg)
+        except LoopHermesUnavailableError as exc:
+            return {"status": "blocked_runtime", "detail": exc.detail, "items": []}
+        return result
+
+    @app.post("/hermes/sessions")
+    def hermes_session_create(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app.hermes_inventory import can_run
+        from app.loop_hermes_bridge import LoopHermesUnavailableError, query_hermes
+
+        can_run(store, ctx.principal_id)
+        try:
+            result = query_hermes(settings.hermes_api_base_url, "session_create", "")
+        except LoopHermesUnavailableError as exc:
+            return {"status": "blocked_runtime", "detail": exc.detail}
+        _query_throttle(ctx.principal_id)
+        body = result.get("body") if isinstance(result.get("body"), dict) else {}
+        session = body.get("session") if isinstance(body.get("session"), dict) else {}
+        sid = str(body.get("id") or body.get("session_id") or session.get("id") or "")
+        from app.hermes_inventory import SESSION_ID as _SID
+
+        if sid and _SID.fullmatch(sid):
+            from app import hermes_runs
+
+            hermes_runs.register_session(store, ctx.tenant_id, ctx.principal_id, sid)
+        store.append_audit(ctx.principal_id, "hermes.session.create", "hermes_session", "session")
+        return result
 
     @app.post("/members/invites")
     def create_member_invite(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
@@ -219,8 +308,11 @@ def create_app(store_path: str | None = None) -> FastAPI:
 
     @app.get("/connections")
     def connections(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
-        items = [annotate_connection(row, settings) for row in store.list_connections(ctx.principal_id)]
-        catalog = [annotate_connection(dict(row), settings) for row in list_connectors()]
+        items = [
+            messaging.annotate(annotate_connection(row, settings), settings)
+            for row in store.list_connections(ctx.principal_id)
+        ]
+        catalog = [messaging.annotate(annotate_connection(dict(row), settings), settings) for row in list_connectors()]
         return {"items": items, "catalog": catalog}
 
     @app.get("/connections/{provider}")
@@ -229,10 +321,12 @@ def create_app(store_path: str | None = None) -> FastAPI:
         if spec is None:
             raise HTTPException(status_code=403, detail="unknown provider")
         items = {row["id"]: row for row in store.list_connections(ctx.principal_id)}
-        return items.get(provider, spec)
+        return messaging.annotate(dict(items.get(provider, spec)), settings)
 
     @app.post("/connections/{provider}/connect")
     def connect_provider(provider: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        if provider in messaging.PROVIDERS:
+            return messaging.connect(store, ctx.principal_id, provider)
         started = start_oauth_connect(store, settings, ctx.principal_id, provider)
         if started is not None:
             return started
@@ -263,12 +357,91 @@ def create_app(store_path: str | None = None) -> FastAPI:
             raise HTTPException(status_code=403, detail="send is not enabled for this provider")
         grants = store.grant_classes(ctx.principal_id)
         perms = body.get("source_perms") or {}
+        if provider in messaging.PROVIDERS and messaging.readiness(provider)["ready"]:
+            # Papership holds the bot credential, so the source permission is the credential itself.
+            perms = {"bot.send": "write"} if provider == "telegram" else {"messages.send": "write"}
         if not may_live_write(provider, grants, perms):
             raise HTTPException(status_code=403, detail="empty source perms or missing comms.send intersection")
         if not body.get("approval_id"):
             raise HTTPException(status_code=403, detail="send needs approval then receipt")
+        if provider in messaging.PROVIDERS:
+            return messaging.send_approved(
+                store,
+                ctx.principal_id,
+                provider,
+                str(body.get("to") or ""),
+                str(body.get("text") or ""),
+                str(body.get("approval_id") or ""),
+            )
         store.require_live_approval(str(body.get("target_id") or provider), str(body.get("target_version") or "1"))
         return {"status": "receipt", "provider": provider, "dry_run": True}
+
+    @app.post("/connections/{provider}/compose")
+    def compose_message(provider: str, body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        if provider not in messaging.PROVIDERS:
+            raise HTTPException(status_code=403, detail="compose is not enabled for this provider")
+        return messaging.compose(store, ctx.principal_id, provider, str(body.get("to") or ""), str(body.get("text") or ""))
+
+    @app.get("/connections/{provider}/messages")
+    def provider_messages(provider: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        if provider not in messaging.PROVIDERS:
+            raise HTTPException(status_code=403, detail="unknown provider")
+        if not (
+            store.has_grant(ctx.principal_id, "comms.draft")
+            or store.has_grant(ctx.principal_id, "comms.send")
+            or store.has_grant(ctx.principal_id, "org.admin")
+        ):
+            raise HTTPException(status_code=403, detail="denied: comms")
+        items = messaging.list_messages(store, ctx.tenant_id, provider)
+        return {"items": items, "state": "ready" if items else "empty"}
+
+    @app.post("/connections/telegram/webhook/register")
+    def register_telegram(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        return messaging.register_telegram_webhook(
+            store, settings, ctx.principal_id, confirm_takeover=body.get("confirm_takeover") is True
+        )
+
+    async def _bounded_body(request: Request) -> bytes:
+        length = request.headers.get("content-length")
+        if length and length.isdigit() and int(length) > messaging.MAX_WEBHOOK_BYTES:
+            raise HTTPException(status_code=413, detail="payload too large")
+        raw = await request.body()
+        if len(raw) > messaging.MAX_WEBHOOK_BYTES:
+            raise HTTPException(status_code=413, detail="payload too large")
+        return raw
+
+    @app.post("/webhooks/telegram")
+    async def telegram_webhook(request: Request) -> dict[str, Any]:
+        if not messaging.verify_telegram(request.headers.get("x-telegram-bot-api-secret-token")):
+            raise HTTPException(status_code=401, detail="bad webhook secret")
+        raw = await _bounded_body(request)
+        try:
+            update = json.loads(raw.decode() or "{}")
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="invalid json") from exc
+        return {"ok": True, "stored": messaging.ingest_telegram(store, update if isinstance(update, dict) else {})}
+
+    @app.get("/webhooks/whatsapp")
+    def whatsapp_verify(
+        hub_mode: str = Query("", alias="hub.mode"),
+        hub_verify_token: str = Query("", alias="hub.verify_token"),
+        hub_challenge: str = Query("", alias="hub.challenge"),
+    ) -> Response:
+        challenge = messaging.verify_whatsapp_challenge(hub_mode, hub_verify_token, hub_challenge)
+        if challenge is None:
+            raise HTTPException(status_code=403, detail="verification failed")
+        return Response(content=challenge, media_type="text/plain")
+
+    @app.post("/webhooks/whatsapp")
+    async def whatsapp_webhook(request: Request) -> dict[str, Any]:
+        raw = await _bounded_body(request)
+        if not messaging.verify_whatsapp_signature(raw, request.headers.get("x-hub-signature-256")):
+            raise HTTPException(status_code=401, detail="bad signature")
+        try:
+            payload = json.loads(raw.decode() or "{}")
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="invalid json") from exc
+        return {"ok": True, "stored": messaging.ingest_whatsapp(store, payload if isinstance(payload, dict) else {})}
 
     @app.post("/connections/{provider}/sync")
     def sync_provider(provider: str, body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
@@ -710,6 +883,37 @@ def create_app(store_path: str | None = None) -> FastAPI:
         phase5.refuse_domain_connect(domain_id)
         return {}
 
+    @app.get("/domains/records")
+    def domain_records_all(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app.domain_records import list_all
+
+        return list_all(store, ctx.principal_id)
+
+    @app.get("/domains/{domain_id}/records")
+    def domain_records(domain_id: str, ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app.domain_records import list_records
+
+        return list_records(store, ctx.principal_id, domain_id)
+
+    @app.post("/domains/{domain_id}/records")
+    def create_domain_record(domain_id: str, body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app.domain_records import create_record
+
+        return create_record(store, ctx.principal_id, domain_id, body)
+
+    @app.get("/knowledge/search")
+    def knowledge_search(q: str = "", ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app.domain_records import search_knowledge
+
+        return search_knowledge(store, ctx.principal_id, q)
+
+    @app.get("/boundaries")
+    def boundaries(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app.domain_records import boundary_inventory, list_records
+
+        list_records(store, ctx.principal_id, "P12")
+        return boundary_inventory()
+
     @app.get("/references")
     def references(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
         return phase5.CANONICAL_REFERENCES
@@ -892,14 +1096,46 @@ def create_app(store_path: str | None = None) -> FastAPI:
 
     @app.post("/runs")
     def post_run(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> JSONResponse:
-        job = store.persist_job(ctx.principal_id, str(body.get("purpose") or "run"))
+        purpose = str(body.get("purpose") or "run")
+        if body.get("tool"):
+            from app import hermes_runs
+            from app.hermes_inventory import SESSION_ID, can_run
+
+            can_run(store, ctx.principal_id)
+            if body.get("session_id") and not SESSION_ID.fullmatch(str(body.get("session_id"))):
+                raise HTTPException(status_code=422, detail="invalid session id")
+            if len(purpose) > hermes_runs.MAX_PURPOSE_CHARS:
+                raise HTTPException(status_code=413, detail="purpose is too long")
+        job = store.persist_job(ctx.principal_id, purpose)
         store.add_receipt(job["id"], "run.persist", str(body.get("idempotency_key") or f"{job['id']}:start"))
+        request_row = None
+        if body.get("tool"):
+
+            request_row = hermes_runs.record_request(
+                store,
+                job["id"],
+                ctx.tenant_id,
+                str(body.get("tool")),
+                body.get("arguments") if isinstance(body.get("arguments"), dict) else {},
+                str(body.get("session_id") or ""),
+                requester_id=ctx.principal_id,
+                purpose=purpose,
+            )
         hermes = probe_hermes(settings.hermes_api_base_url)
         runtime = {
             "status": "queued" if hermes == "reachable" else "blocked_runtime",
             "hermes": hermes,
         }
-        return JSONResponse({"job": job, "runtime": runtime}, status_code=202)
+        return JSONResponse({"job": job, "runtime": runtime, "hermes_request": request_row}, status_code=202)
+
+    @app.get("/hermes/runs")
+    def hermes_run_requests(ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:
+        from app import hermes_runs
+        from app.hermes_inventory import can_run
+
+        can_run(store, ctx.principal_id)
+        items = hermes_runs.list_requests(store, ctx.tenant_id)
+        return {"items": items, "state": "ready" if items else "empty"}
 
     @app.post("/github/pulls")
     def github_open_pull(body: dict[str, Any], ctx: AuthContext = Depends(auth_dep)) -> dict[str, Any]:

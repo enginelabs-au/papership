@@ -32,6 +32,13 @@ API_ENV_ALLOWLIST = frozenset(
         "SLACK_CLIENT_ID",
         "SLACK_CLIENT_SECRET",
         "SLACK_OAUTH_REDIRECT_URL",
+        "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_WEBHOOK_SECRET",
+        "WHATSAPP_ACCESS_TOKEN",
+        "WHATSAPP_PHONE_NUMBER_ID",
+        "WHATSAPP_VERIFY_TOKEN",
+        "WHATSAPP_APP_SECRET",
+        "WHATSAPP_BRIDGE_URL",
         "ENGINE_BILLING_CHARGES_ENABLED",
         "ENGINE_PACK_EXECUTION_ENABLED",
         "ENGINE_API_PUBLIC_URL",
@@ -201,6 +208,8 @@ def settings_public_dict(settings: Settings) -> dict[str, object]:
         "has_gmail_oauth_secret": bool(_get("GMAIL_OAUTH_CLIENT_SECRET", "")),
         "has_slack_client_id": bool(settings.slack_client_id),
         "has_slack_secret": bool(_get("SLACK_CLIENT_SECRET", "")),
+        "has_telegram_bot_token": bool(_get("TELEGRAM_BOT_TOKEN", "")),
+        "has_whatsapp_access_token": bool(_get("WHATSAPP_ACCESS_TOKEN", "")),
     }
 
 
@@ -208,4 +217,24 @@ def oauth_secret(name: str) -> str:
     """Read an OAuth client secret. Never log or return this to callers."""
     if name not in {"GMAIL_OAUTH_CLIENT_SECRET", "SLACK_CLIENT_SECRET"}:
         raise RuntimeError(f"refusing to read non-oauth secret: {name}")
+    return _get(name, "")
+
+
+MESSAGING_ENV_NAMES = frozenset(
+    {
+        "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_WEBHOOK_SECRET",
+        "WHATSAPP_ACCESS_TOKEN",
+        "WHATSAPP_PHONE_NUMBER_ID",
+        "WHATSAPP_VERIFY_TOKEN",
+        "WHATSAPP_APP_SECRET",
+        "WHATSAPP_BRIDGE_URL",
+    }
+)
+
+
+def messaging_secret(name: str) -> str:
+    """Read a messaging credential. Never log it or return it to a caller."""
+    if name not in MESSAGING_ENV_NAMES:
+        raise RuntimeError(f"refusing to read non-messaging secret: {name}")
     return _get(name, "")

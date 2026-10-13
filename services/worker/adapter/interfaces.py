@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, Iterator, Protocol
 
@@ -17,13 +18,27 @@ class RuntimeAdapter(Protocol):
 
     def capabilities_check(self) -> dict[str, Any]: ...
 
+
 from adapter.approvals import resolve_owned_approval
-from policy_hooks.interception import PolicyError, intercept_tool_call, tool_call_from_event
-from policy_hooks.startup import load_toolsets
+from policy_hooks.interception import (
+    ApprovalPending,
+    PolicyError,
+    ScopeViolation,
+    allow_tool,
+    intercept_tool_call,
+    is_side_effecting,
+    prompt_gate,
+    tool_calls_from_event,
+)
+from policy_hooks.startup import load_toolsets, validate_startup
 
 
 def _default_config() -> dict[str, Any]:
-    return load_toolsets(Path(__file__).resolve().parents[1] / "config" / "toolsets.yaml")
+    """Load toolsets.yaml and fail closed if the interception artefact or catalog hash no longer match."""
+    worker_root = Path(__file__).resolve().parents[1]
+    config = load_toolsets(worker_root / "config" / "toolsets.yaml")
+    validate_startup(config, root=worker_root)
+    return config
 
 
 class UnwiredAdapter:
@@ -59,16 +74,36 @@ class HermesRuntimeAdapter:
             arguments,
             persist_receipt=hooks.get("persist_receipt"),
             persist_approval=hooks.get("persist_approval"),
+            require_approved=bool(hooks.get("require_approved")),
+            approval_covered=bool(hooks.get("approval_covered")),
         )
 
     def start_run(self, **kwargs: Any) -> dict[str, Any]:
-        if "tool" in kwargs:
-            self.intercept(
-                str(kwargs.get("tool") or ""),
-                kwargs.get("arguments") or {},
-                persist_receipt=kwargs.get("persist_receipt"),
-                persist_approval=kwargs.get("persist_approval"),
-            )
+        """Policy first, Hermes second.
+
+        Hermes picks its own tools from the prompt, so unless the prompt is Papership-generated
+        (`trusted_purpose=True`) a human must approve the exact (tool, arguments, prompt, session)
+        before Hermes is called. External tools need that approval regardless.
+        """
+        declared = str(kwargs.get("tool") or "")
+        purpose = str(kwargs.get("purpose") or "run")
+        session_id = kwargs.get("session_id")
+        bound = {**(kwargs.get("arguments") or {}), "_purpose": purpose, "_session_id": session_id or ""}
+        if declared:
+            if not allow_tool(self.config, declared):
+                raise PolicyError(f"policy refused tool {declared!r}")
+            try:
+                if not kwargs.get("trusted_purpose"):
+                    prompt_gate(kwargs.get("persist_approval"), declared, bound)
+                self.intercept(
+                    declared,
+                    bound,
+                    persist_receipt=kwargs.get("persist_receipt"),
+                    persist_approval=kwargs.get("persist_approval"),
+                    require_approved=True,
+                )
+            except ApprovalPending as exc:
+                return {"status": "awaiting_approval", "tool": declared, "approval": exc.approval, "purpose": purpose}
         from adapter.hermes_client import probe_hermes, start_run as hermes_start
 
         probe = probe_hermes()
@@ -77,31 +112,74 @@ class HermesRuntimeAdapter:
                 "status": "blocked_runtime",
                 "reason": "hermes_api_server_unavailable",
                 "probe": {k: probe.get(k) for k in ("hermes", "mode", "api_server", "http_status")},
-                "purpose": kwargs.get("purpose"),
+                "purpose": purpose,
             }
-        if "tool" not in kwargs:
+        if not declared:
             raise PolicyError("catalogued tool= is required for live Hermes runs")
+        user_args = kwargs.get("arguments") or {}
+        extra = None
+        if user_args and not kwargs.get("trusted_purpose"):
+            # Hermes receives exactly what was approved: the prompt, the tool, and its arguments.
+            extra = {"input": f"{purpose}\n\nTool: {declared}\nArguments: {json.dumps(user_args, sort_keys=True, default=str)}"}
         code, body = hermes_start(
-            purpose=str(kwargs.get("purpose") or "run"),
+            purpose=purpose,
             idempotency_key=str(kwargs.get("idempotency_key") or ""),
-            session_id=kwargs.get("session_id"),
+            session_id=session_id,
+            **({"extra": extra} if extra else {}),
         )
         replayed = code == 202 and bool((body or {}).get("idempotency_replayed") or body.get("Idempotency-Replayed"))
-        return {"status": "accepted" if code in {200, 201, 202} else "error", "http_status": code, "body": body, "replayed": replayed}
+        return {
+            "status": "accepted" if code in {200, 201, 202} else "error",
+            "http_status": code,
+            "body": body,
+            "replayed": replayed,
+            "tool": declared,
+        }
 
-    def subscribe(self, run_id: str, last_event_id: str | None = None, **hooks: Any) -> Iterator[dict[str, Any]]:
-        from adapter.hermes_client import stream_events
+    def subscribe(
+        self,
+        run_id: str,
+        last_event_id: str | None = None,
+        *,
+        declared_tool: str | None = None,
+        **hooks: Any,
+    ) -> Iterator[dict[str, Any]]:
+        """Observe a run and stop it on anything unexpected.
 
-        for event in stream_events(run_id, last_event_id):
-            parsed = tool_call_from_event(event)
-            if parsed is not None:
-                self.intercept(
-                    parsed[0],
-                    parsed[1],
-                    persist_receipt=hooks.get("persist_receipt"),
-                    persist_approval=hooks.get("persist_approval"),
-                )
-            yield event
+        Stops on: a side-effecting tool outside `declared_tool`, an unknown tool, a tool event that
+        cannot be read, or a stream that cannot be read to its end. Hermes may already have executed
+        an observed call; the stop limits the blast radius and the receipt records it. The run-level
+        approval is the primary gate.
+        """
+        from adapter.hermes_client import StreamUnavailable, stream_events
+
+        declared = (declared_tool or "").lower()
+        try:
+            for event in stream_events(run_id, last_event_id):
+                for name, args in tool_calls_from_event(event):
+                    if declared and name.lower() != declared and is_side_effecting(name):
+                        raise ScopeViolation(declared_tool or "", name)
+                    self.intercept(
+                        name,
+                        args,
+                        persist_receipt=hooks.get("persist_receipt"),
+                        persist_approval=hooks.get("persist_approval"),
+                        require_approved=True,
+                        approval_covered=bool(declared and name.lower() == declared),
+                    )
+                yield event
+        except StreamUnavailable as exc:
+            self._stop_quietly(run_id)
+            raise PolicyError(f"run could not be observed ({exc})") from exc
+        except PolicyError:
+            self._stop_quietly(run_id)
+            raise
+
+    def _stop_quietly(self, run_id: str) -> None:
+        try:
+            self.stop(run_id)
+        except Exception:  # stopping is best effort; the policy error is what the caller needs
+            pass
 
     def stop(self, run_id: str) -> dict[str, Any]:
         from adapter.hermes_client import stop_run

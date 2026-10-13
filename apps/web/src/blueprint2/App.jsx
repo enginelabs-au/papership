@@ -823,6 +823,15 @@ export default function Blueprint2App() {
     };
     out.desktopBridge = typeof window !== "undefined" && Boolean(window.__TAURI_INTERNALS__);
     out.localFileError = localFileError;
+    out.createDomainRecord = async (domainId, kind, title) => {
+      const body = kind === "agent_profile" ? "active" : ["task_completion", "correctness", "recovery", "operator_intervention", "context_switching", "cost_per_outcome"].includes(kind) ? "not_captured" : "";
+      try {
+        await postPapershipJson(`/domains/${domainId}/records`, { kind, title, body });
+        setOverlay(await loadPapershipOverlay());
+      } catch (error) {
+        setOverlay((prev) => ({ ...prev, actionError: error.message || "Could not record that." }));
+      }
+    };
     out.addLocalFile = async () => {
       const invoke = window.__TAURI_INTERNALS__?.invoke;
       if (!invoke) return;
@@ -1098,7 +1107,7 @@ export default function Blueprint2App() {
     revoke: { title: "Revoke this connection?", body: "Papership will lose access to GitHub · Papership immediately.", confirm: "Revoke", cancel: "Back", btn: "var(--red)" },
     upload: { title: "Upload documents", body: "Documents are classified on intake and linked to work items.", confirm: "Choose files", cancel: "Cancel", btn: "var(--blue)" },
     invite: { title: "Invite a person", body: "A second seat stays blocked until the measurement notice is accepted (OQ-G2). Mail is not sent.", confirm: "Prepare seat", cancel: "Cancel", btn: "var(--blue)" },
-    wizard: { title: "Connect a provider", body: "GitHub is configured. Gmail and Slack authorise in your browser — Papership never embeds a provider sign-in. Send stays approval-then-receipt.", confirm: "Continue to authorise ↗", cancel: "Cancel", btn: "var(--blue)" },
+    wizard: { title: "Connect a provider", body: "GitHub is configured. Gmail and Slack authorise in your browser — Papership never embeds a provider sign-in. Telegram and WhatsApp connect with a bot token held on the API host. Send stays approval-then-receipt.", confirm: "Continue to authorise ↗", cancel: "Cancel", btn: "var(--blue)" },
   };
   const md = MODALS[modal];
 
@@ -1108,13 +1117,17 @@ export default function Blueprint2App() {
       return;
     }
     const pick = wizardPick || "gmail";
-    if (pick !== "gmail" && pick !== "slack") {
-      setWizardError(`${pick} stays planned until that app is registered.`);
+    if (!["gmail", "slack", "telegram", "whatsapp"].includes(pick)) {
+      setWizardError(`${pick} is not a connectable provider.`);
       return;
     }
     setWizardError("");
     try {
       const body = await postPapershipJson(`/connections/${pick}/connect`, {});
+      if ((pick === "telegram" || pick === "whatsapp") && !body.enabled) {
+        setWizardError(`Add ${(body.missing_env || []).join(", ")} on the API host, then press Connect again.`);
+        return;
+      }
       if (body.authorize_url) {
         window.location.assign(body.authorize_url);
         return;
@@ -1579,7 +1592,7 @@ export default function Blueprint2App() {
             ) : null}
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", padding: "13px 17px", borderTop: "1px solid var(--line2)", background: "var(--canvas)" }}>
               <button type="button" className="bp2-hit" onClick={() => setModal(null)} style={{ height: 30, padding: "0 13px", border: "1px solid var(--line)", background: "var(--surface)", color: "var(--t1)", borderRadius: 6, font: "600 12px Inter,sans-serif", cursor: "pointer" }}>{md.cancel}</button>
-              <button type="button" className="bp2-hit" onClick={confirmModal} style={{ height: 30, padding: "0 14px", border: 0, borderRadius: 6, background: md.btn, color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer" }}>{modal === "wizard" ? (wizardPick === "slack" ? "Continue to Slack ↗" : wizardPick === "gmail" ? "Continue to Google ↗" : md.confirm) : md.confirm}</button>
+              <button type="button" className="bp2-hit" onClick={confirmModal} style={{ height: 30, padding: "0 14px", border: 0, borderRadius: 6, background: md.btn, color: "#fff", font: "600 12px Inter,sans-serif", cursor: "pointer" }}>{modal === "wizard" ? (wizardPick === "slack" ? "Continue to Slack ↗" : wizardPick === "gmail" ? "Continue to Google ↗" : (wizardPick === "telegram" || wizardPick === "whatsapp") ? "Connect" : md.confirm) : md.confirm}</button>
             </div>
           </div>
         </div>

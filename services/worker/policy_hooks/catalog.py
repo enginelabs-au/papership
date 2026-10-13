@@ -13,12 +13,16 @@ Risk = Literal["read", "write", "external", "destructive"]
 # Pin: documented hermes-api-server tools plus Papership action-service aliases.
 TOOLS: dict[str, tuple[str, Risk]] = {
     # web
+    # Hermes bridge: discovery only. `tool_call` is deliberately absent; the interceptor unwraps it.
+    "tool_search": ("bridge", "read"),
+    "tool_describe": ("bridge", "read"),
     "web_search": ("web", "read"),
     "web_extract": ("web", "write"),
     "x_search": ("web", "read"),
     # terminal
     "terminal": ("terminal", "write"),
     "process": ("terminal", "write"),
+    "process_manage": ("terminal", "write"),
     "shell": ("terminal", "write"),
     "exec": ("terminal", "write"),
     # file
@@ -40,12 +44,14 @@ TOOLS: dict[str, tuple[str, Risk]] = {
     "browser_vision": ("browser", "write"),
     "browser_console": ("browser", "read"),
     "browser_cdp": ("browser", "write"),
+    "browser_exec": ("browser", "write"),
     "browser_dialog": ("browser", "write"),
     "web_fetch": ("browser", "write"),
     # memory / planning
     "memory": ("memory", "write"),
     "memory_read": ("memory", "read"),
     "todo": ("todo", "write"),
+    "todo_list": ("todo", "write"),
     "session_search": ("session_search", "read"),
     # skills
     "skills_list": ("skills", "read"),
@@ -68,6 +74,7 @@ TOOLS: dict[str, tuple[str, Risk]] = {
     "execute_code": ("code_execution", "write"),
     "delegate_task": ("delegation", "write"),
     "cronjob": ("cronjob", "write"),
+    "cronjob_manage": ("cronjob", "write"),
     # home assistant (service tools; approval-bound)
     "ha_list_entities": ("homeassistant", "read"),
     "ha_get_state": ("homeassistant", "read"),

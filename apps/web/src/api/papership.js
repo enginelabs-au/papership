@@ -49,24 +49,24 @@ export const CONNECTOR_CATALOG = [
     initials: "TG",
     name: "Telegram",
     kind: "Comms channel",
-    status: "planned",
+    status: "unavailable",
     destination_class: "chat",
-    scope: "Planned until a bot mapping is supplied.",
+    scope: "Inbound lands in Inbox. Send needs your approval, then returns a receipt.",
     verified: "Not enabled",
     recovery: "",
-    handoff: "Telegram stays planned until a bot mapping is supplied.",
+    handoff: "Add TELEGRAM_BOT_TOKEN and TELEGRAM_WEBHOOK_SECRET on the API host, then press Connect.",
   },
   {
     id: "whatsapp",
     initials: "WA",
     name: "WhatsApp",
     kind: "Comms channel",
-    status: "planned",
+    status: "unavailable",
     destination_class: "chat",
-    scope: "Planned until a business mapping is supplied.",
+    scope: "Inbound lands in Inbox. Send needs your approval, then returns a receipt.",
     verified: "Not enabled",
     recovery: "",
-    handoff: "WhatsApp Cloud API stays planned until a business mapping is supplied.",
+    handoff: "Add WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN and WHATSAPP_APP_SECRET on the API host, then press Connect.",
   },
 ];
 
@@ -660,7 +660,7 @@ export async function loadPapershipOverlay() {
     };
   }
   try {
-    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, operatorSeat, engineLabsLoop, agents, knowledge, materials, approvals, audit] = await Promise.all([
+    const [people, teams, inbox, connections, measurement, memory, strategy, personalisation, view, domains, projects, references, schedules, packs, proposals, evidence, erasure, rateCard, health, hermesHost, hermesInventory, operatorSeat, engineLabsLoop, agents, knowledge, materials, approvals, audit, domainRecords] = await Promise.all([
       fetchPapershipJson("/people"),
       fetchPapershipJson("/teams"),
       fetchPapershipJson("/inbox"),
@@ -681,6 +681,7 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/billing/rate-card").catch(() => TRIAL_RATE_CARD),
       fetchHealth(),
       fetchPapershipJson("/hermes/host").catch(() => null),
+      fetchPapershipJson("/hermes/inventory").catch(() => ({ areas: [] })),
       fetchPapershipJson("/seats/operator").catch(() => null),
       fetchEngineLabsLoopState().catch(() => null),
       fetchPapershipJson("/agents").catch((error) => ({ error: error.message, agents: null })),
@@ -688,6 +689,7 @@ export async function loadPapershipOverlay() {
       fetchPapershipJson("/registry/materials").catch((error) => ({ error: error.message, materials: null })),
       fetchPapershipJson("/approvals").catch((error) => ({ error: error.message, approvals: null })),
       fetchPapershipJson("/audit").catch((error) => ({ error: error.message, records: null })),
+      fetchPapershipJson("/domains/records").catch(() => ({ items: [] })),
     ]);
     return {
       source: "api",
@@ -706,6 +708,7 @@ export async function loadPapershipOverlay() {
       personalisation,
       view,
       domains: domains.items || [],
+      domainRecords: domainRecords.items || [],
       managedProjects: projects.items || [],
       packs: packs.items || [],
       proposals: proposals.items || [],
@@ -721,6 +724,7 @@ export async function loadPapershipOverlay() {
         api_server: Boolean(hermesHost?.api_server),
         pin: health?.hermes_pin || hermesHost?.pin || null,
       },
+      hermesInventory: hermesInventory?.areas || [],
       operatorSeat,
       engineLabsLoop: coalesceEngineLabsLoop(engineLabsLoop),
       references,
@@ -1036,9 +1040,13 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
       open: () => {},
     }));
   }
-  out.domainShells = overlay.domains || [];
+  out.domainShells = (overlay.domains || []).map((domain) => ({
+    ...domain,
+    records: (overlay.domainRecords || []).filter((row) => row.domain_id === domain.id),
+  }));
   out.managedProjects = overlay.managedProjects || [];
   out.hermesHost = overlay.hermesHost || null;
+  out.hermesInventory = overlay.hermesInventory || [];
   out.operatorSeat = overlay.operatorSeat || null;
   const loop = overlay.engineLabsLoop || null;
   out.engineLabsLoop = loop;
@@ -1157,6 +1165,24 @@ export function applyPapershipOverlay(view, overlay, ui = {}) {
     out.auditRows = overlay.auditRecords || [];
     out.callerGrants = overlay.callerGrants || [];
     out.permissionsLive = overlay.source === "api" && Array.isArray(overlay.callerGrants);
+    if (overlay.domains?.length && out.registrySections) {
+      const byCode = Object.fromEntries(overlay.domains.map((domain) => [domain.id, domain.status]));
+      const chip = (status) => (
+        status === "working" ? { bg: "var(--green-soft)", ink: "var(--green)", dot: "var(--green)", action: "Open" }
+          : status === "configured" ? { bg: "var(--blue-soft)", ink: "var(--blue)", dot: "var(--blue)", action: "Review" }
+            : status === "unavailable" ? { bg: "var(--red-soft)", ink: "var(--red)", dot: "var(--red)", action: "Recover" }
+              : { bg: "var(--line2)", ink: "var(--t3)", dot: "var(--t3)", action: "Plan" }
+      );
+      out.registrySections = out.registrySections.map((section) => ({
+        ...section,
+        rows: section.rows.map((row) => (byCode[row.code] ? { ...row, status: byCode[row.code], ...chip(byCode[row.code]) } : row)),
+      }));
+      const all = out.registrySections.flatMap((section) => section.rows);
+      const count = (status) => String(all.filter((row) => row.status === status).length);
+      out.registryFilters = (out.registryFilters || []).map((filter) => (
+        filter.label === "All" ? filter : { ...filter, n: count(filter.label.toLowerCase()) }
+      ));
+    }
     out.knowledgeError = overlay.knowledgeError || "";
     out.agentsError = overlay.agentsError || "";
     out.auditError = overlay.auditError || "";

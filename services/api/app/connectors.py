@@ -39,8 +39,8 @@ CONNECTORS: dict[str, dict[str, Any]] = {
         "kind": "Comms channel",
         "destination_class": "chat",
         "status": "planned",
-        "actions": {"read": False, "send": "approval_then_receipt"},
-        "handoff": "Telegram stays planned until a bot mapping is supplied.",
+        "actions": {"read": "webhook", "send": "approval_then_receipt"},
+        "handoff": "Add TELEGRAM_BOT_TOKEN and TELEGRAM_WEBHOOK_SECRET on the API host, then press Connect. Inbound lands in Inbox. Send needs an approval, then returns a receipt.",
     },
     "whatsapp": {
         "id": "whatsapp",
@@ -48,8 +48,8 @@ CONNECTORS: dict[str, dict[str, Any]] = {
         "kind": "Comms channel",
         "destination_class": "chat",
         "status": "planned",
-        "actions": {"read": False, "send": "approval_then_receipt"},
-        "handoff": "WhatsApp Cloud API stays planned until a business mapping is supplied.",
+        "actions": {"read": "webhook", "send": "approval_then_receipt"},
+        "handoff": "Add WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_VERIFY_TOKEN and WHATSAPP_APP_SECRET on the API host, then press Connect. Send needs an approval, then returns a receipt. Alternative (send-only): set WHATSAPP_BRIDGE_URL to the Hermes bridge on loopback.",
     },
 }
 

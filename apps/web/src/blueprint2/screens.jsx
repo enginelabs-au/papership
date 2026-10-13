@@ -1,3 +1,4 @@
+import { HermesRunsPanel, MessagingPanel } from "./panels.jsx";
 const DOTS = { ok: "var(--green)", warn: "var(--amber)", bad: "var(--red)", idle: "var(--t3)", run: "var(--blue)" };
 
 export function PageHead({ title, desc, chip, actions }) {
@@ -855,6 +856,7 @@ export function ConnectionsView({ v }) {
         </div>
       ))}
     </div>
+    <MessagingPanel />
     {v.packs?.length ? (
       <div>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Available packs</div>
@@ -880,12 +882,26 @@ export function ConnectionsView({ v }) {
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--t3)", marginBottom: 8 }}>Company domains</div>
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
           {v.domainShells.map((d) => (
-            <div key={d.id} style={{ display: "flex", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
-              <span>{d.id} · {d.label}</span>
-              <span style={{ color: "var(--t3)" }}>
-                {d.status || "planned"}
-                {d.needs_connection ? " · needs connection" : d.live_write ? "" : " · no live write"}
-              </span>
+            <div key={d.id} style={{ padding: "10px 14px", borderBottom: "1px solid var(--line2)", fontSize: 12.5 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                <span>{d.id} · {d.label}</span>
+                <span style={{ color: "var(--t3)" }}>
+                  {d.status || "planned"}
+                  {d.needs_connection ? " · source unavailable" : " · no live write"}
+                </span>
+              </div>
+              {d.records?.length ? (
+                <div style={{ marginTop: 6, color: "var(--t2)" }}>
+                  {d.records.slice(0, 3).map((row) => (
+                    <div key={row.id}>{row.kind} · {row.title} · {row.status}</div>
+                  ))}
+                </div>
+              ) : null}
+              {d.native_kinds?.[0] && v.createDomainRecord ? (
+                <button type="button" onClick={() => v.createDomainRecord(d.id, d.native_kinds[0], d.label)} style={{ marginTop: 8, height: 26, padding: "0 10px", border: "1px solid var(--line)", background: "transparent", color: "var(--t1)", borderRadius: 6, font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>
+                  Record {d.native_kinds[0].replaceAll("_", " ")}
+                </button>
+              ) : null}
             </div>
           ))}
         </div>
@@ -918,11 +934,12 @@ export function SettingsView({ v }) {
             <div style={{ fontSize: 12.5, color: "var(--t2)", marginTop: 8 }}>{v.hermesHost.message}</div>
             <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12 }}>
               <div>Always-on agent box · technical operators</div>
-              <div style={{ textAlign: "right", color: "var(--t3)" }}>Write tools · blocked</div>
+              <div style={{ textAlign: "right", color: "var(--t3)" }}>{v.hermesHost.write_tools ? "Write tools · gated (receipt / approval)" : "Write tools · off"}</div>
               <div>Pin · {v.hermesHost.pin || "not set"}</div>
               <div style={{ textAlign: "right", color: "var(--t3)" }}>{v.hermesHost.api_server ? "Host API ready" : v.hermesHost.mock ? "Host not ready" : "Probe only"}</div>
             </div>
             <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--t3)" }}>Workspace product stays Papership. Hermes Host is the runtime box inside it. Context Music is out of scope.</div>
+            <div style={{ marginTop: 12 }}><HermesRunsPanel /></div>
           </div>
         ) : null}
         {v.set_plan ? (

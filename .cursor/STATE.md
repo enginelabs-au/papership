@@ -2,7 +2,7 @@
 
 ## Current Objective
 
-- Knowledge Layer KL-P15 ecosystem scale is `complete` (security PASS). An external agent uses the existing plan payload and does not receive a copy of the graph. Charges stay off. Registrar DNS for `papership.com.au` is still GoDaddy (OT-89). Hermes write/external `accepted` stays unauthorized.
+- Knowledge Layer KL-P15 ecosystem scale is `complete` (security PASS). An external agent uses the existing plan payload and does not receive a copy of the graph. Charges stay off. Registrar DNS for `papership.com.au` is still GoDaddy (OT-89). Hermes write/external `accepted` is owner-approved under D-37 (2026-10-13) behind the D-17 gates; Telegram and WhatsApp are wired in Papership and wait only on owner credentials (OT-105, OT-106). Live Hermes replay is done (OT-107, 2026-10-14).
 
 ## Current Status
 
@@ -131,7 +131,7 @@
 
 ## Active Role and Gate
 
-- KL-P7 is `complete_conditional`. KL-P8 through KL-P15 are `complete` (security PASS). Registrar DNS remains (OT-89). KL-P0 security remains CONDITIONAL. Checklist residuals parked: CA-10, D-25 (OT-10 later), ERA-15 (OT-13 later).
+- KL-P7 is `complete_conditional`. KL-P8 through KL-P15 are `complete` (security PASS). Registrar DNS remains (OT-89). KL-P0 security remains CONDITIONAL. Checklist residuals parked: CA-10, ERA-15 (OT-13 later). D-25 is lifted by D-37 (OT-10 done).
 
 ## Predecessor Handoff
 
@@ -213,7 +213,7 @@
 
 ## Decisions and Assumptions
 
-- D-25 lift review 2026-09-12 CONDITIONAL; re-pass 2026-09-13 CONDITIONAL — write/external Hermes `accepted` unauthorized (`20260913-d25-repass`).
+- D-25 lift review 2026-09-12 CONDITIONAL; re-pass 2026-09-13 CONDITIONAL. Superseded 2026-10-13 by D-37 (owner approval). Independent security review of the D-37 change: first pass FAIL/CONDITIONAL with 16 findings, remediated, re-review CONDITIONAL for Hermes and messaging (open: OT-105/106/107 live evidence). See `docs/decisions/2026-10-13-hermes-capabilities-approved.md`.
 - D-35 trial rate card published; charges stay off.
 - Erasure records intent only; destroy stays false.
 - ERA-15 script is list-only.
@@ -316,3 +316,10 @@
 - 2026-09-15T10:53Z — Pushed Desktop scroll/persist to fork + NousResearch PR #111822; papership docs d23cb1e; preserve extras-after-apply wired.
 - 2026-09-15T11:02Z — Preserve automation: post-commit snapshot + agent-commit record; host extras in snapshot; Mac synced to Hatch-class apply; private `.hermes` `fabf5d9` pushed.
 - 2026-09-15T11:06Z — Removed custom Desktop `data-tui-scrollbar` rail; wheel/PageUp tmux history path kept. Pushed fork PR branch.
+
+## 2026-10-13 D-37 working state
+
+- Hermes: all 14 areas `configured`, run via worker only. Every free-text run needs an approved record bound to (tool, arguments, prompt, session). Stream failure, unknown tool, out-of-scope write, or no run id stops the run and fails the job. Key never read by the API.
+- Messaging: Telegram and WhatsApp connect, signed webhooks into Inbox, compose then approve then send with a receipt, one send per approval. Tests mock the provider.
+- Tests at close: API 191, worker 71, web scan 15, web build ok. Live: approved Telegram send, approved WhatsApp bridge send, approved Hermes read run and write-class (`todo_list`) run with receipts. Second security re-review CONDITIONAL PASS.
+- Next: owner decides inbound for Telegram (second bot or takeover) and WhatsApp (Meta Cloud API); owner reverts the local hook exception (`~/policy.mjs.bak-*`). Rows may move to `working` per `docs/capabilities.md` §2 with the evidence above.

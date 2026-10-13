@@ -206,6 +206,15 @@ class Store:
         from app.knowledge_layer import migrate_workspace
 
         migrate_workspace(self)
+        from app.domain_records import migrate as migrate_domain_records
+
+        migrate_domain_records(self)
+        from app.hermes_runs import migrate as migrate_hermes_runs
+
+        migrate_hermes_runs(self)
+        from app.messaging import migrate as migrate_messaging
+
+        migrate_messaging(self)
         self.flush()
 
     def flush(self) -> None:
@@ -607,6 +616,10 @@ class Store:
                 "UPDATE registry SET payload=? WHERE capability_id=?",
                 (json.dumps(payload), cap_id),
             )
+
+        from app.domain_records import apply_registry
+
+        apply_registry(self)
 
         for domain_id, label in DOMAIN_LABELS.items():
             cap_id = f"{domain_id}.01"
@@ -2291,13 +2304,35 @@ class Store:
         rows = self.conn.execute(
             """SELECT jobs.*, runs.id AS run_id FROM jobs
                LEFT JOIN runs ON runs.job_id = jobs.id
-               WHERE jobs.status='queued' ORDER BY jobs.created_at LIMIT ?""",
+               WHERE jobs.status='queued' ORDER BY jobs.updated_at, jobs.created_at LIMIT ?""",
             (limit,),
         ).fetchall()
         return [self.row_to_dict(r) for r in rows]  # type: ignore[misc]
 
     def claim_job(self, job_id: str) -> None:
         self.start_job(job_id)
+
+    def fail_job(self, job_id: str, reason: str = "") -> None:
+        self.conn.execute("UPDATE jobs SET status='failed', updated_at=? WHERE id=?", (_now(), job_id))
+        job = self.conn.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+        if job:
+            self._add_event(job_id, job["tenant_id"], "job.failed", {"job_id": job_id, "reason": reason[:200]})
+        self.flush()
+
+    def get_hermes_request(self, job_id: str) -> dict[str, Any] | None:
+        from app import hermes_runs
+
+        return hermes_runs.get_request(self, job_id)
+
+    def set_hermes_state(self, job_id: str, state: str, detail: str = "", hermes_run_id: str = "") -> None:
+        from app import hermes_runs
+
+        hermes_runs.set_state(self, job_id, state, detail, hermes_run_id)
+
+    def hermes_tool_approval(self, job_id: str, tool: str, digest: str) -> dict[str, Any]:
+        from app import hermes_runs
+
+        return hermes_runs.tool_approval(self, job_id, tool, digest)
 
     def _seed_phase4(self, tenant_id: str) -> None:
         now = _now()

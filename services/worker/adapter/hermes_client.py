@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
+from pathlib import Path
 from typing import Any, Iterator
 
 from policy_hooks.env_allowlist import WORKER_ENV_ALLOWLIST
@@ -27,14 +30,58 @@ DOCUMENTED_API_SERVER = {
 }
 
 
+class StreamUnavailable(Exception):
+    """The event stream could not be read to a clean end. Callers must treat the run as unobserved."""
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *_args, **_kwargs):  # type: ignore[override]
+        return None
+
+
+_OPENER = urllib.request.build_opener(_NoRedirect)
+MAX_STREAM_EVENTS = 2000
+MAX_STREAM_SECONDS = 120.0
+_KEY_FILES = (
+    Path.home() / ".config/papership/hermes-api-server.env",
+    Path.home() / ".config/orgos/hermes-api-server.env",
+)
+
+
+def _open(req: urllib.request.Request, timeout: float):
+    """Open without following redirects, so the bearer key never follows a Location header."""
+    return _OPENER.open(req, timeout=timeout)
+
+
+def _valid_base(url: str) -> bool:
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme == "https" and parsed.hostname:
+        return True
+    return parsed.scheme == "http" and (parsed.hostname or "") in {"127.0.0.1", "localhost", "::1"}
+
+
 def hermes_base_url() -> str:
-    return (os.environ.get("HERMES_API_BASE_URL") or "").rstrip("/")
+    url = (os.environ.get("HERMES_API_BASE_URL") or "").rstrip("/")
+    return url if (not url or _valid_base(url)) else ""
+
+
+def _key_from_file() -> str:
+    for path in _KEY_FILES:
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip().removeprefix("export ").strip()
+            if line.startswith("HERMES_API_SERVER_KEY="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+        return ""
+    return ""
 
 
 def _transport_key() -> str:
+    """Worker-only. The API process never calls this (D-37)."""
     if "HERMES_API_SERVER_KEY" not in WORKER_ENV_ALLOWLIST:
         return ""
-    return os.environ.get("HERMES_API_SERVER_KEY") or ""
+    return os.environ.get("HERMES_API_SERVER_KEY") or _key_from_file()
 
 
 def documented_capabilities() -> dict[str, Any]:
@@ -48,7 +95,7 @@ def documented_capabilities() -> dict[str, Any]:
 def _probe_status(url: str, method: str, timeout: float) -> int | None:
     req = urllib.request.Request(url, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _open(req, timeout) as resp:
             return getattr(resp, "status", 200)
     except urllib.error.HTTPError as exc:
         return exc.code
@@ -58,6 +105,8 @@ def _probe_status(url: str, method: str, timeout: float) -> int | None:
 
 def probe_hermes(base_url: str | None = None, timeout: float = 3.0) -> dict[str, Any]:
     url = (base_url or hermes_base_url()).rstrip("/")
+    if url and not _valid_base(url):
+        return {"hermes": "not_configured", "wired": False, "api_server": False}
     if not url:
         return {"hermes": "not_configured", "wired": False, "api_server": False}
     target = f"{url}/health"
@@ -105,7 +154,7 @@ def _headers() -> dict[str, str]:
 def _get_json(base: str, path: str, timeout: float = 8.0) -> Any:
     req = urllib.request.Request(f"{base}{path}", method="GET", headers=_headers())
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _open(req, timeout) as resp:
             raw = resp.read()
     except urllib.error.HTTPError as exc:
         raw = exc.read()
@@ -134,8 +183,8 @@ def request_json(
     base_url: str | None = None,
 ) -> tuple[int, Any]:
     base = (base_url or hermes_base_url()).rstrip("/")
-    if not base:
-        return 503, {"detail": "HERMES_API_BASE_URL is not set"}
+    if not base or not _valid_base(base):
+        return 503, {"detail": "HERMES_API_BASE_URL is not set or not https/loopback"}
     headers = _headers()
     headers.update(extra_headers or {})
     data = None
@@ -144,7 +193,7 @@ def request_json(
         headers["Content-Type"] = "application/json"
     req = urllib.request.Request(f"{base}{path}", data=data, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _open(req, timeout) as resp:
             raw = resp.read()
             code = getattr(resp, "status", 200)
     except urllib.error.HTTPError as exc:
@@ -198,27 +247,32 @@ def resolve_approval(run_id: str, decision: dict[str, Any]) -> tuple[int, dict[s
 
 
 def stream_events(run_id: str, last_event_id: str | None = None) -> Iterator[dict[str, Any]]:
+    """Yield run events. Any transport failure raises `StreamUnavailable`; it never ends silently."""
     base = hermes_base_url()
     if not base:
-        return
-        yield {}  # pragma: no cover
-    path = f"/v1/runs/{run_id}/events"
+        raise StreamUnavailable("no valid HERMES_API_BASE_URL")
+    path = f"/v1/runs/{urllib.parse.quote(run_id, safe='')}/events"
     if last_event_id:
-        path += f"?after={last_event_id}"
+        path += f"?after={urllib.parse.quote(last_event_id, safe='')}"
     req = urllib.request.Request(f"{base}{path}", method="GET", headers=_headers())
+    started = time.monotonic()
+    count = 0
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with _open(req, 30) as resp:
             for raw in resp:
+                if time.monotonic() - started > MAX_STREAM_SECONDS or count >= MAX_STREAM_EVENTS:
+                    raise StreamUnavailable("event stream exceeded its bound")
                 line = raw.decode(errors="replace").strip()
                 if line.startswith("data:"):
                     chunk = line[5:].strip()
                     if chunk:
+                        count += 1
                         try:
                             yield json.loads(chunk)
                         except json.JSONDecodeError:
                             yield {"raw": chunk}
-    except (urllib.error.URLError, TimeoutError, OSError, urllib.error.HTTPError):
-        return
+    except (urllib.error.URLError, TimeoutError, OSError, urllib.error.HTTPError) as exc:
+        raise StreamUnavailable(type(exc).__name__) from exc
 
 
 def list_toolsets() -> tuple[int, Any]:

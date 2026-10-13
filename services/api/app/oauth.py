@@ -57,6 +57,7 @@ def annotate_connection(row: dict[str, Any], settings: Settings) -> dict[str, An
             item["status"] = "configured"
             item["handoff"] = "Connected. Read and draft stay dry-run. Send stays approval-then-receipt."
         elif ready[provider] == "ready":
+            item["status"] = "configured"
             item["handoff"] = "Continue in your browser. Papership never embeds the provider sign-in."
         elif ready[provider] == "missing_secret":
             item["handoff"] = "Client ID is present. Add the client secret on the API host, then retry."

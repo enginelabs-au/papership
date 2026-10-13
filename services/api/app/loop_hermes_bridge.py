@@ -18,21 +18,6 @@ def _hermes_env_paths() -> tuple[Path, ...]:
     )
 
 
-def _parse_env_file(path: Path) -> dict[str, str]:
-    out: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line.startswith("export "):
-            line = line[7:].strip()
-        if "=" not in line:
-            continue
-        key, val = line.split("=", 1)
-        out[key.strip()] = val.strip().strip('"').strip("'")
-    return out
-
-
 def _worker_root() -> Path:
     return Path(__file__).resolve().parents[2] / "worker"
 
@@ -77,6 +62,43 @@ class LoopHermesUnavailableError(Exception):
         self.probe = probe or {}
 
 
+_PASS_THROUGH = ("PATH", "HOME", "USER", "LANG", "LC_ALL", "TMPDIR", "UV_CACHE_DIR", "UV_PROJECT_ENVIRONMENT", "VIRTUAL_ENV")
+
+
+def _worker_env(base_url: str) -> dict[str, str]:
+    """Minimal environment for a worker subprocess.
+
+    The API process never reads or forwards the transport key: the worker loads it itself from its
+    own environment or `~/.config/papership/hermes-api-server.env`. No other API secret is inherited.
+    """
+    env = {k: os.environ[k] for k in _PASS_THROUGH if k in os.environ}
+    env["HERMES_API_BASE_URL"] = base_url.rstrip("/")
+    if not any(path.is_file() for path in _hermes_env_paths()):
+        raise LoopHermesUnavailableError(
+            "Hermes transport key file is missing on this machine. "
+            "Add HERMES_API_SERVER_KEY to ~/.config/papership/hermes-api-server.env "
+            "(worker/VPS only — never on the API process).",
+        )
+    return env
+
+
+def query_hermes(base_url: str, op: str, arg: str = "") -> dict[str, Any]:
+    """Read a Hermes catalogue (toolsets, skills, sessions) through the worker. Never fakes a list."""
+    assert_loop_hermes_ready(base_url)
+    env = _worker_env(base_url)
+    cmd = ["uv", "run", "python", "-m", "hermes_query", json.dumps({"op": op, "arg": arg})]
+    try:
+        proc = subprocess.run(
+            cmd, cwd=str(_worker_root()), env=env, capture_output=True, text=True, timeout=45, check=False
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise LoopHermesUnavailableError(f"Could not run Hermes query ({type(exc).__name__}).") from exc
+    try:
+        return json.loads(proc.stdout.strip() or "{}")
+    except json.JSONDecodeError as exc:
+        raise LoopHermesUnavailableError("Hermes query returned invalid JSON.") from exc
+
+
 def dispatch_loop_stage(
     *,
     base_url: str,
@@ -96,18 +118,7 @@ def dispatch_loop_stage(
         "bound_repo": bound_repo,
         "base_url": base_url.rstrip("/"),
     }
-    env = os.environ.copy()
-    env["HERMES_API_BASE_URL"] = base_url.rstrip("/")
-    for path in _hermes_env_paths():
-        if path.is_file():
-            env.update(_parse_env_file(path))
-            break
-    if not (env.get("HERMES_API_SERVER_KEY") or "").strip():
-        raise LoopHermesUnavailableError(
-            "Hermes transport key is missing on this machine. "
-            "Add HERMES_API_SERVER_KEY to ~/.config/papership/hermes-api-server.env "
-            "(worker/VPS only — never on the API process).",
-        )
+    env = _worker_env(base_url)
     cmd = [
         "uv",
         "run",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ipaddress
 import re
+import socket
 from urllib.parse import urlparse
 
 ALLOWED_EXACT = frozenset(
@@ -54,6 +55,25 @@ def host_from_target(target: str) -> str:
     return (parsed.hostname or "").lower()
 
 
+def _normalise_ip(host: str) -> str:
+    """Resolve numeric host spellings (0x7f.0.0.1, 127.1, 2130706433) to dotted form."""
+    if re.fullmatch(r"[0-9a-fx.]+", host, re.I) and any(c.isdigit() for c in host):
+        try:
+            return socket.inet_ntoa(socket.inet_aton(host))
+        except OSError:
+            return host
+    return host
+
+
+def _resolves_private(host: str) -> bool:
+    """Best effort: deny when DNS returns a private address. A failed lookup is not a denial."""
+    try:
+        infos = socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)
+    except (socket.gaierror, UnicodeError, OSError):
+        return False
+    return any(_is_blocked_ip(info[4][0]) for info in infos)
+
+
 def _is_blocked_ip(host: str) -> bool:
     try:
         addr = ipaddress.ip_address(host)
@@ -74,6 +94,11 @@ def allow_egress(target: str) -> bool:
         return False
     if host in {"127.0.0.1", "localhost"}:
         return True
+    normalised = _normalise_ip(host)
+    if normalised != host or re.fullmatch(r"[0-9.]+", host):
+        # A numeric spelling of any address is not a hostname; only the literal loopback above is allowed.
+        if _is_blocked_ip(normalised) or normalised != host:
+            return False
     if _is_blocked_ip(host):
         return False
     if host in ALLOWED_EXACT:
@@ -82,7 +107,7 @@ def allow_egress(target: str) -> bool:
         return True
     # Public DNS names (not raw private IPs) are allowed for web/browser research.
     if "." in host and not host.endswith(".local") and not host.endswith(".internal"):
-        return True
+        return not _resolves_private(host)
     return False
 
 
@@ -91,14 +116,33 @@ def assert_egress(target: str) -> None:
         raise EgressDenied(host_from_target(target) or target)
 
 
+def _strings(value: object, depth: int = 0) -> list[tuple[str, str]]:
+    """(key, text) for every string in nested arguments."""
+    out: list[tuple[str, str]] = []
+    if depth > 6:
+        return out
+    if isinstance(value, dict):
+        for key, inner in value.items():
+            if isinstance(inner, str):
+                out.append((str(key), inner))
+            else:
+                out.extend(_strings(inner, depth + 1))
+    elif isinstance(value, (list, tuple)):
+        for inner in value:
+            if isinstance(inner, str):
+                out.append(("", inner))
+            else:
+                out.extend(_strings(inner, depth + 1))
+    return out
+
+
 def extract_targets(arguments: dict[str, object] | None) -> list[str]:
     if not arguments:
         return []
     found: list[str] = []
-    for key in ("url", "href", "host", "endpoint", "target"):
-        value = arguments.get(key)
-        if isinstance(value, str) and value.strip():
-            found.append(value.strip())
-    blob = " ".join(str(v) for v in arguments.values() if isinstance(v, str))
-    found.extend(_URL_RE.findall(blob))
+    pairs = _strings(arguments)
+    for key, text in pairs:
+        if key in ("url", "href", "host", "endpoint", "target") and text.strip():
+            found.append(text.strip())
+    found.extend(_URL_RE.findall(" ".join(text for _key, text in pairs)))
     return found

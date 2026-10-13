@@ -122,7 +122,14 @@ def domain_row_from_registry(domain_id: str, registry_row: dict[str, Any] | None
             if domain_id in CONNECTOR_HEAVY_DOMAINS
             else "Native or configured without inventing a live connector write."
         ),
+        "native_kinds": list(_native_kinds(domain_id)),
     }
+
+
+def _native_kinds(domain_id: str) -> tuple[str, ...]:
+    from app.domain_records import SPECS
+
+    return tuple(SPECS.get(domain_id, {}).get("native", ()))
 
 
 def full_domain_catalogue(registry_items: list[dict[str, Any]]) -> list[dict[str, Any]]:

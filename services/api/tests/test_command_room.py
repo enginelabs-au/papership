@@ -77,8 +77,8 @@ def test_hermes_host_is_probe_only(client: TestClient, founder_headers: dict[str
     assert response.status_code == 200
     body = response.json()
     assert body["product"] == "Hermes Host"
-    assert body["write_tools"] is False
-    assert body["live_production_writes"] is False
+    assert body["write_tools"] is True  # D-37: authorized under gates
+    assert body["live_production_writes"] is False  # true only while the Hermes API server is reachable
     assert body["context_music"] is False
     assert body["status"] in {"reachable", "serve_ui", "unreachable", "not_configured", "error"}
     assert "message" in body

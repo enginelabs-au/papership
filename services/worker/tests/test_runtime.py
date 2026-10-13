@@ -49,7 +49,9 @@ def test_head_405_plus_capabilities_401_is_api_server(monkeypatch) -> None:
         "adapter.hermes_client.start_run",
         lambda **_k: (202, {"id": "run-1"}),
     )
-    result = adapter.start_run(purpose="Reply with pong.", idempotency_key="job-live:start", tool="memory_read")
+    result = adapter.start_run(
+        purpose="Reply with pong.", idempotency_key="job-live:start", tool="memory_read", trusted_purpose=True
+    )
     assert result["status"] == "accepted"
 
 
