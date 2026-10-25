@@ -170,6 +170,33 @@ export async function postPapershipJson(path, body) {
   return payload;
 }
 
+/** GET that surfaces the API's own explanation (a disabled product, a missing grant) instead of a bare status. */
+export async function getPapershipJson(path) {
+  const response = await papershipRequest(path, { method: "GET" });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const err = new Error(payload.detail || `Papership API ${path} returned ${response.status}`);
+    err.status = response.status;
+    throw err;
+  }
+  return payload;
+}
+
+export async function putPapershipJson(path, body) {
+  const response = await papershipRequest(path, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const err = new Error(payload.detail || `Papership API ${path} returned ${response.status}`);
+    err.status = response.status;
+    throw err;
+  }
+  return payload;
+}
+
 export async function ensureLocalSession() {
   const current = token();
   if (sessionIsFresh(current)) return current;

@@ -1,0 +1,13 @@
+{
+  "schema": "papership.agent-package/1",
+  "name": "engine-labs/supabase-linked-migrations",
+  "version": "1.0.0",
+  "kind": "skill",
+  "description": "Ship SQL schema changes from a repository to a hosted Supabase project and verify that local and remote migration history agree.",
+  "category": "data",
+  "tags": ["supabase", "postgres", "migrations", "schema"],
+  "jurisdiction": [],
+  "compatible": ["agent-skills", "cursor", "claude", "codex"],
+  "license": { "class": "open", "spdx": "MIT" },
+  "visibility": "private"
+}

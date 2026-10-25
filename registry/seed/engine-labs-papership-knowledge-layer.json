@@ -1,0 +1,13 @@
+{
+  "schema": "papership.agent-package/1",
+  "name": "engine-labs/papership-knowledge-layer",
+  "version": "1.0.0",
+  "kind": "context-pack",
+  "description": "Architecture, security model, API contract, decision log and phase roadmap of the Papership Knowledge Layer: what an agent needs to work inside this codebase without breaking its guards.",
+  "category": "papership",
+  "tags": ["papership", "architecture", "security-model", "decisions"],
+  "jurisdiction": [],
+  "compatible": ["agent-skills", "cursor", "claude", "codex"],
+  "license": { "class": "open", "spdx": "MIT" },
+  "visibility": "private"
+}

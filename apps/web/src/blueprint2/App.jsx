@@ -4,6 +4,14 @@ import { PRODUCT } from "../brand";
 import { useIsMobile } from "../hooks/use-mobile";
 import "./blueprint2.css";
 import { Ico, PATHS, SearchIco } from "./svg";
+import { LoopPanel } from "./loop.jsx";
+import { RegistryPanel } from "./registry.jsx";
+import { WorkspacePanel } from "./workspace.jsx";
+import { StudioPanel } from "./studio.jsx";
+import { ExchangePanel } from "./exchange.jsx";
+import { HomePanel } from "./home.jsx";
+import { LiveProvider } from "./live.jsx";
+import { ProductShell } from "./shell.jsx";
 import {
   AccountView,
   AgentDetail,
@@ -17,12 +25,10 @@ import {
   InboxView,
   InvitesView,
   MemoryView,
-  PageHead,
   PeopleView,
   Registry,
   RunDetailView,
   SettingsView,
-  SubNav,
   TeamsView,
   TodayDecisions,
   TodayOverview,
@@ -62,6 +68,12 @@ function migrateStored(primary, legacy) {
 }
 const DOTS = { ok: "var(--green)", warn: "var(--amber)", bad: "var(--red)", idle: "var(--t3)", run: "var(--blue)" };
 const TABDEF = {
+  home: { label: "Home", d: PATHS.today },
+  workspace: { label: "Workspace", d: PATHS.today },
+  studio: { label: "Studio", d: PATHS.work },
+  exchange: { label: "Exchange", d: PATHS.plug },
+  registry: { label: "Registry", d: PATHS.plug },
+  loop: { label: "Context", d: PATHS.data },
   today: { label: "Today", d: PATHS.today },
   work: { label: "Work", d: PATHS.work },
   inbox: { label: "Inbox", d: PATHS.inbox },
@@ -73,11 +85,19 @@ const TABDEF = {
   knowledge: { label: "Knowledge", d: PATHS.files },
   settings: { label: "Settings", d: PATHS.settings },
 };
-const TAB_KEYS = ["today", "work", "inbox", "people", "data", "files", "integrations", "agents", "knowledge", "settings"];
-const BOTTOM_TABS = ["today", "work", "inbox"];
-const RAIL_TABS = ["people", "data", "files", "integrations", "agents", "knowledge", "settings"];
+const TAB_KEYS = ["home", "workspace", "registry", "studio", "exchange", "loop", "knowledge", "agents", "today", "settings"];
+const BOTTOM_TABS = ["workspace", "registry", "studio", "exchange"];
+// Operations: the company-OS surfaces. Kept and working, but not the product (D-38).
+const RAIL_TABS = ["work", "inbox", "people", "data", "files", "integrations"];
+const TAB_LABELS = Object.fromEntries(Object.entries(TABDEF).map(([k, v]) => [k, v.label]));
 const NARROW_PX = 768;
 const PAGES = {
+  home: { t: "Home", d: "Four products, one organisation. Start the connected demo, see what needs you, and follow the work across products.", subs: [] },
+  workspace: { t: "Workspace", d: "Your people, agents, tools and work in one place. Every external action waits for a decision you can inspect.", subs: ["Overview", "Agents", "Tasks", "Approvals", "Activity", "Team & tools"] },
+  studio: { t: "Studio", d: "Define an agent, lock the exact materials it uses, check it against fixtures, and create a Workspace agent. Preview: no deployment yet.", subs: ["Blueprints", "Builder", "Evaluations", "Deployment"] },
+  exchange: { t: "Exchange", d: "Find and buy the capability to get a task done. Demo: every provider, price and result is simulated.", subs: ["Catalogue", "Quotes", "Jobs", "Budget & policy"] },
+  registry: { t: "Registry", d: "Installable Agent Materials: skills, context packs, workflows and references. Search, resolve for a task, install, measure.", subs: ["Browse", "Resolve", "Installed", "Publish", "Insights"] },
+  loop: { t: "Context", d: "Your organisation's own repository knowledge: ask for context, see what an agent would receive, record how it went.", subs: [] },
   today: { t: "Today", d: "Command room — what needs you now (blueprint-3 tiles on blueprint-2 chrome)", subs: ["Overview", "Decisions", "Running", "Registry"], counts: { Decisions: "2", Running: "3" } },
   work: { t: "Work", d: "Plans, assignments and the development loop — the native work ledger", subs: ["Projects", "Issues", "Board", "Roadmap", "Workflows", "Wiki"] },
   inbox: { t: "Inbox", d: "Ticketed conversations across connected channels", subs: ["All", "Mentions", "Starred", "Archived"], counts: { All: "4" } },
@@ -89,7 +109,7 @@ const PAGES = {
   knowledge: { t: "Knowledge", d: "Objects this seat may see. Class, source, and version.", subs: ["Objects", "Materials"] },
   settings: { t: "Settings", d: "Organisation defaults, grants, retention and appearance", subs: [] },
 };
-const DFLT = { today: "Overview", work: "Issues", inbox: "All", people: "People", data: "AI traces", integrations: "Connected", agents: "Roster", knowledge: "Objects" };
+const DFLT = { home: "", workspace: "Overview", studio: "Blueprints", exchange: "Catalogue", registry: "Browse", today: "Overview", work: "Issues", inbox: "All", people: "People", data: "AI traces", integrations: "Connected", agents: "Roster", knowledge: "Objects" };
 const SETTINGS_PANES = ["General", "AI & Agents", "Notifications", "Security", "Permissions", "Plan", "Team", "Appearance", "Data & retention", "Personalisation", "Docs"];
 const navBtn = { width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(196,181,253,.34)", background: "rgba(255,255,255,.06)", borderRadius: 8, color: "var(--navink)", cursor: "pointer" };
 
@@ -101,7 +121,7 @@ function toSlug(label) {
 }
 
 function hashFromNav(tab, subMap, setPane) {
-  if (!tab || !PAGES[tab]) return "#today/overview";
+  if (!tab || !PAGES[tab]) return "#registry";
   if (tab === "settings") return `#settings/${toSlug(setPane || "Plan")}`;
   if (tab === "files") return "#files";
   const cur = subMap[tab] || DFLT[tab];
@@ -205,7 +225,7 @@ function Auth({ theme, cycleTheme, onSignIn }) {
 export default function Blueprint2App() {
   const [theme, setTheme] = useState(() => migrateStored(THEME_KEY, LEGACY_THEME_KEY) || "light");
   const [authed, setAuthed] = useState(() => !!readAuth());
-  const [tab, setTab] = useState("today");
+  const [tab, setTab] = useState("home");
   const [sub, setSub] = useState({});
   const isMobile = useIsMobile();
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
@@ -1036,7 +1056,7 @@ export default function Blueprint2App() {
   let pageTitle = page.t;
   let pageDesc = page.d;
   let pageChip = "";
-  let pageActions = [{ label: "Start a run", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: () => setHey(true) }];
+  let pageActions = [];
   if (tab === "work") pageActions = [{ label: "Filter", bg: "var(--surface)", bd: "var(--line)", ink: "var(--t1)", go: () => {} }, { label: "New issue", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => {} }];
   if (tab === "files") pageActions = [{ label: "Upload", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => setModal("upload") }];
   if (tab === "integrations") pageActions = [{ label: "Add connection", bg: "var(--blue)", bd: "var(--blue)", ink: "#fff", go: () => openWizard() }];
@@ -1098,7 +1118,7 @@ export default function Blueprint2App() {
       const waiting = (v.decisions || []).filter((d) => d.pending).length;
       count = waiting ? String(waiting) : "0";
     }
-    return { label: s, go: setSubTab(tab, s), bg: on ? "var(--surface)" : "transparent", ink: on ? "var(--t1)" : "var(--t3)", fw: on ? "600" : "500", sh: on ? "0 1px 2px rgba(26,18,36,.08)" : "none", count, cbg: on ? "var(--blue-soft)" : "var(--line2)", cink: on ? "var(--blue)" : "var(--t3)" };
+    return { label: s, on, go: setSubTab(tab, s), bg: on ? "var(--surface)" : "transparent", ink: on ? "var(--t1)" : "var(--t3)", fw: on ? "600" : "500", sh: on ? "0 1px 2px rgba(26,18,36,.08)" : "none", count, cbg: on ? "var(--blue-soft)" : "var(--line2)", cink: on ? "var(--blue)" : "var(--t3)" };
   });
 
   const MODALS = {
@@ -1160,326 +1180,138 @@ export default function Blueprint2App() {
     setAuthed(false); setAvatarOpen(false);
   };
 
+  const heyPanel = hey ? (
+    <div className="bp2-hey" style={{ width: 420, maxWidth: "42%", flex: "none", borderLeft: "1px solid var(--line)", background: "var(--surface)", display: "flex", flexDirection: "column", minHeight: 0, position: "relative", zIndex: 500, boxShadow: "-14px 0 40px rgba(26,18,36,.06)" }}>
+      <div className="bp2-hey-mobile-bar">
+        <div>
+          <Ico d={PATHS.star} size={15} />
+          <span style={{ flex: 1, font: "600 13.5px Inter,sans-serif" }}>Hey Papership</span>
+          <span style={{ font: "400 11px 'JetBrains Mono',monospace", opacity: 0.8 }}>CCO-245</span>
+          <button type="button" title="Close sheet" onClick={() => setHey(false)} style={{ width: 28, height: 28, border: 0, background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16 }}>✕</button>
+        </div>
+      </div>
+      <div className="bp2-hey-desktop-bar" style={{ flex: "none", display: "flex", alignItems: "center", gap: 4, padding: "7px 8px 0", borderBottom: "1px solid var(--line2)" }}>
+        {v.heySessions.map((s) => (
+          <button key={s.label} type="button" style={{ display: "flex", alignItems: "center", gap: 7, maxWidth: 150, height: 29, padding: "0 10px", border: `1px solid ${s.bd}`, borderBottom: 0, borderRadius: "7px 7px 0 0", background: s.bg, color: s.ink, fontSize: 11.5, fontWeight: s.fw, cursor: "pointer" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot, flex: "none" }} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
+          </button>
+        ))}
+        <button type="button" title="New session" style={{ width: 26, height: 26, border: 0, background: "transparent", color: "var(--t3)", borderRadius: 6, cursor: "pointer", fontSize: 15, lineHeight: 1 }}>+</button>
+        <div style={{ flex: 1 }} />
+        <button type="button" onClick={() => setRoute({ kind: "run" })} style={{ height: 24, padding: "0 8px", border: 0, background: "transparent", color: "var(--t3)", borderRadius: 6, font: "500 11px Inter,sans-serif", cursor: "pointer", marginBottom: 4 }}>Technical details</button>
+        <button type="button" title="Close panel" onClick={() => setHey(false)} style={{ width: 26, height: 26, border: 0, background: "transparent", color: "var(--t3)", borderRadius: 6, cursor: "pointer", marginBottom: 4 }}>✕</button>
+      </div>
+      <div style={{ flex: 1, overflow: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ fontSize: 12.5, color: "var(--t2)" }}>{v.decisionsNote || "Approvals come from the organisation ledger."}</div>
+        {v.actionError ? <div style={{ fontSize: 12, color: "var(--red)" }}>{v.actionError}</div> : null}
+        {(v.approvalsLive ? v.decisions : []).map((d) => (
+          <div key={`${d.action}-${d.target}-${d.version}`} style={{ border: "1px solid var(--line)", borderRadius: 9, padding: "10px 11px", background: "var(--canvas)" }}>
+            <div style={{ font: "600 12px Inter,sans-serif" }}>{d.action}</div>
+            <div style={{ marginTop: 6, font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>Target · {d.target}</div>
+            <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>Version · {d.version}</div>
+            <div style={{ marginTop: 6, fontSize: 12, color: "var(--t3)" }}>{d.why}</div>
+            {d.pending ? (
+              <button type="button" className="bp2-hit" onClick={d.approve} style={{ marginTop: 10, height: 27, padding: "0 12px", border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>Approve</button>
+            ) : null}
+          </div>
+        ))}
+        {v.approvalsLive && !(v.decisions || []).length ? (
+          <div style={{ fontSize: 13, fontWeight: 600 }}>Nothing is waiting for your approval.</div>
+        ) : null}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "var(--raised)", fontSize: 11.5, color: "var(--t2)" }}>
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ flex: "none" }}><circle cx="8" cy="8" r="6" /><path d="M8 5.2v3.4M8 10.8h.01" strokeLinecap="round" /></svg>
+              Closing this panel won’t stop the work.
+            </div>
+      </div>
+      <div style={{ flex: "none", borderTop: "1px solid var(--line2)", padding: "10px 12px 12px", display: "flex", flexDirection: "column", gap: 9 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+          {v.modes.map((m) => (
+            <button key={m.label} type="button" style={{ height: 23, padding: "0 9px", border: `1px solid ${m.bd}`, background: m.bg, color: m.ink, borderRadius: 12, font: "500 11px Inter,sans-serif", cursor: m.cursor }}>{m.label}</button>
+          ))}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 22, padding: "0 9px", borderRadius: 11, background: "var(--raised)", border: "1px solid var(--line2)", font: "500 11px Inter,sans-serif", color: "var(--t2)" }}>
+            <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="6.4" width="10" height="7" rx="1.4" /><path d="M5.6 6.4V4.8a2.4 2.4 0 0 1 4.8 0v1.6" /></svg>
+            Item · CCO-245
+          </span>
+          <span style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>read-only scope</span>
+        </div>
+        <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>Remaining allowance: not captured · action cost: not captured</div>
+        <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 7, border: "1px solid var(--line)", borderRadius: 9, background: "var(--canvas)", padding: "7px 9px" }}>
+            <textarea placeholder="Ask, or describe the outcome you want…" style={{ flex: 1, minHeight: 34, maxHeight: 120, resize: "none", border: 0, background: "transparent", color: "var(--t1)", font: "400 12.5px Inter,sans-serif", outline: "none" }} />
+            <button type="button" title="Wake word unavailable" style={{ width: 26, height: 26, border: "1px solid var(--line2)", background: "transparent", color: "var(--t3)", borderRadius: 6, cursor: "not-allowed", flex: "none" }}>
+              <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="6" y="2.4" width="4" height="7" rx="2" /><path d="M4 8a4 4 0 0 0 8 0M8 12v1.8" strokeLinecap="round" /><path d="M3 3l10 10" strokeLinecap="round" /></svg>
+            </button>
+          </div>
+          <button type="button" className="bp2-hit" onClick={() => setStreaming((s) => !s)} style={{ height: 34, padding: "0 14px", border: 0, borderRadius: 8, background: streaming ? "var(--red)" : "var(--blue)", color: "#fff", font: "600 12.5px Inter,sans-serif", cursor: "pointer", flex: "none" }}>{streaming ? "Stop" : "Send"}</button>
+        </div>
+        <div style={{ fontSize: 10.5, color: "var(--t3)" }}>Enter sends · Shift+Enter for a new line. Hey Papership acts with your access — never more.</div>
+      </div>
+    </div>
+  ) : null;
+
   return (
+    <LiveProvider enabled={authed}>
     <div className="bp2-root" data-theme={theme} data-narrow={isMobile ? "1" : "0"} data-rail={railOpen ? "1" : "0"} data-hey={hey ? "1" : "0"}>
       {!authed ? (
         <Auth theme={theme} cycleTheme={cycleTheme} onSignIn={signIn} />
       ) : (
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-          {oauthNote ? (
-            <div style={{ flex: "none", padding: "8px 14px", background: "var(--blue-soft)", color: "var(--t1)", fontSize: 12.5, borderBottom: "1px solid var(--line)" }}>
-              {oauthNote}
-            </div>
+        <ProductShell
+          theme={theme} cycleTheme={cycleTheme} online={online} isMobile={isMobile}
+          tab={tab} route={route} go={go} tabLabels={TAB_LABELS} pages={PAGES}
+          title={pageTitle} desc={pageDesc} chip={pageChip} actions={pageActions.map((a) => ({ label: a.label, go: a.go, primary: a.bg === "var(--blue)" }))}
+          subnav={!route ? subnav : []} hasBack={!!route} onBack={() => setRoute(null)}
+          onSearch={() => setPalette(true)} onHey={() => { setHey(true); setPalette(false); setDrawer(false); }} heyOpen={hey} heyPanel={heyPanel}
+          noticeCount={3} onBell={() => setDrawer((o) => !o)}
+          menuItems={[
+            { label: "Profile", go: () => setRoute({ kind: "account" }) },
+            { label: "Settings · Plan", go: goSeat },
+            { label: "Memory", go: () => setRoute({ kind: "memory" }) },
+            { label: `Theme: ${theme === "light" ? "Light" : theme === "dark" ? "Dark" : "Dimmed"}`, go: cycleTheme },
+            { label: "Sign out", go: signOut, danger: true },
+          ]}
+          banner={oauthNote ? (
+          <div style={{ flex: "none", padding: "8px 14px", background: "var(--blue-soft)", color: "var(--t1)", fontSize: 12.5, borderBottom: "1px solid var(--line)" }}>
+            {oauthNote}
+          </div>
           ) : null}
-          <div className="bp2-top" style={{ height: 60, flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "0 14px", background: "var(--navfield)", borderBottom: "1px solid rgba(0,0,0,.25)", position: "relative", zIndex: 520 }}>
-            <button type="button" title="Toggle company rail" onClick={() => setRailOpen((o) => !o)} style={{ width: 36, height: 36, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(196,181,253,.34)", background: "rgba(255,255,255,.06)", borderRadius: 8, color: "var(--navink)", cursor: "pointer" }}>
-              <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="2" y="3" width="12" height="10" rx="1.6" /><path d="M6.2 3v10" /></svg>
-            </button>
-            <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 0 }}>
-              <span style={{ fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-.2px" }}>{PRODUCT.name}</span>
-              <span style={{ fontSize: 10.5, color: "var(--navink2)" }}>{PRODUCT.company}</span>
-            </div>
-            <div className="bp2-search-wide" style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-              <button type="button" onClick={() => setPalette(true)} style={{ width: "100%", maxWidth: 400, height: 32, display: "flex", alignItems: "center", gap: 8, padding: "0 10px", borderRadius: 8, border: "1px solid rgba(196,181,253,.3)", background: "rgba(0,0,0,.18)", color: "var(--navink2)", cursor: "pointer", font: "400 12.5px Inter,sans-serif" }}>
-                <SearchIco />
-                <span style={{ flex: 1, textAlign: "left" }}>Search anything</span>
-                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10.5, border: "1px solid rgba(196,181,253,.3)", borderRadius: 4, padding: "1px 5px" }}>⌘K</span>
-              </button>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, flex: "none", marginLeft: "auto" }}>
-              <button type="button" title="Search" className="bp2-search-narrow" onClick={() => setPalette(true)} style={navBtn}><SearchIco /></button>
-              <button type="button" className="bp2-desktop-extra" title={`Theme: ${theme}`} onClick={cycleTheme} style={navBtn}><Ico d={theme === "light" ? PATHS.sun : PATHS.moon} /></button>
-              <div className="bp2-desktop-extra" style={{ position: "relative" }}>
-                <button type="button" title="Create" onClick={() => { setCreateOpen((o) => !o); setAvatarOpen(false); }} style={navBtn}><Ico d={PATHS.plus} /></button>
-                {createOpen ? (
-                  <div style={{ position: "absolute", top: 38, right: 0, width: 228, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, boxShadow: "var(--shadow-lg)", padding: 5, zIndex: 530 }}>
-                    {["New priority", "New plan", "New request", "New run"].map((l) => (
-                      <div key={l} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }} onClick={() => setCreateOpen(false)}>{l}</div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-              <button type="button" title="Notifications" onClick={() => { setDrawer((o) => !o); setAvatarOpen(false); setCreateOpen(false); }} style={{ ...navBtn, position: "relative" }}>
-                <Ico d={PATHS.bell} />
-                <span style={{ position: "absolute", top: -4, right: -4, minWidth: 16, height: 16, padding: "0 4px", borderRadius: 8, background: "var(--red)", color: "#fff", font: "600 10px 'JetBrains Mono',monospace", display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid var(--navfield)" }}>3</span>
-              </button>
-              <div style={{ position: "relative" }}>
-                <button type="button" onClick={() => { setAvatarOpen((o) => !o); setCreateOpen(false); }} style={{ width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(196,181,253,.4)", background: "linear-gradient(135deg,#2563eb,#a78bfa)", color: "#fff", font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>CD</button>
-                {avatarOpen ? (
-                  <div style={{ position: "absolute", top: 38, right: 0, width: 210, background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, boxShadow: "var(--shadow-lg)", padding: 5, zIndex: 530 }}>
-                    <div style={{ padding: "8px 9px 9px", borderBottom: "1px solid var(--line2)", marginBottom: 4 }}>
-                      <div style={{ fontSize: 12.5, fontWeight: 600 }}>Cam Douglas</div>
-                      <div style={{ fontSize: 11, color: "var(--t3)", fontFamily: "'JetBrains Mono',monospace" }}>founder@enginelabs.com.au</div>
-                      <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", height: 20, padding: "0 8px", borderRadius: 10, background: "var(--blue-soft)", color: "var(--blue)", font: "600 10.5px Inter,sans-serif", cursor: "pointer" }} onClick={() => { goSeat(); setAvatarOpen(false); }}>Paid operator seat</div>
-                    </div>
-                    <div onClick={() => { setRoute({ kind: "account" }); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Profile</div>
-                    <div onClick={() => { goSeat(); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Settings · Plan</div>
-                    <div onClick={() => { goWorkflows(); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Work · Workflows</div>
-                    <div onClick={() => { setRoute({ kind: "memory" }); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Memory</div>
-                    <div onClick={() => { cycleTheme(); setAvatarOpen(false); }} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer" }}>Theme: {theme === "light" ? "Light" : theme === "dark" ? "Dark" : "Dimmed"}</div>
-                    <div onClick={signOut} style={{ padding: "7px 9px", borderRadius: 6, fontSize: 12.5, cursor: "pointer", color: "var(--red)" }}>Sign out</div>
-                  </div>
-                ) : null}
-              </div>
-              <button type="button" className="bp2-hey-launch" onClick={() => setHey((o) => !o)} style={{ height: 32, padding: 3, border: 0, borderRadius: 8, background: "linear-gradient(135deg,#2563eb,#22d3ee,#4ade80,#fbbf24,#f472b6,#a78bfa)", cursor: "pointer", display: "flex", alignItems: "center" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 7, height: 26, padding: "0 11px", borderRadius: 6, background: hey ? "transparent" : (theme !== "light" ? "#16081f" : "#2c1050"), color: "#fff", font: "600 12px Inter,sans-serif" }}>
-                  <Ico d={PATHS.star} size={13} /> Hey Papership
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div className="bp2-tabs-desktop" style={{ flex: "none", display: "flex", alignItems: "flex-end", gap: 2, padding: "0 12px", background: "var(--navfield)", position: "relative", zIndex: 519 }}>
-            {TAB_KEYS.map((k) => {
-              const active = tab === k && !route;
-              const badge = k === "inbox" ? "4" : "";
-              return (
-                <button key={k} type="button" onClick={go(k)} style={{ display: "flex", alignItems: "center", gap: 7, height: active ? 36 : 32, padding: "0 13px", border: 0, borderRadius: "9px 9px 0 0", background: active ? "var(--canvas)" : "transparent", color: active ? "var(--t1)" : "var(--navink2)", fontSize: 12.5, fontWeight: active ? 600 : 500, cursor: "pointer", position: "relative" }}>
-                  <Ico d={TABDEF[k].d} />
-                  {TABDEF[k].label}
-                  {badge ? <span style={{ minWidth: 17, height: 17, padding: "0 5px", borderRadius: 9, background: active ? "var(--red-soft)" : "rgba(255,255,255,.16)", color: active ? "var(--red)" : "#fff", font: "600 10px 'JetBrains Mono',monospace", display: "flex", alignItems: "center", justifyContent: "center" }}>{badge}</span> : null}
-                </button>
-              );
-            })}
-            <div style={{ flex: 1 }} />
-            <button type="button" className="bp2-founder-chip" onClick={goSeat} style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 4px 8px", fontSize: 10.5, color: "var(--navink2)", fontFamily: "'JetBrains Mono',monospace", border: 0, background: "transparent", cursor: "pointer" }}>Paid operator · Cam Douglas</button>
-          </div>
-
-          <div className="bp2-body" style={{ flex: 1, display: "flex", minHeight: 0, background: "var(--canvas)", position: "relative" }}>
-            {railOpen ? <div className="bp2-rail-dim" onClick={() => setRailOpen(false)} /> : null}
-            <div className="bp2-rail" style={{ width: railOpen ? 264 : 54, flex: "none", borderRight: "1px solid var(--line)", background: "var(--raised)", display: "flex", flexDirection: "column", minHeight: 0, transition: "width .28s cubic-bezier(0.32,0.72,0,1)" }}>
-              {railOpen ? (
-                <>
-                  <div style={{ flex: "none", padding: "13px 14px 11px", borderBottom: "1px solid var(--line2)" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".02em" }}>Company</div>
-                    <div style={{ fontSize: 11, color: "var(--t3)" }}>Health · work · decisions</div>
-                  </div>
-                  <div style={{ flex: 1, overflow: "auto", padding: "8px 8px 16px" }}>
-                    <div style={{ padding: "9px 6px 5px", font: "600 10px Inter,sans-serif", letterSpacing: ".09em", color: "var(--t3)", textTransform: "uppercase" }}>Signals</div>
-                    {v.railSignals.map((r) => (
-                      <div key={r.label} onClick={r.open} style={{ display: "flex", alignItems: "center", gap: 8, height: 30, padding: "0 7px", borderRadius: 6, cursor: "pointer" }}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: r.dot, flex: "none" }} />
-                        <span style={{ flex: 1, fontSize: 12.5 }}>{r.label}</span>
-                        <span style={{ font: "500 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{r.meta}</span>
-                      </div>
-                    ))}
-                    <div style={{ padding: "13px 6px 5px", font: "600 10px Inter,sans-serif", letterSpacing: ".09em", color: "var(--t3)", textTransform: "uppercase" }}>Priorities</div>
-                    {v.railPriorities.map((r) => (
-                      <div key={r.label} onClick={r.open} style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 30, padding: "5px 7px", borderRadius: 6, cursor: "pointer" }}>
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: r.dot, flex: "none" }} />
-                        <span style={{ flex: 1, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
-                        <span style={{ font: "500 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{r.meta}</span>
-                      </div>
-                    ))}
-                    <div onClick={() => setPlansOpen((o) => !o)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "13px 6px 5px", cursor: "pointer" }}>
-                      <span style={{ font: "600 10px Inter,sans-serif", letterSpacing: ".09em", color: "var(--t3)", textTransform: "uppercase" }}>Plans & milestones</span>
-                    </div>
-                    {plansOpen ? v.railPlans.map((r) => (
-                      <div key={r.label} onClick={r.open} style={{ padding: "6px 7px", borderRadius: 6, cursor: "pointer" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ flex: 1, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
-                          <span style={{ font: "500 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{r.pct}%</span>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 5 }}>
-                          <span style={{ flex: 1, height: 6, borderRadius: 3, background: "var(--line2)", overflow: "hidden" }}><span style={{ display: "block", height: 6, width: r.pctw, background: r.dot, borderRadius: 3 }} /></span>
-                          <span style={{ font: "400 10px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{r.due}</span>
-                        </div>
-                      </div>
-                    )) : null}
-                    <div style={{ padding: "13px 6px 5px", font: "600 10px Inter,sans-serif", letterSpacing: ".09em", color: "var(--t3)", textTransform: "uppercase" }}>Blockers</div>
-                    {v.railBlockers.map((r) => (
-                      <div key={r.label} onClick={r.open} style={{ padding: "7px 8px", borderRadius: 6, background: "var(--red-soft)", border: "1px solid rgba(225,29,72,.18)", marginBottom: 5, cursor: "pointer" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--red)", flex: "none" }} />
-                          <span style={{ flex: 1, fontSize: 12, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
-                        </div>
-                        <div style={{ marginLeft: 14, fontSize: 10.5, color: "var(--t3)" }}>{r.meta}</div>
-                      </div>
-                    ))}
-                    <div style={{ padding: "13px 6px 5px", font: "600 10px Inter,sans-serif", letterSpacing: ".09em", color: "var(--t3)", textTransform: "uppercase" }}>Decisions</div>
-                    {v.railDecisions.map((r) => (
-                      <div key={r.label} onClick={r.open} style={{ padding: "7px 8px", borderRadius: 6, border: "1px solid var(--line2)", background: "var(--surface)", marginBottom: 5, cursor: "pointer" }}>
-                        <div style={{ fontSize: 12, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</div>
-                        <div style={{ font: "400 10px 'JetBrains Mono',monospace", color: "var(--t3)", marginTop: 2 }}>{r.meta}</div>
-                      </div>
-                    ))}
-                    <div className="bp2-rail-more">
-                      <div style={{ padding: "13px 6px 5px", font: "600 10px Inter,sans-serif", letterSpacing: ".09em", color: "var(--t3)", textTransform: "uppercase" }}>More</div>
-                      {RAIL_TABS.map((k) => (
-                        <button key={k} type="button" onClick={go(k)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", height: 36, padding: "0 7px", border: 0, borderRadius: 6, background: tab === k ? "var(--surface)" : "transparent", color: "var(--t1)", font: "500 12.5px Inter,sans-serif", cursor: "pointer", textAlign: "left" }}>
-                          <Ico d={TABDEF[k].d} size={14} />
-                          {TABDEF[k].label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : isMobile ? null : (
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "10px 0" }}>
-                  {["Signals", "Priorities", "Plans", "Blockers", "Decisions"].map((t) => (
-                    <button key={t} type="button" title={t} onClick={() => setRailOpen(true)} style={{ width: 36, height: 34, border: 0, background: "transparent", color: "var(--t2)", borderRadius: 7, cursor: "pointer" }}>·</button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-              <div style={{ flex: 1, minWidth: 0, overflow: "auto", background: "var(--wash)" }}>
-                <div className="bp2-page" style={{ maxWidth: 1280, minWidth: 0, margin: "0 auto", padding: "20px 28px 40px" }}>
-                  {!online ? (
-                    <div className="bp2-offline" role="status">
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--red)", marginTop: 4, flex: "none", animation: "ogblink 1.6s infinite" }} />
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>Offline · Reconnecting…</div>
-                        <div style={{ fontSize: 11.5, color: "var(--t3)", marginTop: 2 }}>Showing last known state. Work already started continues in the cloud.</div>
-                      </div>
-                    </div>
-                  ) : null}
-                  <PageHead title={pageTitle} desc={pageDesc} chip={pageChip} actions={pageActions} />
-                  {!route && page.subs.length > 0 ? <SubNav items={subnav} /> : null}
-                  {rk === "agent" && <AgentDetail v={v} agentId={route.id} />}
-                  {rk === "knowledge-object" && <KnowledgeDetail v={v} objectId={route.id} />}
-                  {rk === "work-item" && <WorkItemView v={v} />}
-                  {rk === "run" && <RunDetailView v={v} />}
-                  {rk === "account" && <AccountView v={v} />}
-                  {rk === "memory" && <MemoryView v={v} />}
-                  {!route && tab === "today" && cur === "Overview" && <TodayOverview v={v} />}
-                  {!route && tab === "today" && cur === "Decisions" && <TodayDecisions v={v} />}
-                  {!route && tab === "today" && cur === "Running" && <TodayRunning v={v} />}
-                  {!route && tab === "today" && cur === "Registry" && <Registry v={v} />}
-                  {!route && tab === "work" && cur === "Projects" && <WorkProjects v={v} />}
-                  {!route && tab === "work" && cur === "Issues" && <WorkIssues v={v} />}
-                  {!route && tab === "work" && cur === "Board" && <WorkBoard v={v} />}
-                  {!route && tab === "work" && cur === "Roadmap" && <WorkRoadmap v={v} />}
-                  {!route && tab === "work" && cur === "Workflows" && <WorkWorkflows v={v} />}
-                  {!route && tab === "work" && cur === "Wiki" && <WorkWiki />}
-                  {!route && tab === "inbox" && <InboxView v={v} />}
-                  {!route && tab === "people" && cur === "People" && <PeopleView v={v} />}
-                  {!route && tab === "people" && cur === "Teams" && <TeamsView v={v} />}
-                  {!route && tab === "people" && cur === "Pending invites" && <InvitesView />}
-                  {!route && tab === "data" && <DataView v={v} sub={cur} />}
-                  {!route && tab === "files" && <FilesView v={v} />}
-                  {!route && tab === "integrations" && <ConnectionsView v={v} />}
-                  {!route && tab === "agents" && <AgentsView v={v} />}
-                  {!route && tab === "knowledge" && cur === "Materials" && <MaterialsView v={v} />}
-                  {!route && tab === "knowledge" && cur !== "Materials" && <KnowledgeView v={v} />}
-                  {!route && tab === "settings" && <SettingsView v={v} />}
-                </div>
-              </div>
-            </div>
-
-            {hey ? (
-              <div className="bp2-hey" style={{ width: 420, maxWidth: "42%", flex: "none", borderLeft: "1px solid var(--line)", background: "var(--surface)", display: "flex", flexDirection: "column", minHeight: 0, position: "relative", zIndex: 500, boxShadow: "-14px 0 40px rgba(26,18,36,.06)" }}>
-                <div className="bp2-hey-mobile-bar">
-                  <div>
-                    <Ico d={PATHS.star} size={15} />
-                    <span style={{ flex: 1, font: "600 13.5px Inter,sans-serif" }}>Hey Papership</span>
-                    <span style={{ font: "400 11px 'JetBrains Mono',monospace", opacity: 0.8 }}>CCO-245</span>
-                    <button type="button" title="Close sheet" onClick={() => setHey(false)} style={{ width: 28, height: 28, border: 0, background: "transparent", color: "#fff", cursor: "pointer", fontSize: 16 }}>✕</button>
-                  </div>
-                </div>
-                <div className="bp2-hey-desktop-bar" style={{ flex: "none", display: "flex", alignItems: "center", gap: 4, padding: "7px 8px 0", borderBottom: "1px solid var(--line2)" }}>
-                  {v.heySessions.map((s) => (
-                    <button key={s.label} type="button" style={{ display: "flex", alignItems: "center", gap: 7, maxWidth: 150, height: 29, padding: "0 10px", border: `1px solid ${s.bd}`, borderBottom: 0, borderRadius: "7px 7px 0 0", background: s.bg, color: s.ink, fontSize: 11.5, fontWeight: s.fw, cursor: "pointer" }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot, flex: "none" }} />
-                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
-                    </button>
-                  ))}
-                  <button type="button" title="New session" style={{ width: 26, height: 26, border: 0, background: "transparent", color: "var(--t3)", borderRadius: 6, cursor: "pointer", fontSize: 15, lineHeight: 1 }}>+</button>
-                  <div style={{ flex: 1 }} />
-                  <button type="button" onClick={() => setRoute({ kind: "run" })} style={{ height: 24, padding: "0 8px", border: 0, background: "transparent", color: "var(--t3)", borderRadius: 6, font: "500 11px Inter,sans-serif", cursor: "pointer", marginBottom: 4 }}>Technical details</button>
-                  <button type="button" title="Close panel" onClick={() => setHey(false)} style={{ width: 26, height: 26, border: 0, background: "transparent", color: "var(--t3)", borderRadius: 6, cursor: "pointer", marginBottom: 4 }}>✕</button>
-                </div>
-                <div style={{ flex: 1, overflow: "auto", padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ fontSize: 12.5, color: "var(--t2)" }}>{v.decisionsNote || "Approvals come from the organisation ledger."}</div>
-                  {v.actionError ? <div style={{ fontSize: 12, color: "var(--red)" }}>{v.actionError}</div> : null}
-                  {(v.approvalsLive ? v.decisions : []).map((d) => (
-                    <div key={`${d.action}-${d.target}-${d.version}`} style={{ border: "1px solid var(--line)", borderRadius: 9, padding: "10px 11px", background: "var(--canvas)" }}>
-                      <div style={{ font: "600 12px Inter,sans-serif" }}>{d.action}</div>
-                      <div style={{ marginTop: 6, font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>Target · {d.target}</div>
-                      <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t2)" }}>Version · {d.version}</div>
-                      <div style={{ marginTop: 6, fontSize: 12, color: "var(--t3)" }}>{d.why}</div>
-                      {d.pending ? (
-                        <button type="button" className="bp2-hit" onClick={d.approve} style={{ marginTop: 10, height: 27, padding: "0 12px", border: 0, borderRadius: 6, background: "var(--blue)", color: "#fff", font: "600 11.5px Inter,sans-serif", cursor: "pointer" }}>Approve</button>
-                      ) : null}
-                    </div>
-                  ))}
-                  {v.approvalsLive && !(v.decisions || []).length ? (
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>Nothing is waiting for your approval.</div>
-                  ) : null}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "var(--raised)", fontSize: 11.5, color: "var(--t2)" }}>
-                        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ flex: "none" }}><circle cx="8" cy="8" r="6" /><path d="M8 5.2v3.4M8 10.8h.01" strokeLinecap="round" /></svg>
-                        Closing this panel won’t stop the work.
-                      </div>
-                </div>
-                <div style={{ flex: "none", borderTop: "1px solid var(--line2)", padding: "10px 12px 12px", display: "flex", flexDirection: "column", gap: 9 }}>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                    {v.modes.map((m) => (
-                      <button key={m.label} type="button" style={{ height: 23, padding: "0 9px", border: `1px solid ${m.bd}`, background: m.bg, color: m.ink, borderRadius: 12, font: "500 11px Inter,sans-serif", cursor: m.cursor }}>{m.label}</button>
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 22, padding: "0 9px", borderRadius: 11, background: "var(--raised)", border: "1px solid var(--line2)", font: "500 11px Inter,sans-serif", color: "var(--t2)" }}>
-                      <svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="6.4" width="10" height="7" rx="1.4" /><path d="M5.6 6.4V4.8a2.4 2.4 0 0 1 4.8 0v1.6" /></svg>
-                      Item · CCO-245
-                    </span>
-                    <span style={{ font: "400 10.5px 'JetBrains Mono',monospace", color: "var(--t3)" }}>read-only scope</span>
-                  </div>
-                  <div style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>Remaining allowance: not captured · action cost: not captured</div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                    <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 7, border: "1px solid var(--line)", borderRadius: 9, background: "var(--canvas)", padding: "7px 9px" }}>
-                      <textarea placeholder="Ask, or describe the outcome you want…" style={{ flex: 1, minHeight: 34, maxHeight: 120, resize: "none", border: 0, background: "transparent", color: "var(--t1)", font: "400 12.5px Inter,sans-serif", outline: "none" }} />
-                      <button type="button" title="Wake word unavailable" style={{ width: 26, height: 26, border: "1px solid var(--line2)", background: "transparent", color: "var(--t3)", borderRadius: 6, cursor: "not-allowed", flex: "none" }}>
-                        <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="6" y="2.4" width="4" height="7" rx="2" /><path d="M4 8a4 4 0 0 0 8 0M8 12v1.8" strokeLinecap="round" /><path d="M3 3l10 10" strokeLinecap="round" /></svg>
-                      </button>
-                    </div>
-                    <button type="button" className="bp2-hit" onClick={() => setStreaming((s) => !s)} style={{ height: 34, padding: "0 14px", border: 0, borderRadius: 8, background: streaming ? "var(--red)" : "var(--blue)", color: "#fff", font: "600 12.5px Inter,sans-serif", cursor: "pointer", flex: "none" }}>{streaming ? "Stop" : "Send"}</button>
-                  </div>
-                  <div style={{ fontSize: 10.5, color: "var(--t3)" }}>Enter sends · Shift+Enter for a new line. Hey Papership acts with your access — never more.</div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="bp2-status" style={{ flex: "none", position: "relative", zIndex: 10050, borderTop: "1px solid var(--line)", background: "var(--surface)" }}>
-            {statusOpen ? (
-              <div style={{ maxHeight: "40vh", overflow: "auto", borderBottom: "1px solid var(--line2)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 14px", borderBottom: "1px solid var(--line2)" }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>Platform activity · last 80 events</span>
-                  <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>Australia/Sydney</span>
-                </div>
-                {v.auditEvents.map((e) => (
-                  <div key={e.time + e.text} style={{ display: "grid", gridTemplateColumns: "78px 110px minmax(0,1fr)", gap: 12, alignItems: "center", padding: "6px 14px", borderBottom: "1px solid var(--line2)" }}>
-                    <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)" }}>{e.time}</span>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5 }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: e.dot }} />{e.kind}</span>
-                    <span style={{ fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.text}</span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            <div onClick={() => setStatusOpen((o) => !o)} style={{ height: 32, display: "flex", alignItems: "center", gap: 10, padding: "0 14px", cursor: "pointer" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: online ? "var(--green)" : "var(--red)", flex: "none", animation: "ogblink 1.8s infinite" }} />
-              <span style={{ font: "400 11px 'JetBrains Mono',monospace", color: "var(--t3)", flex: "none" }}>{online ? "12s ago" : "Offline"}</span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: "var(--t2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{online ? "Checks passed for CCO-245 — 14 tests, 0 failures" : "Last known state · work already started continues in the cloud"}</span>
-              <span className="bp2-status-live" style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 20, padding: "0 9px", borderRadius: 10, background: online ? "var(--green-soft)" : "var(--red-soft)", color: online ? "var(--green)" : "var(--red)", font: "600 10.5px Inter,sans-serif", flex: "none" }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: online ? "var(--green)" : "var(--red)", animation: "ogblink 1.8s infinite" }} />{online ? "Live" : "Offline"}
-              </span>
-              <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="var(--t3)" strokeWidth="1.8" style={{ flex: "none", transform: statusOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .2s" }}><path d="m4 10 4-4 4 4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </div>
-          </div>
-          <nav className="bp2-bottom" aria-label="Primary">
-            {BOTTOM_TABS.map((k) => (
-              <button key={k} type="button" data-on={!hey && tab === k && !route ? "1" : "0"} onClick={go(k)}>
-                <Ico d={TABDEF[k].d} size={19} />
-                {TABDEF[k].label}
-              </button>
-            ))}
-            <button type="button" data-on={hey ? "1" : "0"} onClick={() => { setHey(true); setRailOpen(false); setPalette(false); setDrawer(false); }}>
-              <Ico d={PATHS.star} size={19} />
-              Hey Papership
-            </button>
-          </nav>
-        </div>
+        >
+                {rk === "agent" && <AgentDetail v={v} agentId={route.id} />}
+                {rk === "knowledge-object" && <KnowledgeDetail v={v} objectId={route.id} />}
+                {rk === "work-item" && <WorkItemView v={v} />}
+                {rk === "run" && <RunDetailView v={v} />}
+                {rk === "account" && <AccountView v={v} />}
+                {rk === "memory" && <MemoryView v={v} />}
+                {!route && tab === "home" && <HomePanel />}
+                {!route && tab === "workspace" && <WorkspacePanel sub={cur} />}
+                {!route && tab === "studio" && <StudioPanel sub={cur} />}
+                {!route && tab === "exchange" && <ExchangePanel sub={cur} />}
+                {!route && tab === "registry" && <RegistryPanel sub={cur} />}
+                {!route && tab === "loop" && <LoopPanel />}
+                {!route && tab === "today" && cur === "Overview" && <TodayOverview v={v} />}
+                {!route && tab === "today" && cur === "Decisions" && <TodayDecisions v={v} />}
+                {!route && tab === "today" && cur === "Running" && <TodayRunning v={v} />}
+                {!route && tab === "today" && cur === "Registry" && <Registry v={v} />}
+                {!route && tab === "work" && cur === "Projects" && <WorkProjects v={v} />}
+                {!route && tab === "work" && cur === "Issues" && <WorkIssues v={v} />}
+                {!route && tab === "work" && cur === "Board" && <WorkBoard v={v} />}
+                {!route && tab === "work" && cur === "Roadmap" && <WorkRoadmap v={v} />}
+                {!route && tab === "work" && cur === "Workflows" && <WorkWorkflows v={v} />}
+                {!route && tab === "work" && cur === "Wiki" && <WorkWiki />}
+                {!route && tab === "inbox" && <InboxView v={v} />}
+                {!route && tab === "people" && cur === "People" && <PeopleView v={v} />}
+                {!route && tab === "people" && cur === "Teams" && <TeamsView v={v} />}
+                {!route && tab === "people" && cur === "Pending invites" && <InvitesView />}
+                {!route && tab === "data" && <DataView v={v} sub={cur} />}
+                {!route && tab === "files" && <FilesView v={v} />}
+                {!route && tab === "integrations" && <ConnectionsView v={v} />}
+                {!route && tab === "agents" && <AgentsView v={v} />}
+                {!route && tab === "knowledge" && cur === "Materials" && <MaterialsView v={v} />}
+                {!route && tab === "knowledge" && cur !== "Materials" && <KnowledgeView v={v} />}
+                {!route && tab === "settings" && <SettingsView v={v} />}
+        </ProductShell>
       )}
 
       {palette ? (
@@ -1598,5 +1430,6 @@ export default function Blueprint2App() {
         </div>
       ) : null}
     </div>
+    </LiveProvider>
   );
 }

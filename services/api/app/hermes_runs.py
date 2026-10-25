@@ -32,7 +32,8 @@ SECRET_VALUE_PATTERNS = (
     re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}"),
     re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
     re.compile(r"\bAIza[0-9A-Za-z_-]{30,}"),
-    re.compile(r"\bey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"),
+    # Lookbehind, not \b: the class contains "-", so \b restarted the scan inside every hyphen run (quadratic on "ey-ey-...").
+    re.compile(r"(?<![A-Za-z0-9_-])ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}"),
     re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{16,}"),
     re.compile(r"\b\d{8,10}:[A-Za-z0-9_-]{30,}"),
 )

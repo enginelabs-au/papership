@@ -1,0 +1,13 @@
+{
+  "schema": "papership.agent-package/1",
+  "name": "engine-labs/vercel-deploy-workflow",
+  "version": "1.0.0",
+  "kind": "skill",
+  "description": "Deploy a Next.js project to Vercel through Git or the CLI, keep dashboard deployments aligned with the repository, pull environment values, and fall back to the Vercel MCP.",
+  "category": "deployment",
+  "tags": ["vercel", "nextjs", "deploy", "ci"],
+  "jurisdiction": [],
+  "compatible": ["agent-skills", "cursor", "claude", "codex"],
+  "license": { "class": "open", "spdx": "MIT" },
+  "visibility": "private"
+}

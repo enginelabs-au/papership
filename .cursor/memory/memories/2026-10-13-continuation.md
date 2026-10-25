@@ -28,3 +28,8 @@
 - OT-107 done: live read run and write-class `todo_list` run through the gate against real Hermes; fail-closed stops observed live. Catalogue aligned to live tool names; `tool_call` bridge unwrapped; catalog hash updated.
 - Second security re-review: CONDITIONAL PASS (Hermes, messaging). Only blocker: owner's temporary ssh hook exception, kept out of the commit along with the pre-existing `vercel --prod` hook edit. `.cursor/hooks/*` and generated Tauri schemas are not committed.
 - Tests: API 191, worker 71, web scan 15, build ok. Released by pushing to main (Vercel git integration builds `@papership/web`; API and worker are not Vercel projects).
+
+## 2026-10-14 D-38: product definition and the knowledge loop
+- Owner asked what the platform is for. Decision D-38 (`docs/decisions/2026-10-14-papership-definition.md`): wedge = coding agents on the owner's own stack; moat = the context-to-outcome impact record; company-OS surfaces demoted to an Operations rail section (code kept); kill list recorded; content-index data-policy amendment recorded.
+- Built the loop: `services/api/app/knowledge_loop.py` (ingest, FTS5 BM25 resolve with token budget, deliveries, outcomes, lift), routes `/knowledge/ingest|resolve|outcomes|loop`, stdio MCP server `scripts/papership_mcp.py`, web Loop tab `apps/web/src/blueprint2/loop.jsx`, Operations demotion in `App.jsx`.
+- Evidence: real repo ingest = 399 documents, 2519 passages in about 1.3 s; five task queries returned on-topic passages (approvals, Vercel deploy, Telegram webhook, Slack connector); weak on abstract queries ("moat"). API 204 passed (13 new), worker 71, web scan 15, build ok. Not committed or deployed. Security review of the new surface still to do.

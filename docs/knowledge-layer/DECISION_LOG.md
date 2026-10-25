@@ -40,6 +40,8 @@ Impact and knowledge events reuse `usage.py` rules: dotted names, identifier and
 
 "Capability registry" means the 43-domain catalogue (D-02). "Papership Registry" means Agent Materials discovery and supply (KL-P3). UI copy must not call the catalogue the Papership Registry.
 
+Update (D-39, 2026-10-25): the Papership Registry now accepts third-party packages under `/registry/packages`, `/registry/install`, `/registry/resolve`, `/registry/outcomes` and `/registry/loop` (module `registry.py`, tables `ar_*`). `GET /registry` still returns the 43-row capability catalogue. The "not a marketplace" guard is superseded for publishing and install; payments remain off.
+
 ## Open items
 
 | ID | Question | Deadline | Default if still open |

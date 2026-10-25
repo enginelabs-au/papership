@@ -1,5 +1,7 @@
 # Vision
 
+> Product definition, wedge, moat test and kill list: [D-38](../decisions/2026-10-14-papership-definition.md). Pivot to the open Agent Registry, Resolver and Workspace: [D-39](../decisions/2026-10-25-agent-registry-pivot.md); package standard in `docs/agent-registry/PACKAGE_SPEC.md`.
+
 ## Mission
 
 Papership is the Knowledge Layer for agents. It determines what a particular agent needs to know to perform a task under the active constraints, gives the agent that knowledge, and learns whether the knowledge worked.

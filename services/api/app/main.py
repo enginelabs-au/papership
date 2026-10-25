@@ -1200,6 +1200,20 @@ def create_app(store_path: str | None = None) -> FastAPI:
     from app.knowledge_layer import register_routes
 
     register_routes(app, store)
+
+    from pathlib import Path as _Path
+
+    from app import knowledge_loop
+
+    knowledge_loop.register_routes(app, store, _Path(__file__).resolve().parents[3])
+
+    from app import registry
+
+    registry.register_routes(app, store)
+
+    from app import foundation
+
+    foundation.register_routes(app, store)
     return app
 
 

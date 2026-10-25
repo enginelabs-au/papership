@@ -29,8 +29,10 @@ test("localStorage keys are papership-* with legacy migrate", () => {
 test("narrow chrome uses blueprint-2 bottom tabs", () => {
   const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
   const css = readFileSync(join(root, "src/blueprint2/blueprint2.css"), "utf8");
-  assert.match(app, /className="bp2-bottom"/);
-  assert.match(app, /BOTTOM_TABS = \["today", "work", "inbox"\]/);
+  const shell = readFileSync(join(root, "src/blueprint2/shell.jsx"), "utf8");
+  assert.match(shell, /className="bp2-bottom"/);
+  assert.match(shell, /PRODUCT_TABS = \["home", "workspace", "registry", "studio", "exchange"\]/);
+  assert.match(app, /RAIL_TABS = \["work", "inbox", "people", "data", "files", "integrations"\]/); // Operations (D-38)
   assert.match(css, /@media \(max-width: 767px\)/);
   assert.match(css, /\.bp2-hey \{/);
 });
@@ -139,4 +141,20 @@ test("founder loop survives API outage via local mock", () => {
   assert.match(api, /localStartEngineLabsJob/);
   assert.match(api, /coalesceEngineLabsLoop/);
   assert.match(app, /Loop ·/);
+});
+
+test("platform foundation: four products are routed and honestly labelled", () => {
+  const app = readFileSync(join(root, "src/blueprint2/App.jsx"), "utf8");
+  for (const p of ["workspace", "studio", "exchange", "registry"]) {
+    assert.match(app, new RegExp(`TAB_KEYS = \\[[^\\]]*"${p}"`));
+  }
+  const exchange = readFileSync(join(root, "src/blueprint2/exchange.jsx"), "utf8");
+  assert.match(exchange, /fictional/);
+  assert.match(exchange, /tone="simulated"/);
+  const studio = readFileSync(join(root, "src/blueprint2/studio.jsx"), "utf8");
+  assert.match(studio, /fixture checks/i);
+  assert.match(studio, /planned, not available/);
+  for (const f of ["workspace", "studio", "exchange", "platform"]) {
+    assert.doesNotMatch(readFileSync(join(root, `src/blueprint2/${f}.jsx`), "utf8"), /\u2014/, `${f}.jsx copy has an em dash`);
+  }
 });
